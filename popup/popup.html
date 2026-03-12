@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 翻译</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <img src="../icons/icon-48.svg" alt="icon" width="24" height="24">
+      <h1>AI 翻译</h1>
+    </header>
+
+    <div id="no-api-key" class="warning hidden">
+      <span>⚠️ 未设置 API Key</span>
+      <a href="#" id="go-to-options">前往设置</a>
+    </div>
+
+    <div id="page-info">
+      <div id="page-title" class="truncate">加载中...</div>
+      <div id="word-count" class="meta"></div>
+    </div>
+
+    <div id="actions-inline">
+      <button id="btn-screen" class="btn btn-inline">
+        <span class="btn-icon">▦</span> 翻译屏幕内容
+      </button>
+    </div>
+
+    <div id="status" class="hidden">
+      <div class="spinner"></div>
+      <span id="status-text">处理中...</span>
+    </div>
+
+    <footer>
+      <a href="#" id="options-link">设置</a>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
