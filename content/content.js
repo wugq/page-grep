@@ -80,6 +80,7 @@ function injectStyles() {
 
 function createFloatButton() {
   if (document.getElementById(FLOAT_BTN_ID)) return;
+  injectStyles();
   const btn = document.createElement('button');
   btn.id = FLOAT_BTN_ID;
   btn.textContent = '译';
@@ -177,5 +178,17 @@ browser.runtime.onMessage.addListener((message) => {
   }
 });
 
-// Inject the floating translate button on every page
-createFloatButton();
+// Inject float button based on preference, and watch for changes
+browser.storage.local.get('showFloatBtn').then(({ showFloatBtn }) => {
+  if (showFloatBtn !== false) createFloatButton();
+});
+
+browser.storage.onChanged.addListener((changes) => {
+  if ('showFloatBtn' in changes) {
+    if (changes.showFloatBtn.newValue !== false) {
+      createFloatButton();
+    } else {
+      document.getElementById(FLOAT_BTN_ID)?.remove();
+    }
+  }
+});

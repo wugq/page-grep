@@ -1,13 +1,8 @@
 async function loadSettings() {
   const { openaiApiKey, preferredModel } = await browser.storage.local.get(['openaiApiKey', 'preferredModel']);
 
-  if (openaiApiKey) {
-    document.getElementById('api-key').value = openaiApiKey;
-  }
-
-  if (preferredModel) {
-    document.getElementById('model-select').value = preferredModel;
-  }
+  if (openaiApiKey) document.getElementById('api-key').value = openaiApiKey;
+  if (preferredModel) document.getElementById('model-select').value = preferredModel;
 }
 
 function showStatus(message, type) {

@@ -45,8 +45,14 @@ async function init() {
     document.getElementById('word-count').textContent = `约 ${count.toLocaleString()} 词`;
   } catch (e) {}
 
-  const { openaiApiKey } = await getStorageData();
+  const { openaiApiKey, showFloatBtn } = await browser.storage.local.get(['openaiApiKey', 'showFloatBtn']);
   if (!openaiApiKey) document.getElementById('no-api-key').classList.remove('hidden');
+
+  const floatCheckbox = document.getElementById('show-float-btn');
+  floatCheckbox.checked = showFloatBtn !== false; // default true
+  floatCheckbox.addEventListener('change', () => {
+    browser.storage.local.set({ showFloatBtn: floatCheckbox.checked });
+  });
 
   document.getElementById('btn-screen').addEventListener('click', () => translateScreen());
 
