@@ -1,11 +1,13 @@
 {
   "manifest_version": 2,
-  "name": "AI Reader Helper",
+  "name": "Reader Helper",
   "version": "1.1",
-  "description": "AI-powered reading assistant: translate pages and highlight content matching your interests",
+  "description": "Reading assistant: translate pages and highlight content matching your interests",
   "icons": {
+    "16": "icons/icon-16.svg",
     "48": "icons/icon-48.svg",
-    "96": "icons/icon-96.svg"
+    "96": "icons/icon-96.svg",
+    "128": "icons/icon-128.svg"
   },
   "permissions": [
     "storage",
@@ -18,12 +20,13 @@
     "persistent": false
   },
   "browser_action": {
-    "default_popup": "popup/popup.html",
     "default_icon": {
+      "16": "icons/icon-16.svg",
       "48": "icons/icon-48.svg",
-      "96": "icons/icon-96.svg"
+      "96": "icons/icon-96.svg",
+      "128": "icons/icon-128.svg"
     },
-    "default_title": "AI Reader Helper"
+    "default_title": "Reader Helper"
   },
   "sidebar_action": {
     "default_title": "阅读助手",

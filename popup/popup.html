@@ -3,33 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI 阅读助手</title>
+  <title>阅读助手</title>
+  <script src="../theme.js"></script>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div id="app">
-    <header>
-      <img src="../icons/icon-48.svg" alt="icon" width="24" height="24">
-      <h1>AI 阅读助手</h1>
-    </header>
-
-    <div id="no-api-key" class="warning hidden">
-      <span>⚠️ 未设置 API Key</span>
-      <a href="#" id="go-to-options">前往设置</a>
-    </div>
-
-    <div id="page-info">
-      <div id="page-title">加载中...</div>
-      <div id="word-count" class="meta"></div>
-    </div>
-
-    <div id="actions-inline">
-      <label class="toggle-row">
-        <input type="checkbox" id="show-float-btn">
-        <span>显示悬浮按钮</span>
-      </label>
-    </div>
-
     <div id="interests-section">
       <div class="section-label">阅读兴趣</div>
       <textarea id="interests-input" rows="3" placeholder="描述你感兴趣的内容，如：AI科技、宏观经济、体育赛事..."></textarea>
@@ -40,7 +19,18 @@
       </div>
     </div>
 
+    <div id="actions-inline">
+      <label class="toggle-row">
+        <input type="checkbox" id="show-float-btn">
+        <span>显示悬浮按钮</span>
+      </label>
+    </div>
+
     <footer>
+      <label class="toggle-row" title="切换深色/浅色模式" style="margin-right: auto;">
+        <input type="checkbox" id="theme-toggle">
+        <span>深色</span>
+      </label>
       <a href="#" id="options-link">设置</a>
     </footer>
   </div>

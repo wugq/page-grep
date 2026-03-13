@@ -4,26 +4,70 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>阅读助手</title>
+    <script src="../theme.js"></script>
     <link rel="stylesheet" href="sidebar.css" />
   </head>
   <body>
-    <header class="summary-header">
-      <div class="actions">
-        <button id="summary-btn" class="ghost-btn" type="button">摘要</button>
-        <button id="highlight-btn" class="ghost-btn" type="button">兴趣</button>
-      </div>
+    <header class="app-header">
+      <nav class="tab-nav">
+        <div class="tabs-left">
+          <button id="tab-summary" class="tab-btn active" data-tab="summary">摘要</button>
+          <button id="tab-interests" class="tab-btn" data-tab="interests">兴趣</button>
+        </div>
+        <button id="options-btn" class="icon-btn" title="高级设置">⚙</button>
+      </nav>
     </header>
 
-    <section id="summary-section" class="summary-section" hidden>
-<main id="summary-list" class="summary-list" aria-live="polite"></main>
-    </section>
+    <main id="main-content">
+      <section id="summary-tab" class="tab-content active">
+        <div class="tab-actions">
+          <button id="summary-btn" class="primary-btn">生成摘要</button>
+        </div>
+        <div id="summary-list" class="summary-list"></div>
+        <div id="summary-empty" class="empty">点击上方按钮生成页面摘要</div>
+      </section>
 
-    <section id="highlight-section" class="highlight-section" hidden>
-      <div class="section-title">兴趣</div>
-      <div id="highlight-list" class="summary-list"></div>
-    </section>
+      <section id="interests-tab" class="tab-content">
+        <div class="config-section">
+          <div class="config-header">
+            <span class="config-title">阅读兴趣</span>
+            <button id="toggle-config-btn" class="text-link">展开设置</button>
+          </div>
+          <div id="interests-config" class="config-body hidden">
+            <textarea id="interests-input" rows="3" placeholder="描述你感兴趣的内容，如：AI科技、宏观经济..."></textarea>
+            <div class="config-footer">
+              <button id="save-interests-btn" class="small-btn primary-btn">保存</button>
+              <button id="clear-interests-btn" class="small-btn ghost-btn hidden">清除</button>
+              <span id="interests-status" class="status-msg hidden">已保存 ✓</span>
+            </div>
+          </div>
+        </div>
+        <div class="tab-actions">
+          <button id="highlight-btn" class="primary-btn">查找匹配</button>
+        </div>
+        <div id="highlight-list" class="summary-list"></div>
+        <div id="highlight-empty" class="empty">点击上方按钮查找感兴趣的内容</div>
+      </section>
 
-<div id="summary-error" class="error" hidden></div>
+      <div id="global-error" class="error hidden"></div>
+    </main>
+
+    <footer class="app-footer">
+      <div class="toggle-row" title="切换深色/浅色模式">
+        <label class="switch">
+          <input type="checkbox" id="theme-toggle">
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">深色模式</span>
+      </div>
+      <div class="toggle-row" title="在页面右下角显示浮动操作按钮">
+        <label class="switch">
+          <input type="checkbox" id="show-float-btn">
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">浮动按钮</span>
+      </div>
+    </footer>
 
     <script src="sidebar.js"></script>
   </body>

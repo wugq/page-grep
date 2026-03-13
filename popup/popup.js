@@ -1,17 +1,3 @@
-async function getActiveTab() {
-  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-  return tabs[0];
-}
-
-async function getPageText(tabId) {
-  const response = await browser.tabs.sendMessage(tabId, { action: 'getPageText' });
-  return response.text;
-}
-
-function wordCount(text) {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
 async function saveInterests() {
   const input = document.getElementById('interests-input');
   const interests = input.value.trim();
@@ -37,17 +23,30 @@ async function clearInterests() {
 }
 
 async function init() {
-  const tab = await getActiveTab();
-  document.getElementById('page-title').textContent = tab.title || '(无标题)';
+  const { showFloatBtn, userInterests, theme } = await browser.storage.local.get(['showFloatBtn', 'userInterests', 'theme']);
 
-  try {
-    const text = await getPageText(tab.id);
-    const count = wordCount(text);
-    document.getElementById('word-count').textContent = `约 ${count.toLocaleString()} 词`;
-  } catch (e) {}
+  const themeToggle = document.getElementById('theme-toggle');
+  const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  themeToggle.checked = isDark;
+  themeToggle.addEventListener('change', () => {
+    browser.storage.local.set({ theme: themeToggle.checked ? 'dark' : 'light' });
+  });
 
-  const { openaiApiKey, showFloatBtn, userInterests } = await browser.storage.local.get(['openaiApiKey', 'showFloatBtn', 'userInterests']);
-  if (!openaiApiKey) document.getElementById('no-api-key').classList.remove('hidden');
+  // Handle system theme changes if no explicit preference is set
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async (e) => {
+    const { theme } = await browser.storage.local.get('theme');
+    if (!theme) {
+      themeToggle.checked = e.matches;
+    }
+  });
+
+  browser.storage.onChanged.addListener((changes) => {
+    if ('theme' in changes) {
+      const theme = changes.theme.newValue;
+      const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      themeToggle.checked = isDark;
+    }
+  });
 
   const floatCheckbox = document.getElementById('show-float-btn');
   floatCheckbox.checked = showFloatBtn !== false;
@@ -63,10 +62,6 @@ async function init() {
   document.getElementById('save-interests-btn').addEventListener('click', () => saveInterests());
   document.getElementById('clear-interests-btn').addEventListener('click', () => clearInterests());
 
-  document.getElementById('go-to-options').addEventListener('click', (e) => {
-    e.preventDefault();
-    browser.runtime.openOptionsPage();
-  });
   document.getElementById('options-link').addEventListener('click', (e) => {
     e.preventDefault();
     browser.runtime.openOptionsPage();

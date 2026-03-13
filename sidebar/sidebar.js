@@ -31,7 +31,23 @@ toggleConfigBtn.addEventListener('click', () => {
 // --- Initialization ---
 
 async function init() {
-  const { showFloatBtn, userInterests } = await browser.storage.local.get(['showFloatBtn', 'userInterests']);
+  const { showFloatBtn, userInterests, theme } = await browser.storage.local.get(['showFloatBtn', 'userInterests', 'theme']);
+
+  // Theme Toggle
+  const themeToggle = document.getElementById('theme-toggle');
+  const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  themeToggle.checked = isDark;
+  themeToggle.addEventListener('change', () => {
+    browser.storage.local.set({ theme: themeToggle.checked ? 'dark' : 'light' });
+  });
+
+  // Handle system theme changes if no explicit preference is set
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async (e) => {
+    const { theme } = await browser.storage.local.get('theme');
+    if (!theme) {
+      themeToggle.checked = e.matches;
+    }
+  });
 
   // Global Toggles
   const floatCheckbox = document.getElementById('show-float-btn');
@@ -273,6 +289,14 @@ browser.storage.onChanged.addListener((changes) => {
   if ('showFloatBtn' in changes) {
     const floatCheckbox = document.getElementById('show-float-btn');
     if (floatCheckbox) floatCheckbox.checked = changes.showFloatBtn.newValue !== false;
+  }
+  if ('theme' in changes) {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+      const theme = changes.theme.newValue;
+      const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      themeToggle.checked = isDark;
+    }
   }
 });
 
