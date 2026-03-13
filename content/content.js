@@ -221,11 +221,12 @@ function createFloatButton() {
 }
 
 function findMainContentScope() {
-  // 1. Try to find a clear "main" container first, which usually holds all articles on a list page.
+  // 1. Try to find a clear "main" container first
   const mainSelectors = [
     '[role="main"]',
     'main',
     '#main-content', '#content', '#main',
+    '#primary', '.main-content', '.main', '.content'
   ];
   for (const sel of mainSelectors) {
     const el = document.querySelector(sel);
@@ -233,14 +234,15 @@ function findMainContentScope() {
   }
 
   // 2. If no clear main container, check for article.
-  // If there's exactly one article, it's likely a single-article page and we should focus on it.
+  // If there's exactly one article, it's likely a single-article page.
   const articles = document.querySelectorAll('article');
   if (articles.length === 1) return articles[0];
 
   // 3. Fallback to common class-based content areas
   const fallbackSelectors = [
     '.post-content', '.article-content', '.entry-content',
-    '.article-body', '.post-body', '.story-body', '.content-body',
+    '.article-body', '.article__body', '.post-body', '.story-body', '.content-body',
+    '.post-text', '.entry-text'
   ];
   for (const sel of fallbackSelectors) {
     const el = document.querySelector(sel);
@@ -251,12 +253,12 @@ function findMainContentScope() {
   return document.body;
 }
 
-const CHROME_SELECTOR = 'nav, header, footer, aside, [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"]';
+const CHROME_SELECTOR = 'nav, header, footer, aside, [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"], .sidebar, #sidebar, .nav, #nav, .menu, #menu, .footer, #footer';
 
 function findVisibleParagraphs() {
   const scope = findMainContentScope();
   const excludeChrome = scope === document.body;
-  const candidates = scope.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, td, figcaption');
+  const candidates = scope.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, td, figcaption, dd');
   return Array.from(candidates).filter(el => {
     if (el.dataset.aiWrapped) return false;
     if (el.closest('[data-ai-wrapped]')) return false;
@@ -444,16 +446,17 @@ function collectArticleElements(scope) {
   const excludeChrome = scope === document.body;
   const seen = new Set();
   const results = [];
-  const candidates = scope.querySelectorAll('h1, h2, h3, h4, h5, h6, li, p, blockquote');
+  // Use a more comprehensive set of tags for article content
+  const candidates = scope.querySelectorAll('h1, h2, h3, h4, h5, h6, li, p, blockquote, dt, dd, figcaption');
   for (const el of candidates) {
     if (excludeChrome && el.closest(CHROME_SELECTOR)) continue;
     const text = el.innerText?.trim().replace(/\s+/g, ' ');
     // Filter out very short text and very long boilerplate
-    if (!text || text.length < 15 || text.length > 2000) continue;
+    if (!text || text.length < 10 || text.length > 3000) continue;
     if (seen.has(text)) continue;
     seen.add(text);
     results.push({ el, text });
-    if (results.length >= 160) break;
+    if (results.length >= 180) break;
   }
   return results;
 }
