@@ -1,4 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
-  <rect width="96" height="96" rx="18" fill="#1a73e8"/>
-  <text x="48" y="64" font-family="Arial, sans-serif" font-size="52" font-weight="bold" fill="white" text-anchor="middle">译</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="96" height="96">
+  <!-- Background -->
+  <rect width="48" height="48" rx="10" fill="#283593"/>
+
+  <!-- Left page -->
+  <path d="M7 14 C7 13 8 12 9 12 L23 12 L23 37 L9 37 C8 37 7 36 7 35 Z" fill="white"/>
+  <!-- Right page -->
+  <path d="M25 12 L39 12 C40 12 41 13 41 14 L41 35 C41 36 40 37 39 37 L25 37 Z" fill="white"/>
+  <!-- Spine -->
+  <rect x="22" y="12" width="4" height="25" fill="#283593"/>
+
+  <!-- Text lines — left page -->
+  <rect x="10" y="17" width="9" height="1.5" rx="0.75" fill="#9fa8da"/>
+  <rect x="10" y="21" width="9" height="1.5" rx="0.75" fill="#9fa8da"/>
+  <rect x="10" y="25" width="6" height="1.5" rx="0.75" fill="#9fa8da"/>
+  <rect x="10" y="29" width="8" height="1.5" rx="0.75" fill="#9fa8da"/>
+
+  <!-- Text lines — right page -->
+  <rect x="29" y="17" width="9" height="1.5" rx="0.75" fill="#9fa8da"/>
+  <rect x="29" y="21" width="9" height="1.5" rx="0.75" fill="#9fa8da"/>
+  <rect x="29" y="25" width="6" height="1.5" rx="0.75" fill="#9fa8da"/>
+  <rect x="29" y="29" width="8" height="1.5" rx="0.75" fill="#9fa8da"/>
+
+  <!-- AI sparkle (4-pointed star) -->
+  <path d="M40 3.5 L41.3 6.7 L44.5 8 L41.3 9.3 L40 12.5 L38.7 9.3 L35.5 8 L38.7 6.7 Z" fill="#FFD600"/>
 </svg>

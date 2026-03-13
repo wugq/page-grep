@@ -3,10 +3,6 @@ async function getActiveTab() {
   return tabs[0];
 }
 
-async function getStorageData() {
-  return browser.storage.local.get(['openaiApiKey', 'preferredModel']);
-}
-
 async function getPageText(tabId) {
   const response = await browser.tabs.sendMessage(tabId, { action: 'getPageText' });
   return response.text;
@@ -14,25 +10,6 @@ async function getPageText(tabId) {
 
 function wordCount(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-async function translateScreen() {
-  const { openaiApiKey, preferredModel } = await getStorageData();
-  if (!openaiApiKey) {
-    document.getElementById('no-api-key').classList.remove('hidden');
-    return;
-  }
-  const model = preferredModel || 'gpt-4o-mini';
-  const tab = await getActiveTab();
-  const btn = document.getElementById('btn-screen');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="btn-icon">▦</span> 翻译中...';
-  try {
-    await browser.tabs.sendMessage(tab.id, { action: 'translateVisible', apiKey: openaiApiKey, model });
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<span class="btn-icon">▦</span> 翻译屏幕内容';
-  }
 }
 
 async function saveInterests() {
@@ -83,7 +60,6 @@ async function init() {
     document.getElementById('clear-interests-btn').classList.remove('hidden');
   }
 
-  document.getElementById('btn-screen').addEventListener('click', () => translateScreen());
   document.getElementById('save-interests-btn').addEventListener('click', () => saveInterests());
   document.getElementById('clear-interests-btn').addEventListener('click', () => clearInterests());
 
