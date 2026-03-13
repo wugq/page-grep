@@ -203,11 +203,32 @@ function createFloatButton() {
   btn.addEventListener('click', () => runTranslateOnPage(btn));
 }
 
+function findMainContentScope() {
+  const selectors = [
+    'article',
+    '[role="main"]',
+    'main',
+    '#main-content', '#content', '#main',
+    '.post-content', '.article-content', '.entry-content',
+    '.article-body', '.post-body', '.story-body', '.content-body',
+  ];
+  for (const sel of selectors) {
+    const el = document.querySelector(sel);
+    if (el) return el;
+  }
+  return document.body;
+}
+
+const CHROME_SELECTOR = 'nav, header, footer, aside, [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"]';
+
 function findVisibleParagraphs() {
-  const candidates = document.body.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, td, figcaption');
+  const scope = findMainContentScope();
+  const excludeChrome = scope === document.body;
+  const candidates = scope.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, td, figcaption');
   return Array.from(candidates).filter(el => {
     if (el.dataset.aiWrapped) return false;
     if (el.closest('[data-ai-wrapped]')) return false;
+    if (excludeChrome && el.closest(CHROME_SELECTOR)) return false;
     const text = el.innerText?.trim();
     if (!text || text.length < 20) return false;
     const rect = el.getBoundingClientRect();
@@ -231,7 +252,12 @@ async function wrapAndTranslate(el, apiKey, model) {
   el.appendChild(btn);
 
   const text = el.querySelector('.ai-para-original')?.innerText?.trim();
-  if (!text) { btn.remove(); return; }
+  if (!text) {
+    el.innerHTML = originalHTML;
+    el.classList.remove('ai-para-wrap');
+    delete el.dataset.aiWrapped;
+    return;
+  }
 
   try {
     const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text, apiKey, model });
@@ -354,10 +380,13 @@ function collectPageElements() {
     if (hn.length > 0) return hn;
   }
 
+  const scope = findMainContentScope();
+  const excludeChrome = scope === document.body;
   const seen = new Set();
   const results = [];
-  const candidates = document.querySelectorAll('h1, h2, h3, h4, h5, h6, li, p');
+  const candidates = scope.querySelectorAll('h1, h2, h3, h4, h5, h6, li, p');
   for (const el of candidates) {
+    if (excludeChrome && el.closest(CHROME_SELECTOR)) continue;
     const text = el.innerText?.trim().replace(/\s+/g, ' ');
     if (!text || text.length < 4 || text.length > 260) continue;
     if (seen.has(text)) continue;
@@ -397,7 +426,7 @@ function collectHackerNewsElements() {
     const text = metaParts ? `${prefix} ${title} — ${metaParts}` : `${prefix} ${title}`;
     if (seen.has(text)) return;
     seen.add(text);
-    results.push({ el: row, text });
+    results.push({ el: row, text, label: title });
   });
 
   const commentEls = document.querySelectorAll('.comment-tree .commtext');
@@ -406,7 +435,7 @@ function collectHackerNewsElements() {
     if (!text || text.length < 20 || text.length > 260) return;
     if (seen.has(text)) return;
     seen.add(text);
-    results.push({ el, text: `[comment] ${text}` });
+    results.push({ el, text: `[comment] ${text}`, label: text });
   });
 
   return results.slice(0, 160);
@@ -465,11 +494,11 @@ async function runInterestingFromPage() {
     });
 
     if (!response.success) throw new Error(response.error);
-    log(`[Reader] ★: matched indices:`, response.indices);
+    log(`[Reader] ★: matched items:`, response.items);
 
-    const items = response.indices
-      .filter(i => elements[i])
-      .map(i => ({ index: i, text: elements[i].text }));
+    const items = response.items
+      .filter(item => elements[item.index])
+      .map(item => ({ index: item.index, text: elements[item.index].label || elements[item.index].text, reason: item.reason }));
     HIGHLIGHT_STATE.items = items;
     browser.runtime.sendMessage({ action: 'highlightDone', items });
     log(`[Reader] ★: found ${items.length} interesting elements`);

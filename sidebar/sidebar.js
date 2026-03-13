@@ -205,11 +205,18 @@ function renderHighlights(items) {
   items.forEach(item => {
     const row = document.createElement('div');
     row.className = 'summary-item';
-    
+
     const detail = document.createElement('div');
     detail.className = 'summary-item-detail';
     detail.textContent = item.text;
     row.appendChild(detail);
+
+    if (item.reason) {
+      const reason = document.createElement('div');
+      reason.className = 'highlight-reason';
+      reason.textContent = item.reason;
+      row.appendChild(reason);
+    }
 
     row.addEventListener('mouseenter', () => sendToActiveTab({ action: 'highlightHover', index: item.index }));
     row.addEventListener('mouseleave', () => sendToActiveTab({ action: 'highlightUnhover', index: item.index }));

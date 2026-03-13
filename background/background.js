@@ -78,7 +78,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'findInteresting') {
     const elementList = message.elements.map((t, i) => `${i}: ${t}`).join('\n');
     callOpenAI(
-      'You are a content relevance analyzer. Given a list of page elements and user interests, identify which elements are relevant to the user\'s interests. Return ONLY a valid JSON array of integer indices, nothing else. Example: [0,3,7]. If nothing matches, return [].',
+      'You are a content relevance analyzer. Given a list of page elements and user interests, identify which elements are relevant. Return ONLY a valid JSON array of objects with keys "index" (integer) and "reason" (one short sentence, max 12 words, explaining why it matches the user\'s interests). Example: [{"index":0,"reason":"Covers AI model benchmarks you follow"},{"index":3,"reason":"Discusses startup funding trends"}]. If nothing matches, return [].',
       `User interests: ${message.interests}\n\nPage elements:\n${elementList}`,
       message.apiKey,
       message.model
@@ -86,9 +86,10 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .then(result => {
         const trimmed = result.trim();
         try {
-          const match = trimmed.match(/\[[\d,\s]*\]/);
-          const indices = match ? JSON.parse(match[0]) : [];
-          sendResponse({ success: true, indices });
+          const match = trimmed.match(/\[[\s\S]*\]/);
+          const parsed = match ? JSON.parse(match[0]) : [];
+          const items = parsed.filter(x => typeof x?.index === 'number');
+          sendResponse({ success: true, items });
         } catch (e) {
           sendResponse({ success: false, error: 'JSON 解析失败: ' + result });
         }
