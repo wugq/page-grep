@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI 翻译</title>
+  <title>AI 阅读助手</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div id="app">
     <header>
       <img src="../icons/icon-48.svg" alt="icon" width="24" height="24">
-      <h1>AI 翻译</h1>
+      <h1>AI 阅读助手</h1>
     </header>
 
     <div id="no-api-key" class="warning hidden">
@@ -29,8 +29,18 @@
       </button>
       <label class="toggle-row">
         <input type="checkbox" id="show-float-btn">
-        <span>显示悬浮翻译按钮</span>
+        <span>显示悬浮按钮</span>
       </label>
+    </div>
+
+    <div id="interests-section">
+      <div class="section-label">阅读兴趣</div>
+      <textarea id="interests-input" rows="3" placeholder="描述你感兴趣的内容，如：AI科技、宏观经济、体育赛事..."></textarea>
+      <div class="interests-actions">
+        <button id="save-interests-btn" class="btn btn-inline btn-primary">保存</button>
+        <button id="clear-interests-btn" class="btn btn-inline btn-danger hidden">清除</button>
+        <span id="interests-status" class="hidden">已保存 ✓</span>
+      </div>
     </div>
 
     <div id="status" class="hidden">

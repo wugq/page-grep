@@ -35,6 +35,30 @@ async function translateScreen() {
   }
 }
 
+async function saveInterests() {
+  const input = document.getElementById('interests-input');
+  const interests = input.value.trim();
+  const statusEl = document.getElementById('interests-status');
+  const clearBtn = document.getElementById('clear-interests-btn');
+
+  await browser.storage.local.set({ userInterests: interests || null });
+
+  statusEl.classList.remove('hidden');
+  setTimeout(() => statusEl.classList.add('hidden'), 2000);
+
+  if (interests) {
+    clearBtn.classList.remove('hidden');
+  } else {
+    clearBtn.classList.add('hidden');
+  }
+}
+
+async function clearInterests() {
+  document.getElementById('interests-input').value = '';
+  document.getElementById('clear-interests-btn').classList.add('hidden');
+  await browser.storage.local.set({ userInterests: null });
+}
+
 async function init() {
   const tab = await getActiveTab();
   document.getElementById('page-title').textContent = tab.title || '(无标题)';
@@ -45,16 +69,23 @@ async function init() {
     document.getElementById('word-count').textContent = `约 ${count.toLocaleString()} 词`;
   } catch (e) {}
 
-  const { openaiApiKey, showFloatBtn } = await browser.storage.local.get(['openaiApiKey', 'showFloatBtn']);
+  const { openaiApiKey, showFloatBtn, userInterests } = await browser.storage.local.get(['openaiApiKey', 'showFloatBtn', 'userInterests']);
   if (!openaiApiKey) document.getElementById('no-api-key').classList.remove('hidden');
 
   const floatCheckbox = document.getElementById('show-float-btn');
-  floatCheckbox.checked = showFloatBtn !== false; // default true
+  floatCheckbox.checked = showFloatBtn !== false;
   floatCheckbox.addEventListener('change', () => {
     browser.storage.local.set({ showFloatBtn: floatCheckbox.checked });
   });
 
+  if (userInterests) {
+    document.getElementById('interests-input').value = userInterests;
+    document.getElementById('clear-interests-btn').classList.remove('hidden');
+  }
+
   document.getElementById('btn-screen').addEventListener('click', () => translateScreen());
+  document.getElementById('save-interests-btn').addEventListener('click', () => saveInterests());
+  document.getElementById('clear-interests-btn').addEventListener('click', () => clearInterests());
 
   document.getElementById('go-to-options').addEventListener('click', (e) => {
     e.preventDefault();

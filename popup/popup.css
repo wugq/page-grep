@@ -77,6 +77,7 @@ header h1 {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .btn-inline {
@@ -99,6 +100,24 @@ header h1 {
 .btn-inline:hover { background: #e8eaed; }
 .btn-inline:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.btn-primary {
+  background: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
+  flex: 1;
+}
+.btn-primary:hover { background: #1557b0; }
+
+.btn-danger {
+  background: #fff;
+  color: #d32f2f;
+  border-color: #d32f2f;
+  flex: 0 0 auto;
+  width: auto;
+  padding: 7px 12px;
+}
+.btn-danger:hover { background: #ffebee; }
+
 .btn-icon { font-size: 14px; }
 
 .toggle-row {
@@ -117,6 +136,56 @@ header h1 {
   cursor: pointer;
   accent-color: #1a73e8;
   flex-shrink: 0;
+}
+
+#interests-section {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#interests-input {
+  width: 100%;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #333;
+  resize: vertical;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#interests-input:focus {
+  border-color: #1a73e8;
+}
+
+#interests-input::placeholder {
+  color: #bbb;
+}
+
+.interests-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#interests-status {
+  font-size: 11px;
+  color: #34a853;
+  font-weight: 500;
 }
 
 footer {
