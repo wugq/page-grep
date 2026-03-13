@@ -3,7 +3,7 @@
 function devlog(level, ...args) {
   try {
     const fn = level === 'warn' ? console.warn : level === 'error' ? console.error : console.log;
-    fn('[AI Reader]', ...args);
+    fn('[Reader]', ...args);
   } catch (_) {}
   try {
     browser.runtime.sendMessage({
@@ -46,59 +46,29 @@ function injectStyles() {
       right: -34px;
       width: 26px;
       height: 26px;
-      background: #34a853;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
       color: white;
       border: none;
       border-radius: 50%;
       cursor: pointer;
       font-size: 11px;
       font-weight: bold;
-      opacity: 0.7;
-      transition: opacity 0.15s;
+      opacity: 0.8;
+      transition: all 0.2s;
       z-index: 9999;
       padding: 0;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
     }
-    .ai-toggle-btn:hover { opacity: 1; }
+    .ai-toggle-btn:hover { opacity: 1; transform: scale(1.1); }
     .ai-loading-btn {
-      background: #aaa;
+      background: #94a3b8;
       cursor: wait;
-      animation: ai-pulse 0.9s ease-in-out infinite;
+      animation: ai-pulse 1.2s ease-in-out infinite;
     }
-    .ai-error-btn { background: #d32f2f; opacity: 1; }
+    .ai-error-btn { background: #ef4444; opacity: 1; }
     @keyframes ai-pulse {
-      0%, 100% { opacity: 0.4; }
+      0%, 100% { opacity: 0.5; }
       50% { opacity: 1; }
-    }
-    .ai-highlight {
-      background: #fff176 !important;
-      outline: 2px solid #f9a825 !important;
-      border-radius: 3px;
-    }
-    .ai-summary-highlight {
-      background: #e8f0fe !important;
-      outline: 2px solid #1a73e8 !important;
-      border-radius: 3px;
-    }
-    .ai-summary-highlight-active {
-      background: #c5d8fd !important;
-      outline: 2px solid #1a73e8 !important;
-    }
-    .ai-summary-highlight-ping {
-      animation: ai-summary-ping 0.8s ease-out !important;
-    }
-    @keyframes ai-highlight-ping {
-      0%   { box-shadow: 0 0 0 0 rgba(249, 168, 37, 0.9); }
-      60%  { box-shadow: 0 0 0 14px rgba(249, 168, 37, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(249, 168, 37, 0); }
-    }
-    @keyframes ai-summary-ping {
-      0%   { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.7); }
-      60%  { box-shadow: 0 0 0 16px rgba(26, 115, 232, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0); }
-    }
-    .ai-highlight-active {
-      animation: ai-highlight-ping 0.7s ease-out !important;
     }
     #ai-reader-panel {
       position: fixed;
@@ -107,51 +77,52 @@ function injectStyles() {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 10px;
       z-index: 2147483647;
       padding: 0;
     }
     .ai-panel-btn {
-      width: 30px;
-      height: 30px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       border: none;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 16px;
       font-weight: 700;
       color: white;
       padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      transition: transform 0.12s, filter 0.12s;
+      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
-    .ai-panel-btn:hover { transform: scale(1.12); filter: brightness(1.15); }
-    .ai-panel-btn:active { transform: scale(0.92); }
-    .ai-panel-btn:disabled { filter: brightness(0.55); cursor: wait; }
-    #ai-translate-btn { background: #1a73e8; box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
+    .ai-panel-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4); }
+    .ai-panel-btn:active { transform: translateY(0) scale(0.95); }
+    .ai-panel-btn:disabled { filter: grayscale(0.8); cursor: wait; }
+    #ai-translate-btn { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
     #ai-panel-close {
       position: absolute;
-      top: -10px;
-      right: -10px;
-      width: 16px;
-      height: 16px;
+      top: -12px;
+      right: -12px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      border: none;
+      border: 1px solid rgba(255,255,255,0.2);
       cursor: pointer;
-      font-size: 11px;
+      font-size: 14px;
       line-height: 1;
-      color: rgba(255,255,255,0.85);
-      background: rgba(80,80,85,0.95);
+      color: white;
+      background: #1e293b;
       padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.15s;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     #ai-reader-panel:hover #ai-panel-close {
       opacity: 1;
@@ -175,7 +146,7 @@ function getOrCreatePanel() {
     closeBtn.textContent = '×';
     closeBtn.title = '隐藏';
     closeBtn.addEventListener('click', () => {
-      log('[AI Reader] × panel dismissed');
+      log('[Reader] × panel dismissed');
       panel.remove();
       browser.storage.local.set({ showFloatBtn: false });
     });
@@ -194,6 +165,32 @@ function removePanelIfEmpty() {
 
 // --- Translation ---
 
+async function runTranslateOnPage(btn) {
+  log('[Reader] 译 triggered');
+  const { openaiApiKey, preferredModel } = await browser.storage.local.get(['openaiApiKey', 'preferredModel']);
+  if (!openaiApiKey) {
+    warn('[Reader] 译: no API key set');
+    if (btn) { btn.title = '未设置 API Key'; btn.textContent = '!'; setTimeout(() => { btn.textContent = '译'; btn.title = '翻译屏幕内容'; }, 2000); }
+    return;
+  }
+  const model = preferredModel || 'gpt-4o-mini';
+  injectStyles();
+  const visible = findVisibleParagraphs();
+  log(`[Reader] 译: found ${visible.length} visible paragraphs`);
+  if (visible.length === 0) {
+    if (btn) { btn.title = '无可翻译内容'; setTimeout(() => { btn.title = '翻译屏幕内容'; }, 1500); }
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  let done = 0;
+  await Promise.all(visible.map(async el => {
+    await wrapAndTranslate(el, openaiApiKey, model);
+    if (btn) btn.title = `翻译中 ${++done}/${visible.length}`;
+  }));
+  log(`[Reader] 译: done, translated ${visible.length} paragraphs`);
+  if (btn) { btn.disabled = false; btn.textContent = '译'; btn.title = '翻译屏幕内容'; }
+}
+
 function createFloatButton() {
   if (document.getElementById(FLOAT_BTN_ID)) return;
   const panel = getOrCreatePanel();
@@ -203,39 +200,7 @@ function createFloatButton() {
   btn.textContent = '译';
   btn.title = '翻译屏幕内容';
   panel.appendChild(btn);
-
-  btn.addEventListener('click', async () => {
-    log('[AI Reader] 译 clicked');
-    const { openaiApiKey, preferredModel } = await browser.storage.local.get(['openaiApiKey', 'preferredModel']);
-    if (!openaiApiKey) {
-      warn('[AI Reader] 译: no API key set');
-      btn.title = '未设置 API Key';
-      btn.textContent = '!';
-      setTimeout(() => { btn.textContent = '译'; btn.title = '翻译屏幕内容'; }, 2000);
-      return;
-    }
-    const model = preferredModel || 'gpt-4o-mini';
-    injectStyles();
-    const visible = findVisibleParagraphs();
-    log(`[AI Reader] 译: found ${visible.length} visible paragraphs`);
-    if (visible.length === 0) {
-      btn.title = '无可翻译内容';
-      setTimeout(() => { btn.title = '翻译屏幕内容'; }, 1500);
-      return;
-    }
-    btn.disabled = true;
-    btn.textContent = '…';
-    let done = 0;
-    btn.title = `翻译中 0/${visible.length}`;
-    await Promise.all(visible.map(async el => {
-      await wrapAndTranslate(el, openaiApiKey, model);
-      btn.title = `翻译中 ${++done}/${visible.length}`;
-    }));
-    log(`[AI Reader] 译: done, translated ${visible.length} paragraphs`);
-    btn.disabled = false;
-    btn.textContent = '译';
-    btn.title = '翻译屏幕内容';
-  });
+  btn.addEventListener('click', () => runTranslateOnPage(btn));
 }
 
 function findVisibleParagraphs() {
@@ -271,7 +236,7 @@ async function wrapAndTranslate(el, apiKey, model) {
   try {
     const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text, apiKey, model });
     if (!response.success) throw new Error(response.error);
-    log('[AI Reader] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
+    log('[Reader] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
     el.querySelector('.ai-para-translated').textContent = response.result;
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
@@ -280,12 +245,12 @@ async function wrapAndTranslate(el, apiKey, model) {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const showing = el.classList.toggle('show-translation');
-      log(`[AI Reader] toggle paragraph → ${showing ? 'translation' : 'original'}`);
+      log(`[Reader] toggle paragraph → ${showing ? 'translation' : 'original'}`);
       btn.textContent = showing ? '原' : '译';
       btn.title = showing ? '显示原文' : '显示译文';
     });
   } catch (err) {
-    error('[AI Reader] paragraph translation failed:', err.message);
+    error('[Reader] paragraph translation failed:', err.message);
     btn.classList.remove('ai-loading-btn');
     btn.classList.add('ai-error-btn');
     btn.textContent = '!';
@@ -295,49 +260,69 @@ async function wrapAndTranslate(el, apiKey, model) {
 
 // --- Summary ---
 
-function clearSummaryHighlights() {
-  document.querySelectorAll('.ai-summary-highlight, .ai-summary-highlight-active, .ai-summary-highlight-ping').forEach(el => {
-    el.classList.remove('ai-summary-highlight', 'ai-summary-highlight-active', 'ai-summary-highlight-ping');
-  });
+const HOVER_ELEMENTS = new Set();
+
+function hoverElement(el, type) {
+  const color = type === 'summary' ? '168, 85, 247' : '99, 102, 241';
+  el.style.setProperty('outline', `2px solid rgba(${color}, 0.6)`, 'important');
+  el.style.setProperty('background-color', `rgba(${color}, 0.1)`, 'important');
+  el.style.setProperty('border-radius', '4px', 'important');
+  HOVER_ELEMENTS.add(el);
 }
 
-function activateSummaryTarget(index, autoClearMs) {
-  clearSummaryHighlights();
-  const target = SUMMARY_STATE.elements?.[index]?.el;
-  if (target) {
-    target.classList.add('ai-summary-highlight', 'ai-summary-highlight-active');
-    target.classList.remove('ai-summary-highlight-ping');
-    void target.offsetWidth;
-    target.classList.add('ai-summary-highlight-ping');
-    target.addEventListener('animationend', () => target.classList.remove('ai-summary-highlight-ping'), { once: true });
-    if (autoClearMs) {
-      setTimeout(() => {
-        target.classList.remove('ai-summary-highlight', 'ai-summary-highlight-active');
-      }, autoClearMs);
-    }
-  }
+function unhoverElement(el) {
+  el.style.removeProperty('outline');
+  el.style.removeProperty('background-color');
+  el.style.removeProperty('border-radius');
+  HOVER_ELEMENTS.delete(el);
+}
+
+function flashElement(el, type) {
+  const color = type === 'summary' ? '168, 85, 247' : '99, 102, 241';
+  el.animate([
+    { boxShadow: `0 0 0 0 rgba(${color}, 0.9)`, backgroundColor: `rgba(${color}, 0.28)`, outline: `3px solid rgba(${color}, 1)`, borderRadius: '4px' },
+    { boxShadow: `0 0 0 18px rgba(${color}, 0)`, backgroundColor: `rgba(${color}, 0.06)`, outline: `2px solid rgba(${color}, 0.3)`, borderRadius: '4px' },
+    { boxShadow: `0 0 0 0 rgba(${color}, 0)`, backgroundColor: 'transparent', outline: '2px solid transparent', borderRadius: '4px' }
+  ], { duration: 900, easing: 'ease-out' });
+}
+
+function clearAllHighlights() {
+  HOVER_ELEMENTS.forEach(el => unhoverElement(el));
 }
 
 function updateSummarySidebar(points, elements) {
   SUMMARY_STATE.points = points;
   SUMMARY_STATE.elements = elements;
-  clearSummaryHighlights();
+  clearAllHighlights();
   browser.runtime.sendMessage({ action: 'summaryUpdated', points });
   browser.runtime.sendMessage({ action: 'openSidebar' });
 }
 
+function detectPageLanguage() {
+  const lang = (document.documentElement.lang || '').toLowerCase();
+  if (lang.startsWith('zh')) return 'Chinese';
+  if (lang.startsWith('ja')) return 'Japanese';
+  if (lang.startsWith('ko')) return 'Korean';
+  // Fall back to content analysis
+  const sample = document.body?.innerText?.slice(0, 600) || '';
+  const cjkChars = (sample.match(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g) || []).length;
+  if (cjkChars > 15) return 'Chinese';
+  return 'English';
+}
+
 async function runSummaryFromPage() {
-  log('[AI Reader] runSummary triggered');
+  log('[Reader] runSummary triggered');
   const { openaiApiKey, preferredModel } = await browser.storage.local.get(['openaiApiKey', 'preferredModel']);
   if (!openaiApiKey) {
-    warn('[AI Reader] summary: no API key set');
+    warn('[Reader] summary: no API key set');
     browser.runtime.sendMessage({ action: 'summaryError', error: '未设置 API Key' });
     return;
   }
 
   const model = preferredModel || 'gpt-4o-mini';
   const elements = collectPageElements();
-  log(`[AI Reader] summary: collected ${elements.length} page elements`);
+  const pageLanguage = detectPageLanguage();
+  log(`[Reader] summary: collected ${elements.length} page elements, language: ${pageLanguage}`);
   if (elements.length === 0) {
     browser.runtime.sendMessage({ action: 'summaryError', error: '无可分析内容' });
     return;
@@ -347,15 +332,16 @@ async function runSummaryFromPage() {
     const response = await browser.runtime.sendMessage({
       action: 'summarize',
       elements: elements.map(e => e.text),
+      pageLanguage,
       apiKey: openaiApiKey,
       model
     });
 
     if (!response.success) throw new Error(response.error);
-    log(`[AI Reader] summary: received ${response.points.length} points`, response.points);
+    log(`[Reader] summary: received ${response.points.length} points`, response.points);
     updateSummarySidebar(response.points, elements);
   } catch (err) {
-    error('[AI Reader] summary: failed:', err.message);
+    error('[Reader] summary: failed:', err.message);
     browser.runtime.sendMessage({ action: 'summaryError', error: err.message });
   }
 }
@@ -445,20 +431,17 @@ function inferHackerNewsTags(title, site) {
   return Array.from(tags).slice(0, 2);
 }
 
-function clearHighlights() {
-  document.querySelectorAll('.ai-highlight').forEach(el => el.classList.remove('ai-highlight'));
-}
 
 async function runInterestingFromPage() {
-  log('[AI Reader] ★ (highlight) clicked');
+  log('[Reader] ★ (highlight) clicked');
   const { openaiApiKey, preferredModel, userInterests } = await browser.storage.local.get(['openaiApiKey', 'preferredModel', 'userInterests']);
   if (!openaiApiKey) {
-    warn('[AI Reader] ★: no API key set');
+    warn('[Reader] ★: no API key set');
     browser.runtime.sendMessage({ action: 'highlightError', error: '未设置 API Key' });
     return;
   }
   if (!userInterests) {
-    warn('[AI Reader] ★: no user interests set');
+    warn('[Reader] ★: no user interests set');
     browser.runtime.sendMessage({ action: 'highlightError', error: '请先在插件中设置兴趣' });
     return;
   }
@@ -466,7 +449,7 @@ async function runInterestingFromPage() {
   const model = preferredModel || 'gpt-4o-mini';
   const elements = collectPageElements();
   HIGHLIGHT_STATE.elements = elements;
-  log(`[AI Reader] ★: collected ${elements.length} elements, interests: "${userInterests}"`);
+  log(`[Reader] ★: collected ${elements.length} elements, interests: "${userInterests}"`);
   if (elements.length === 0) {
     browser.runtime.sendMessage({ action: 'highlightError', error: '无可分析内容' });
     return;
@@ -482,16 +465,16 @@ async function runInterestingFromPage() {
     });
 
     if (!response.success) throw new Error(response.error);
-    log(`[AI Reader] ★: matched indices:`, response.indices);
+    log(`[Reader] ★: matched indices:`, response.indices);
 
     const items = response.indices
       .filter(i => elements[i])
       .map(i => ({ index: i, text: elements[i].text }));
     HIGHLIGHT_STATE.items = items;
     browser.runtime.sendMessage({ action: 'highlightDone', items });
-    log(`[AI Reader] ★: found ${items.length} interesting elements`);
+    log(`[Reader] ★: found ${items.length} interesting elements`);
   } catch (err) {
-    error('[AI Reader] ★: highlight failed:', err.message);
+    error('[Reader] ★: highlight failed:', err.message);
     browser.runtime.sendMessage({ action: 'highlightError', error: err.message });
   }
 }
@@ -508,23 +491,27 @@ browser.runtime.onMessage.addListener((message) => {
   }
 
   if (message.action === 'summaryHover') {
-    if (typeof message.index === 'number') {
-      activateSummaryTarget(message.index);
+    const target = SUMMARY_STATE.elements?.[message.index]?.el;
+    if (target) {
+      clearAllHighlights();
+      hoverElement(target, 'summary');
+      target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
     return;
   }
 
   if (message.action === 'summaryUnhover') {
-    clearSummaryHighlights();
+    clearAllHighlights();
     return;
   }
 
   if (message.action === 'summaryClick') {
     const target = SUMMARY_STATE.elements?.[message.index]?.el;
     if (target) {
-      log(`[AI Reader] summary item clicked (sidebar): index ${message.index}`);
+      log(`[Reader] summary item clicked (sidebar): index ${message.index}`);
+      clearAllHighlights();
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      activateSummaryTarget(message.index, 1200);
+      flashElement(target, 'summary');
     }
     return;
   }
@@ -541,29 +528,22 @@ browser.runtime.onMessage.addListener((message) => {
 
   if (message.action === 'highlightHover') {
     const target = HIGHLIGHT_STATE.elements?.[message.index]?.el;
-    if (target) target.classList.add('ai-highlight');
+    if (target) hoverElement(target, 'highlight');
     return;
   }
 
   if (message.action === 'highlightUnhover') {
     const target = HIGHLIGHT_STATE.elements?.[message.index]?.el;
-    if (target && !target.classList.contains('ai-highlight-active')) {
-      target.classList.remove('ai-highlight');
-    }
+    if (target) unhoverElement(target);
     return;
   }
 
   if (message.action === 'highlightClick') {
     const target = HIGHLIGHT_STATE.elements?.[message.index]?.el;
     if (target) {
-      log(`[AI Reader] interesting item clicked (sidebar): index ${message.index}`);
+      log(`[Reader] interesting item clicked (sidebar): index ${message.index}`);
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      target.classList.add('ai-highlight');
-      target.classList.remove('ai-highlight-active');
-      void target.offsetWidth;
-      target.classList.add('ai-highlight-active');
-      target.addEventListener('animationend', () => target.classList.remove('ai-highlight-active'), { once: true });
-      setTimeout(() => target.classList.remove('ai-highlight', 'ai-highlight-active'), 1200);
+      flashElement(target, 'highlight');
     }
     return;
   }
@@ -571,9 +551,9 @@ browser.runtime.onMessage.addListener((message) => {
 
 // --- Initialization ---
 
-log('[AI Reader] content script loaded', location.href);
+log('[Reader] content script loaded', location.href);
 browser.storage.local.get(['showFloatBtn']).then(({ showFloatBtn }) => {
-  if (showFloatBtn !== false) { createFloatButton(); }
+  if (showFloatBtn !== false) createFloatButton();
 });
 
 browser.storage.onChanged.addListener((changes) => {
@@ -583,8 +563,7 @@ browser.storage.onChanged.addListener((changes) => {
       createFloatButton();
     } else {
       document.getElementById(FLOAT_BTN_ID)?.remove();
-      clearSummaryHighlights();
-      clearHighlights();
+      clearAllHighlights();
       removePanelIfEmpty();
     }
   }

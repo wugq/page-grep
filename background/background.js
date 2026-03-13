@@ -1,5 +1,10 @@
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
+browser.browserAction.onClicked.addListener(() => {
+  browser.sidebarAction.toggle();
+});
+
+
 async function callOpenAI(systemPrompt, userContent, apiKey, model) {
   const response = await fetch(OPENAI_API_URL, {
     method: 'POST',
@@ -50,16 +55,21 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.action === 'summarize') {
     const elementList = message.elements.map((t, i) => `${i}: ${t}`).join('\n');
+    const lang = message.pageLanguage || 'English';
     callOpenAI(
-      'I’m on page. Please summarize the selection using precise and concise language. Use headers and bulleted lists in the summary, to make it scannable. Maintain the meaning and factual accuracy.\n\nOutput format: Return ONLY valid JSON — an array of 2–5 section objects with keys:\n- "title": a short header, max 8 words\n- "items": an array of 2–5 objects with keys "text" (one bullet line, no prefix) and "index" (integer index of the most relevant source element)\n\nIf the elements include bracketed tags (e.g. [story][score=...][comments=...][tags=ai]), use them to group related items into sections. Do not output raw navigation menus or just repeat titles. No markdown fences, no explanation.',
+      `I'm on a ${lang} page. Please summarize the selection using precise and concise language. Use headers and bulleted lists in the summary, to make it scannable. Maintain the meaning and factual accuracy. Respond entirely in ${lang}.\n\nOutput format: Return ONLY valid JSON - an array of 2-5 section objects with keys:\n- "title": a short header, max 8 words\n- "items": an array of 2-5 objects with keys "text" (one bullet line, no prefix) and "index" (integer index of the most relevant source element)\n\nIf the elements include bracketed tags (e.g. [story][score=...][comments=...][tags=ai]), use them to group related items into sections. Do not output raw navigation menus or just repeat titles. No markdown fences, no explanation.`,
       `Page elements:\n${elementList}`,
       message.apiKey,
       message.model
     )
       .then(result => {
-        const match = result.trim().match(/\[[\s\S]*\]/);
-        const points = match ? JSON.parse(match[0]) : [];
-        sendResponse({ success: true, points });
+        try {
+          const match = result.trim().match(/\[[\s\S]*\]/);
+          const points = match ? JSON.parse(match[0]) : [];
+          sendResponse({ success: true, points });
+        } catch (e) {
+          sendResponse({ success: false, error: 'JSON 解析失败: ' + result });
+        }
       })
       .catch(err => sendResponse({ success: false, error: err.message }));
     return true;
@@ -74,9 +84,14 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       message.model
     )
       .then(result => {
-        const match = result.trim().match(/\[[\d,\s]*\]/);
-        const indices = match ? JSON.parse(match[0]) : [];
-        sendResponse({ success: true, indices });
+        const trimmed = result.trim();
+        try {
+          const match = trimmed.match(/\[[\d,\s]*\]/);
+          const indices = match ? JSON.parse(match[0]) : [];
+          sendResponse({ success: true, indices });
+        } catch (e) {
+          sendResponse({ success: false, error: 'JSON 解析失败: ' + result });
+        }
       })
       .catch(err => sendResponse({ success: false, error: err.message }));
     return true;
