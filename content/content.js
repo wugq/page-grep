@@ -414,27 +414,46 @@ function collectPageElements() {
 
   const scope = findMainContentScope();
 
-  // Try list-style collection first (grouping headlines + snippets)
+  // 1. Detect if it is likely an article page first.
+  // We look for many long paragraphs. If we see a high density of text in paragraphs, 
+  // it is almost certainly an article page, even if there are sidebar lists.
+  const paras = Array.from(scope.querySelectorAll('p')).filter(p => {
+    const text = p.innerText?.trim() || '';
+    return text.length > 100 && !p.closest(CHROME_SELECTOR);
+  });
+
+  const isLikelyArticle = paras.length >= 3;
+  if (isLikelyArticle) {
+    log(`[Reader] article-style collection (detected ${paras.length} long paragraphs)`);
+    return collectArticleElements(scope);
+  }
+
+  // 2. Otherwise try list-style collection (grouping headlines + snippets)
   const listItems = collectGenericListElements(scope);
-  if (listItems && listItems.length >= 3) {
+  if (listItems && listItems.length >= 4) { // Increased threshold from 3 to 4
     log(`[Reader] list-style collection: found ${listItems.length} items`);
     return listItems.slice(0, 140);
   }
 
-  // Otherwise fallback to article-style "flat" collection (paragraphs, headings)
-  log(`[Reader] article-style collection`);
+  // 3. Fallback to article-style collection if list items are few or detection failed
+  log(`[Reader] fallback to article-style collection`);
+  return collectArticleElements(scope);
+}
+
+function collectArticleElements(scope) {
   const excludeChrome = scope === document.body;
   const seen = new Set();
   const results = [];
-  const candidates = scope.querySelectorAll('h1, h2, h3, h4, h5, h6, li, p');
+  const candidates = scope.querySelectorAll('h1, h2, h3, h4, h5, h6, li, p, blockquote');
   for (const el of candidates) {
     if (excludeChrome && el.closest(CHROME_SELECTOR)) continue;
     const text = el.innerText?.trim().replace(/\s+/g, ' ');
-    if (!text || text.length < 4 || text.length > 320) continue;
+    // Filter out very short text and very long boilerplate
+    if (!text || text.length < 15 || text.length > 2000) continue;
     if (seen.has(text)) continue;
     seen.add(text);
     results.push({ el, text });
-    if (results.length >= 140) break;
+    if (results.length >= 160) break;
   }
   return results;
 }
@@ -443,10 +462,10 @@ function collectGenericListElements(scope) {
   // 1. Try common semantic or class-based containers for list items
   const itemSelectors = [
     'article',
-    'li',
     'section',
     '.post', '.entry', '.item', '.card', '.story', '.topic',
-    '[class*="post-"]', '[class*="item-"]', '[class*="card-"]', '[class*="article-"]'
+    '[class*="post-"]', '[class*="item-"]', '[class*="card-"]', '[class*="article-"]',
+    'li' // moved li to end as it is most generic
   ];
   
   let candidates = [];
@@ -458,16 +477,16 @@ function collectGenericListElements(scope) {
       return el.querySelector('h1, h2, h3, h4, h5, h6, a[class*="title"], a[class*="headline"]');
     });
     // If we found a decent number of items, this selector is likely a good fit
-    if (found.length >= 3) {
+    if (found.length >= 4) { // Increased threshold
       candidates = found;
       break;
     }
   }
 
   // 2. Fallback: if no clear containers, look for groups of headings
-  if (candidates.length < 3) {
+  if (candidates.length < 4) {
     const headings = scope.querySelectorAll('h2, h3, h4');
-    if (headings.length >= 4) {
+    if (headings.length >= 5) {
       // Use the parent of the heading as the item container
       const parents = new Set();
       headings.forEach(h => {
@@ -476,12 +495,12 @@ function collectGenericListElements(scope) {
           parents.add(parent);
         }
       });
-      if (parents.size >= 3) candidates = Array.from(parents);
+      if (parents.size >= 4) candidates = Array.from(parents);
     }
   }
 
   // If we still don't have enough, it's probably not a list page
-  if (candidates.length < 3) return null;
+  if (candidates.length < 4) return null;
 
   const results = [];
   const seen = new Set();
@@ -496,7 +515,7 @@ function collectGenericListElements(scope) {
     const p = container.querySelector('p, .excerpt, .dek, .summary, .description, [class*="excerpt"], [class*="summary"], [class*="description"]');
     const snippet = p?.innerText?.trim();
     
-    // Check for duplicate content (common in "trending" vs "main" lists)
+    // Check for duplicate content
     if (seen.has(title)) return;
     seen.add(title);
 
@@ -509,8 +528,7 @@ function collectGenericListElements(scope) {
     results.push({ el: container, text, label: title });
   });
   
-  // Final check: if after filtering we have very few items, abort list mode
-  return results.length >= 3 ? results : null;
+  return results.length >= 4 ? results : null;
 }
 
 function collectHackerNewsElements() {
