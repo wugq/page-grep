@@ -221,18 +221,33 @@ function createFloatButton() {
 }
 
 function findMainContentScope() {
-  const selectors = [
-    'article',
+  // 1. Try to find a clear "main" container first, which usually holds all articles on a list page.
+  const mainSelectors = [
     '[role="main"]',
     'main',
     '#main-content', '#content', '#main',
-    '.post-content', '.article-content', '.entry-content',
-    '.article-body', '.post-body', '.story-body', '.content-body',
   ];
-  for (const sel of selectors) {
+  for (const sel of mainSelectors) {
     const el = document.querySelector(sel);
     if (el) return el;
   }
+
+  // 2. If no clear main container, check for article.
+  // If there's exactly one article, it's likely a single-article page and we should focus on it.
+  const articles = document.querySelectorAll('article');
+  if (articles.length === 1) return articles[0];
+
+  // 3. Fallback to common class-based content areas
+  const fallbackSelectors = [
+    '.post-content', '.article-content', '.entry-content',
+    '.article-body', '.post-body', '.story-body', '.content-body',
+  ];
+  for (const sel of fallbackSelectors) {
+    const el = document.querySelector(sel);
+    if (el) return el;
+  }
+
+  // 4. If nothing else matches, use the whole body
   return document.body;
 }
 
@@ -398,6 +413,16 @@ function collectPageElements() {
   }
 
   const scope = findMainContentScope();
+
+  // Try list-style collection first (grouping headlines + snippets)
+  const listItems = collectGenericListElements(scope);
+  if (listItems && listItems.length >= 3) {
+    log(`[Reader] list-style collection: found ${listItems.length} items`);
+    return listItems.slice(0, 140);
+  }
+
+  // Otherwise fallback to article-style "flat" collection (paragraphs, headings)
+  log(`[Reader] article-style collection`);
   const excludeChrome = scope === document.body;
   const seen = new Set();
   const results = [];
@@ -405,13 +430,87 @@ function collectPageElements() {
   for (const el of candidates) {
     if (excludeChrome && el.closest(CHROME_SELECTOR)) continue;
     const text = el.innerText?.trim().replace(/\s+/g, ' ');
-    if (!text || text.length < 4 || text.length > 260) continue;
+    if (!text || text.length < 4 || text.length > 320) continue;
     if (seen.has(text)) continue;
     seen.add(text);
     results.push({ el, text });
     if (results.length >= 140) break;
   }
   return results;
+}
+
+function collectGenericListElements(scope) {
+  // 1. Try common semantic or class-based containers for list items
+  const itemSelectors = [
+    'article',
+    'li',
+    'section',
+    '.post', '.entry', '.item', '.card', '.story', '.topic',
+    '[class*="post-"]', '[class*="item-"]', '[class*="card-"]', '[class*="article-"]'
+  ];
+  
+  let candidates = [];
+  for (const sel of itemSelectors) {
+    const found = Array.from(scope.querySelectorAll(sel)).filter(el => {
+      // Skip if the container itself is inside site-wide chrome (nav, footer, etc.)
+      if (el.closest(CHROME_SELECTOR)) return false;
+      // Must contain at least one heading or a link that looks like a title
+      return el.querySelector('h1, h2, h3, h4, h5, h6, a[class*="title"], a[class*="headline"]');
+    });
+    // If we found a decent number of items, this selector is likely a good fit
+    if (found.length >= 3) {
+      candidates = found;
+      break;
+    }
+  }
+
+  // 2. Fallback: if no clear containers, look for groups of headings
+  if (candidates.length < 3) {
+    const headings = scope.querySelectorAll('h2, h3, h4');
+    if (headings.length >= 4) {
+      // Use the parent of the heading as the item container
+      const parents = new Set();
+      headings.forEach(h => {
+        const parent = h.parentElement;
+        if (parent && parent !== scope && parent !== document.body && !parent.closest(CHROME_SELECTOR)) {
+          parents.add(parent);
+        }
+      });
+      if (parents.size >= 3) candidates = Array.from(parents);
+    }
+  }
+
+  // If we still don't have enough, it's probably not a list page
+  if (candidates.length < 3) return null;
+
+  const results = [];
+  const seen = new Set();
+  
+  candidates.forEach(container => {
+    // Find the headline: prefer H tags, then class-based titles
+    const head = container.querySelector('h1, h2, h3, h4, h5, h6, .title, .headline, [class*="title"], [class*="headline"]');
+    const title = head?.innerText?.trim();
+    if (!title || title.length < 6) return;
+    
+    // Find a snippet: look for P or description-like classes
+    const p = container.querySelector('p, .excerpt, .dek, .summary, .description, [class*="excerpt"], [class*="summary"], [class*="description"]');
+    const snippet = p?.innerText?.trim();
+    
+    // Check for duplicate content (common in "trending" vs "main" lists)
+    if (seen.has(title)) return;
+    seen.add(title);
+
+    let text = `[item] ${title}`;
+    if (snippet && snippet.length > 10) {
+      const cleanSnippet = snippet.replace(/\s+/g, ' ').slice(0, 240);
+      text += ` — ${cleanSnippet}${snippet.length > 240 ? '...' : ''}`;
+    }
+    
+    results.push({ el: container, text, label: title });
+  });
+  
+  // Final check: if after filtering we have very few items, abort list mode
+  return results.length >= 3 ? results : null;
 }
 
 function collectHackerNewsElements() {
