@@ -124,12 +124,27 @@ function injectStyles() {
       transition: all 0.2s;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
+    .dark #ai-panel-close {
+      background: #475569;
+      border-color: rgba(255,255,255,0.3);
+    }
     #ai-reader-panel:hover #ai-panel-close {
       opacity: 1;
       pointer-events: auto;
     }
   `;
   document.head.appendChild(style);
+}
+
+// --- Theme helper ---
+
+async function applyThemeToPanel() {
+  const { theme } = await browser.storage.local.get('theme');
+  const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const panel = document.getElementById(PANEL_ID);
+  if (panel) {
+    panel.classList.toggle('dark', isDark);
+  }
 }
 
 // --- Shared panel ---
@@ -140,6 +155,8 @@ function getOrCreatePanel() {
     injectStyles();
     panel = document.createElement('div');
     panel.id = PANEL_ID;
+    
+    applyThemeToPanel();
 
     const closeBtn = document.createElement('button');
     closeBtn.id = 'ai-panel-close';
@@ -577,12 +594,20 @@ browser.runtime.onMessage.addListener((message) => {
     return;
   }
 });
-
 // --- Initialization ---
 
 log('[Reader] content script loaded', location.href);
 browser.storage.local.get(['showFloatBtn']).then(({ showFloatBtn }) => {
   if (showFloatBtn !== false) createFloatButton();
+});
+applyThemeToPanel();
+
+// Handle system theme changes if no explicit preference is set
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async (e) => {
+  const { theme } = await browser.storage.local.get('theme');
+  if (!theme) {
+    applyThemeToPanel();
+  }
 });
 
 browser.storage.onChanged.addListener((changes) => {
@@ -595,5 +620,8 @@ browser.storage.onChanged.addListener((changes) => {
       clearAllHighlights();
       removePanelIfEmpty();
     }
+  }
+  if ('theme' in changes) {
+    applyThemeToPanel();
   }
 });

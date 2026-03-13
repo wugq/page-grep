@@ -1,8 +1,12 @@
 async function loadSettings() {
-  const { openaiApiKey, preferredModel } = await browser.storage.local.get(['openaiApiKey', 'preferredModel']);
+  const { openaiApiKey, preferredModel, theme, showFloatBtn } = await browser.storage.local.get(['openaiApiKey', 'preferredModel', 'theme', 'showFloatBtn']);
 
   if (openaiApiKey) document.getElementById('api-key').value = openaiApiKey;
   if (preferredModel) document.getElementById('model-select').value = preferredModel;
+  if (theme !== undefined) document.getElementById('theme-select').value = theme || '';
+  
+  const floatCheckbox = document.getElementById('show-float-btn');
+  if (floatCheckbox) floatCheckbox.checked = showFloatBtn !== false;
 }
 
 function showStatus(message, type) {
@@ -18,6 +22,8 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
 
   const apiKey = document.getElementById('api-key').value.trim();
   const model = document.getElementById('model-select').value;
+  const theme = document.getElementById('theme-select').value;
+  const showFloatBtn = document.getElementById('show-float-btn').checked;
 
   if (!apiKey) {
     showStatus('请输入 API Key', 'error');
@@ -30,7 +36,12 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
   }
 
   try {
-    await browser.storage.local.set({ openaiApiKey: apiKey, preferredModel: model });
+    await browser.storage.local.set({ 
+      openaiApiKey: apiKey, 
+      preferredModel: model,
+      theme: theme || null,
+      showFloatBtn: showFloatBtn
+    });
     showStatus('✓ 设置已保存', 'success');
   } catch (err) {
     showStatus('保存失败：' + err.message, 'error');
@@ -38,11 +49,14 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
 });
 
 document.getElementById('clear-btn').addEventListener('click', async () => {
-  if (!confirm('确定要清除 API Key 吗？')) return;
+  if (!confirm('确定要清除所有设置吗？')) return;
 
-  await browser.storage.local.remove(['openaiApiKey']);
+  await browser.storage.local.remove(['openaiApiKey', 'preferredModel', 'theme', 'showFloatBtn', 'userInterests']);
   document.getElementById('api-key').value = '';
-  showStatus('✓ API Key 已清除', 'success');
+  document.getElementById('model-select').value = 'gpt-4o-mini';
+  document.getElementById('theme-select').value = '';
+  document.getElementById('show-float-btn').checked = true;
+  showStatus('✓ 设置已清除', 'success');
 });
 
 document.getElementById('toggle-visibility').addEventListener('click', () => {
