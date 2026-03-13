@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>阅读助手</title>
+    <link rel="stylesheet" href="sidebar.css" />
+  </head>
+  <body>
+    <header class="summary-header">
+      <div class="actions">
+        <button id="summary-btn" class="ghost-btn" type="button">摘要</button>
+        <button id="highlight-btn" class="ghost-btn" type="button">兴趣</button>
+      </div>
+    </header>
+
+    <section id="summary-section" class="summary-section" hidden>
+<main id="summary-list" class="summary-list" aria-live="polite"></main>
+    </section>
+
+    <section id="highlight-section" class="highlight-section" hidden>
+      <div class="section-title">兴趣</div>
+      <div id="highlight-list" class="summary-list"></div>
+    </section>
+
+<div id="summary-error" class="error" hidden></div>
+
+    <script src="sidebar.js"></script>
+  </body>
+</html>

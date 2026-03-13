@@ -1,21 +1,34 @@
 // Content script - translation & interest highlighting
 
-function extractPageText() {
-  const clone = document.body.cloneNode(true);
-  clone.querySelectorAll('script, style, noscript, iframe, nav, footer, header, aside, .ad, .advertisement, [aria-hidden="true"]')
-    .forEach(el => el.remove());
-  const main = clone.querySelector('article, main, [role="main"], .post-content, .article-body, .entry-content');
-  return (main || clone).innerText
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/[ \t]+/g, ' ')
-    .trim();
+function devlog(level, ...args) {
+  try {
+    const fn = level === 'warn' ? console.warn : level === 'error' ? console.error : console.log;
+    fn('[AI Reader]', ...args);
+  } catch (_) {}
+  try {
+    browser.runtime.sendMessage({
+      action: 'log',
+      level,
+      args: args.map(a => (a !== null && typeof a === 'object') ? JSON.stringify(a) : String(a))
+    }).catch(() => {});
+  } catch (_) {}
 }
+const log   = (...a) => devlog('log',   ...a);
+const warn  = (...a) => devlog('warn',  ...a);
+const error = (...a) => devlog('error', ...a);
+
 
 const STYLE_ID = 'ai-reader-styles';
 const PANEL_ID = 'ai-reader-panel';
 const FLOAT_BTN_ID = 'ai-translate-btn';
-const HIGHLIGHT_BTN_ID = 'ai-highlight-btn';
-const HIGHLIGHT_NAV_ID = 'ai-highlight-nav-row';
+const SUMMARY_STATE = {
+  points: null,
+  elements: null
+};
+const HIGHLIGHT_STATE = {
+  elements: null,
+  items: null
+};
 
 function injectStyles() {
   if (document.getElementById(STYLE_ID)) return;
@@ -62,10 +75,27 @@ function injectStyles() {
       outline: 2px solid #f9a825 !important;
       border-radius: 3px;
     }
+    .ai-summary-highlight {
+      background: #e8f0fe !important;
+      outline: 2px solid #1a73e8 !important;
+      border-radius: 3px;
+    }
+    .ai-summary-highlight-active {
+      background: #c5d8fd !important;
+      outline: 2px solid #1a73e8 !important;
+    }
+    .ai-summary-highlight-ping {
+      animation: ai-summary-ping 0.8s ease-out !important;
+    }
     @keyframes ai-highlight-ping {
       0%   { box-shadow: 0 0 0 0 rgba(249, 168, 37, 0.9); }
       60%  { box-shadow: 0 0 0 14px rgba(249, 168, 37, 0); }
       100% { box-shadow: 0 0 0 0 rgba(249, 168, 37, 0); }
+    }
+    @keyframes ai-summary-ping {
+      0%   { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.7); }
+      60%  { box-shadow: 0 0 0 16px rgba(26, 115, 232, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0); }
     }
     .ai-highlight-active {
       animation: ai-highlight-ping 0.7s ease-out !important;
@@ -79,19 +109,8 @@ function injectStyles() {
       align-items: center;
       gap: 6px;
       z-index: 2147483647;
-      padding: 8px 6px;
-      background: rgba(28, 28, 30, 0.85);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 18px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+      padding: 0;
     }
-    #ai-highlight-nav-row {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    #ai-highlight-nav-row.ai-nav-hidden { display: none; }
     .ai-panel-btn {
       width: 30px;
       height: 30px;
@@ -111,31 +130,11 @@ function injectStyles() {
     .ai-panel-btn:hover { transform: scale(1.12); filter: brightness(1.15); }
     .ai-panel-btn:active { transform: scale(0.92); }
     .ai-panel-btn:disabled { filter: brightness(0.55); cursor: wait; }
-    #ai-translate-btn { background: #1a73e8; }
-    #ai-highlight-btn { background: #f09300; }
-    #ai-highlight-btn.ai-hl-active { background: #e65100; }
-    .ai-nav-btn {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      font-size: 11px;
-      color: rgba(255,255,255,0.85);
-      background: rgba(255,255,255,0.15);
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      transition: background 0.12s, transform 0.1s;
-    }
-    .ai-nav-btn:hover { background: rgba(255,255,255,0.28); transform: scale(1.1); }
-    .ai-nav-btn:active { transform: scale(0.9); }
+    #ai-translate-btn { background: #1a73e8; box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
     #ai-panel-close {
       position: absolute;
-      top: -7px;
-      right: -7px;
+      top: -10px;
+      right: -10px;
       width: 16px;
       height: 16px;
       border-radius: 50%;
@@ -176,6 +175,7 @@ function getOrCreatePanel() {
     closeBtn.textContent = '×';
     closeBtn.title = '隐藏';
     closeBtn.addEventListener('click', () => {
+      log('[AI Reader] × panel dismissed');
       panel.remove();
       browser.storage.local.set({ showFloatBtn: false });
     });
@@ -205,8 +205,10 @@ function createFloatButton() {
   panel.appendChild(btn);
 
   btn.addEventListener('click', async () => {
+    log('[AI Reader] 译 clicked');
     const { openaiApiKey, preferredModel } = await browser.storage.local.get(['openaiApiKey', 'preferredModel']);
     if (!openaiApiKey) {
+      warn('[AI Reader] 译: no API key set');
       btn.title = '未设置 API Key';
       btn.textContent = '!';
       setTimeout(() => { btn.textContent = '译'; btn.title = '翻译屏幕内容'; }, 2000);
@@ -215,6 +217,7 @@ function createFloatButton() {
     const model = preferredModel || 'gpt-4o-mini';
     injectStyles();
     const visible = findVisibleParagraphs();
+    log(`[AI Reader] 译: found ${visible.length} visible paragraphs`);
     if (visible.length === 0) {
       btn.title = '无可翻译内容';
       setTimeout(() => { btn.title = '翻译屏幕内容'; }, 1500);
@@ -228,6 +231,7 @@ function createFloatButton() {
       await wrapAndTranslate(el, openaiApiKey, model);
       btn.title = `翻译中 ${++done}/${visible.length}`;
     }));
+    log(`[AI Reader] 译: done, translated ${visible.length} paragraphs`);
     btn.disabled = false;
     btn.textContent = '译';
     btn.title = '翻译屏幕内容';
@@ -251,11 +255,6 @@ async function wrapAndTranslate(el, apiKey, model) {
   const pos = window.getComputedStyle(el).position;
   if (pos === 'static') el.style.position = 'relative';
 
-  // If a child element was highlighted, hoist the class to el so it survives innerHTML replacement
-  if (!el.classList.contains('ai-highlight') && el.querySelector('.ai-highlight')) {
-    el.classList.add('ai-highlight');
-  }
-
   const originalHTML = el.innerHTML;
   el.innerHTML = `<span class="ai-para-original">${originalHTML}</span><span class="ai-para-translated"></span>`;
   el.classList.add('ai-para-wrap');
@@ -272,6 +271,7 @@ async function wrapAndTranslate(el, apiKey, model) {
   try {
     const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text, apiKey, model });
     if (!response.success) throw new Error(response.error);
+    log('[AI Reader] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
     el.querySelector('.ai-para-translated').textContent = response.result;
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
@@ -280,10 +280,12 @@ async function wrapAndTranslate(el, apiKey, model) {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const showing = el.classList.toggle('show-translation');
+      log(`[AI Reader] toggle paragraph → ${showing ? 'translation' : 'original'}`);
       btn.textContent = showing ? '原' : '译';
       btn.title = showing ? '显示原文' : '显示译文';
     });
   } catch (err) {
+    error('[AI Reader] paragraph translation failed:', err.message);
     btn.classList.remove('ai-loading-btn');
     btn.classList.add('ai-error-btn');
     btn.textContent = '!';
@@ -291,177 +293,287 @@ async function wrapAndTranslate(el, apiKey, model) {
   }
 }
 
+// --- Summary ---
+
+function clearSummaryHighlights() {
+  document.querySelectorAll('.ai-summary-highlight, .ai-summary-highlight-active, .ai-summary-highlight-ping').forEach(el => {
+    el.classList.remove('ai-summary-highlight', 'ai-summary-highlight-active', 'ai-summary-highlight-ping');
+  });
+}
+
+function activateSummaryTarget(index, autoClearMs) {
+  clearSummaryHighlights();
+  const target = SUMMARY_STATE.elements?.[index]?.el;
+  if (target) {
+    target.classList.add('ai-summary-highlight', 'ai-summary-highlight-active');
+    target.classList.remove('ai-summary-highlight-ping');
+    void target.offsetWidth;
+    target.classList.add('ai-summary-highlight-ping');
+    target.addEventListener('animationend', () => target.classList.remove('ai-summary-highlight-ping'), { once: true });
+    if (autoClearMs) {
+      setTimeout(() => {
+        target.classList.remove('ai-summary-highlight', 'ai-summary-highlight-active');
+      }, autoClearMs);
+    }
+  }
+}
+
+function updateSummarySidebar(points, elements) {
+  SUMMARY_STATE.points = points;
+  SUMMARY_STATE.elements = elements;
+  clearSummaryHighlights();
+  browser.runtime.sendMessage({ action: 'summaryUpdated', points });
+  browser.runtime.sendMessage({ action: 'openSidebar' });
+}
+
+async function runSummaryFromPage() {
+  log('[AI Reader] runSummary triggered');
+  const { openaiApiKey, preferredModel } = await browser.storage.local.get(['openaiApiKey', 'preferredModel']);
+  if (!openaiApiKey) {
+    warn('[AI Reader] summary: no API key set');
+    browser.runtime.sendMessage({ action: 'summaryError', error: '未设置 API Key' });
+    return;
+  }
+
+  const model = preferredModel || 'gpt-4o-mini';
+  const elements = collectPageElements();
+  log(`[AI Reader] summary: collected ${elements.length} page elements`);
+  if (elements.length === 0) {
+    browser.runtime.sendMessage({ action: 'summaryError', error: '无可分析内容' });
+    return;
+  }
+
+  try {
+    const response = await browser.runtime.sendMessage({
+      action: 'summarize',
+      elements: elements.map(e => e.text),
+      apiKey: openaiApiKey,
+      model
+    });
+
+    if (!response.success) throw new Error(response.error);
+    log(`[AI Reader] summary: received ${response.points.length} points`, response.points);
+    updateSummarySidebar(response.points, elements);
+  } catch (err) {
+    error('[AI Reader] summary: failed:', err.message);
+    browser.runtime.sendMessage({ action: 'summaryError', error: err.message });
+  }
+}
+
 // --- Interest Highlighting ---
 
 function collectPageElements() {
+  if (location.hostname.endsWith('news.ycombinator.com')) {
+    const hn = collectHackerNewsElements();
+    if (hn.length > 0) return hn;
+  }
+
   const seen = new Set();
   const results = [];
   const candidates = document.querySelectorAll('h1, h2, h3, h4, h5, h6, li, p');
   for (const el of candidates) {
     const text = el.innerText?.trim().replace(/\s+/g, ' ');
-    if (!text || text.length < 4 || text.length > 200) continue;
+    if (!text || text.length < 4 || text.length > 260) continue;
     if (seen.has(text)) continue;
     seen.add(text);
     results.push({ el, text });
-    if (results.length >= 120) break;
+    if (results.length >= 140) break;
   }
   return results;
+}
+
+function collectHackerNewsElements() {
+  const results = [];
+  const seen = new Set();
+  const rows = document.querySelectorAll('tr.athing');
+  rows.forEach(row => {
+    const titleEl = row.querySelector('.titleline a');
+    const subtext = row.nextElementSibling?.querySelector('.subtext');
+    const title = titleEl?.innerText?.trim();
+    if (!title) return;
+
+    const score = subtext?.querySelector('.score')?.innerText?.trim();
+    const user = subtext?.querySelector('.hnuser')?.innerText?.trim();
+    const age = subtext?.querySelector('.age')?.innerText?.trim();
+    const comments = subtext?.querySelector('a:last-of-type')?.innerText?.trim();
+    const site = row.querySelector('.sitebit a')?.innerText?.trim();
+    const tags = inferHackerNewsTags(title, site);
+
+    const metaParts = [score, user ? `by ${user}` : null, age, comments, site ? `source ${site}` : null]
+      .filter(Boolean)
+      .join(' · ');
+
+    const tagText = tags.length ? `tags=${tags.join(',')}` : '';
+    const prefix = ['story', score ? score.replace(/\s+/g, '') : null, comments ? comments.replace(/\s+/g, '') : null, tagText]
+      .filter(Boolean)
+      .map(t => `[${t}]`)
+      .join('');
+    const text = metaParts ? `${prefix} ${title} — ${metaParts}` : `${prefix} ${title}`;
+    if (seen.has(text)) return;
+    seen.add(text);
+    results.push({ el: row, text });
+  });
+
+  const commentEls = document.querySelectorAll('.comment-tree .commtext');
+  commentEls.forEach(el => {
+    const text = el.innerText?.trim().replace(/\s+/g, ' ');
+    if (!text || text.length < 20 || text.length > 260) return;
+    if (seen.has(text)) return;
+    seen.add(text);
+    results.push({ el, text: `[comment] ${text}` });
+  });
+
+  return results.slice(0, 160);
+}
+
+function inferHackerNewsTags(title, site) {
+  const haystack = `${title} ${site || ''}`.toLowerCase();
+  const tags = new Set();
+  const rules = [
+    { tag: 'ai', words: ['ai', 'ml', 'llm', 'neural', 'openai', 'anthropic', 'model'] },
+    { tag: 'dev', words: ['release', 'v', 'version', 'compiler', 'runtime', 'sdk', 'framework', 'library', 'api', 'tool'] },
+    { tag: 'security', words: ['security', 'vuln', 'vulnerability', 'exploit', 'breach', 'malware', 'ransomware'] },
+    { tag: 'systems', words: ['kernel', 'os', 'linux', 'network', 'database', 'infra', 'cloud', 'server'] },
+    { tag: 'hardware', words: ['chip', 'cpu', 'gpu', 'hardware', 'device', 'iphone', 'macbook', 'battery'] },
+    { tag: 'data', words: ['data', 'dataset', 'benchmark', 'analytics', 'statistics'] },
+    { tag: 'business', words: ['startup', 'funding', 'acquisition', 'ipo', 'company', 'business'] },
+    { tag: 'policy', words: ['policy', 'law', 'regulation', 'court', 'legal', 'government'] }
+  ];
+  rules.forEach(rule => {
+    if (rule.words.some(w => haystack.includes(w))) tags.add(rule.tag);
+  });
+  return Array.from(tags).slice(0, 2);
 }
 
 function clearHighlights() {
   document.querySelectorAll('.ai-highlight').forEach(el => el.classList.remove('ai-highlight'));
 }
 
-function createHighlightButton() {
-  if (document.getElementById(HIGHLIGHT_BTN_ID)) return;
-  const panel = getOrCreatePanel();
-
-  // Nav row (prev / next) — inserted before highlight btn
-  const nav = document.createElement('div');
-  nav.id = HIGHLIGHT_NAV_ID;
-  nav.classList.add('ai-nav-hidden');
-
-  const prevBtn = document.createElement('button');
-  prevBtn.className = 'ai-nav-btn';
-  prevBtn.textContent = '▲';
-  prevBtn.title = '上一条';
-
-  const nextBtn = document.createElement('button');
-  nextBtn.className = 'ai-nav-btn';
-  nextBtn.textContent = '▼';
-  nextBtn.title = '下一条';
-
-  nav.appendChild(prevBtn);
-  nav.appendChild(nextBtn);
-
-  const btn = document.createElement('button');
-  btn.id = HIGHLIGHT_BTN_ID;
-  btn.className = 'ai-panel-btn';
-  btn.textContent = '★';
-  btn.title = '高亮兴趣内容';
-
-  // Insert nav + highlight btn before translate btn so order is: nav, ★, 译
-  const translateBtn = document.getElementById(FLOAT_BTN_ID);
-  panel.insertBefore(btn, translateBtn);
-  panel.insertBefore(nav, btn);
-
-  let highlighted = false;
-  let highlightedEls = [];
-  let currentIdx = -1;
-
-  function scrollToHighlight(idx) {
-    if (highlightedEls.length === 0) return;
-    highlightedEls.forEach(el => el.classList.remove('ai-highlight-active'));
-    currentIdx = ((idx % highlightedEls.length) + highlightedEls.length) % highlightedEls.length;
-    const el = highlightedEls[currentIdx];
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    void el.offsetWidth;
-    el.classList.add('ai-highlight-active');
-    el.addEventListener('animationend', () => el.classList.remove('ai-highlight-active'), { once: true });
+async function runInterestingFromPage() {
+  log('[AI Reader] ★ (highlight) clicked');
+  const { openaiApiKey, preferredModel, userInterests } = await browser.storage.local.get(['openaiApiKey', 'preferredModel', 'userInterests']);
+  if (!openaiApiKey) {
+    warn('[AI Reader] ★: no API key set');
+    browser.runtime.sendMessage({ action: 'highlightError', error: '未设置 API Key' });
+    return;
+  }
+  if (!userInterests) {
+    warn('[AI Reader] ★: no user interests set');
+    browser.runtime.sendMessage({ action: 'highlightError', error: '请先在插件中设置兴趣' });
+    return;
   }
 
-  prevBtn.addEventListener('click', () => scrollToHighlight(currentIdx - 1));
-  nextBtn.addEventListener('click', () => scrollToHighlight(currentIdx + 1));
+  const model = preferredModel || 'gpt-4o-mini';
+  const elements = collectPageElements();
+  HIGHLIGHT_STATE.elements = elements;
+  log(`[AI Reader] ★: collected ${elements.length} elements, interests: "${userInterests}"`);
+  if (elements.length === 0) {
+    browser.runtime.sendMessage({ action: 'highlightError', error: '无可分析内容' });
+    return;
+  }
 
-  btn.addEventListener('click', async () => {
-    if (highlighted) {
-      clearHighlights();
-      highlighted = false;
-      highlightedEls = [];
-      currentIdx = -1;
-      nav.classList.add('ai-nav-hidden');
-      btn.classList.remove('ai-hl-active');
-      btn.title = '高亮兴趣内容';
-      return;
-    }
+  try {
+    const response = await browser.runtime.sendMessage({
+      action: 'findInteresting',
+      interests: userInterests,
+      elements: elements.map(e => e.text),
+      apiKey: openaiApiKey,
+      model
+    });
 
-    const { openaiApiKey, preferredModel, userInterests } = await browser.storage.local.get(['openaiApiKey', 'preferredModel', 'userInterests']);
-    if (!openaiApiKey) {
-      btn.title = '未设置 API Key';
-      setTimeout(() => { btn.title = '高亮兴趣内容'; }, 2000);
-      return;
-    }
-    if (!userInterests) {
-      btn.title = '请先在插件中设置兴趣';
-      setTimeout(() => { btn.title = '高亮兴趣内容'; }, 2000);
-      return;
-    }
+    if (!response.success) throw new Error(response.error);
+    log(`[AI Reader] ★: matched indices:`, response.indices);
 
-    const model = preferredModel || 'gpt-4o-mini';
-    const elements = collectPageElements();
-    if (elements.length === 0) {
-      btn.title = '无可分析内容';
-      setTimeout(() => { btn.title = '高亮兴趣内容'; }, 1500);
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = '…';
-    btn.title = '分析中...';
-
-    try {
-      const response = await browser.runtime.sendMessage({
-        action: 'findInteresting',
-        interests: userInterests,
-        elements: elements.map(e => e.text),
-        apiKey: openaiApiKey,
-        model
-      });
-
-      if (!response.success) throw new Error(response.error);
-
-      let count = 0;
-      response.indices.forEach(i => {
-        if (elements[i]) {
-          elements[i].el.classList.add('ai-highlight');
-          count++;
-        }
-      });
-
-      highlighted = count > 0;
-      btn.textContent = '★';
-      if (count > 0) {
-        highlightedEls = Array.from(document.querySelectorAll('.ai-highlight'));
-        nav.classList.remove('ai-nav-hidden');
-        btn.classList.add('ai-hl-active');
-        btn.title = `${count} 条匹配 — 点击清除`;
-        scrollToHighlight(0);
-      } else {
-        btn.title = '无匹配内容';
-        setTimeout(() => { btn.title = '高亮兴趣内容'; }, 2000);
-      }
-    } catch (err) {
-      btn.textContent = '★';
-      btn.title = '分析失败';
-      setTimeout(() => { btn.title = '高亮兴趣内容'; }, 2000);
-    } finally {
-      btn.disabled = false;
-    }
-  });
-}
-
-function removeHighlightButton() {
-  clearHighlights();
-  document.getElementById(HIGHLIGHT_BTN_ID)?.remove();
-  document.getElementById(HIGHLIGHT_NAV_ID)?.remove();
-  removePanelIfEmpty();
+    const items = response.indices
+      .filter(i => elements[i])
+      .map(i => ({ index: i, text: elements[i].text }));
+    HIGHLIGHT_STATE.items = items;
+    browser.runtime.sendMessage({ action: 'highlightDone', items });
+    log(`[AI Reader] ★: found ${items.length} interesting elements`);
+  } catch (err) {
+    error('[AI Reader] ★: highlight failed:', err.message);
+    browser.runtime.sendMessage({ action: 'highlightError', error: err.message });
+  }
 }
 
 // --- Message listeners ---
 
 browser.runtime.onMessage.addListener((message) => {
-  if (message.action === 'getPageText') {
-    return Promise.resolve({ text: extractPageText() });
+  if (message.action === 'getSummaryData') {
+    return Promise.resolve({ points: SUMMARY_STATE.points || [] });
   }
 
+  if (message.action === 'getHighlightData') {
+    return Promise.resolve({ items: HIGHLIGHT_STATE.items || [] });
+  }
 
+  if (message.action === 'summaryHover') {
+    if (typeof message.index === 'number') {
+      activateSummaryTarget(message.index);
+    }
+    return;
+  }
+
+  if (message.action === 'summaryUnhover') {
+    clearSummaryHighlights();
+    return;
+  }
+
+  if (message.action === 'summaryClick') {
+    const target = SUMMARY_STATE.elements?.[message.index]?.el;
+    if (target) {
+      log(`[AI Reader] summary item clicked (sidebar): index ${message.index}`);
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      activateSummaryTarget(message.index, 1200);
+    }
+    return;
+  }
+
+  if (message.action === 'runSummary') {
+    runSummaryFromPage();
+    return;
+  }
+
+  if (message.action === 'runHighlight') {
+    runInterestingFromPage();
+    return;
+  }
+
+  if (message.action === 'highlightHover') {
+    const target = HIGHLIGHT_STATE.elements?.[message.index]?.el;
+    if (target) target.classList.add('ai-highlight');
+    return;
+  }
+
+  if (message.action === 'highlightUnhover') {
+    const target = HIGHLIGHT_STATE.elements?.[message.index]?.el;
+    if (target && !target.classList.contains('ai-highlight-active')) {
+      target.classList.remove('ai-highlight');
+    }
+    return;
+  }
+
+  if (message.action === 'highlightClick') {
+    const target = HIGHLIGHT_STATE.elements?.[message.index]?.el;
+    if (target) {
+      log(`[AI Reader] interesting item clicked (sidebar): index ${message.index}`);
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.classList.add('ai-highlight');
+      target.classList.remove('ai-highlight-active');
+      void target.offsetWidth;
+      target.classList.add('ai-highlight-active');
+      target.addEventListener('animationend', () => target.classList.remove('ai-highlight-active'), { once: true });
+      setTimeout(() => target.classList.remove('ai-highlight', 'ai-highlight-active'), 1200);
+    }
+    return;
+  }
 });
 
 // --- Initialization ---
 
-browser.storage.local.get(['showFloatBtn', 'userInterests']).then(({ showFloatBtn, userInterests }) => {
-  if (showFloatBtn !== false) createFloatButton();
-  if (showFloatBtn !== false && userInterests) createHighlightButton();
+log('[AI Reader] content script loaded', location.href);
+browser.storage.local.get(['showFloatBtn']).then(({ showFloatBtn }) => {
+  if (showFloatBtn !== false) { createFloatButton(); }
 });
 
 browser.storage.onChanged.addListener((changes) => {
@@ -469,23 +581,11 @@ browser.storage.onChanged.addListener((changes) => {
     const show = changes.showFloatBtn.newValue !== false;
     if (show) {
       createFloatButton();
-      browser.storage.local.get('userInterests').then(({ userInterests }) => {
-        if (userInterests) createHighlightButton();
-      });
     } else {
       document.getElementById(FLOAT_BTN_ID)?.remove();
-      removeHighlightButton();
+      clearSummaryHighlights();
+      clearHighlights();
       removePanelIfEmpty();
     }
-  }
-
-  if ('userInterests' in changes) {
-    browser.storage.local.get('showFloatBtn').then(({ showFloatBtn }) => {
-      if (changes.userInterests.newValue && showFloatBtn !== false) {
-        createHighlightButton();
-      } else {
-        removeHighlightButton();
-      }
-    });
   }
 });

@@ -25,6 +25,17 @@ async function callOpenAI(systemPrompt, userContent, apiKey, model) {
 }
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'log') {
+    const fn = message.level === 'warn' ? console.warn : message.level === 'error' ? console.error : console.log;
+    fn(...message.args);
+    return;
+  }
+
+  if (message.action === 'openSidebar') {
+    browser.sidebarAction.open().catch(() => {});
+    return;
+  }
+
   if (message.action === 'translateParagraph') {
     callOpenAI(
       'You are a professional translator. Translate the following text to Simplified Chinese. Output only the translation, no explanation.',
@@ -33,6 +44,23 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       message.model
     )
       .then(result => sendResponse({ success: true, result }))
+      .catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  }
+
+  if (message.action === 'summarize') {
+    const elementList = message.elements.map((t, i) => `${i}: ${t}`).join('\n');
+    callOpenAI(
+      'I’m on page. Please summarize the selection using precise and concise language. Use headers and bulleted lists in the summary, to make it scannable. Maintain the meaning and factual accuracy.\n\nOutput format: Return ONLY valid JSON — an array of 2–5 section objects with keys:\n- "title": a short header, max 8 words\n- "items": an array of 2–5 objects with keys "text" (one bullet line, no prefix) and "index" (integer index of the most relevant source element)\n\nIf the elements include bracketed tags (e.g. [story][score=...][comments=...][tags=ai]), use them to group related items into sections. Do not output raw navigation menus or just repeat titles. No markdown fences, no explanation.',
+      `Page elements:\n${elementList}`,
+      message.apiKey,
+      message.model
+    )
+      .then(result => {
+        const match = result.trim().match(/\[[\s\S]*\]/);
+        const points = match ? JSON.parse(match[0]) : [];
+        sendResponse({ success: true, points });
+      })
       .catch(err => sendResponse({ success: false, error: err.message }));
     return true;
   }

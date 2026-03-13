@@ -10,6 +10,7 @@
   "permissions": [
     "storage",
     "activeTab",
+    "tabs",
     "<all_urls>"
   ],
   "background": {
@@ -23,6 +24,13 @@
       "96": "icons/icon-96.svg"
     },
     "default_title": "AI Reader Helper"
+  },
+  "sidebar_action": {
+    "default_title": "阅读助手",
+    "default_panel": "sidebar/sidebar.html",
+    "default_icon": {
+      "48": "icons/icon-48.svg"
+    }
   },
   "options_ui": {
     "page": "options/options.html",
