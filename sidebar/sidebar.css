@@ -259,6 +259,22 @@ textarea:focus {
 
 .text-link:hover { background: var(--accent-soft); }
 
+.toggle-config-arrow {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: color 0.2s, transform 0.2s;
+  transform: rotate(0deg);
+}
+
+.toggle-config-arrow:hover { color: var(--accent); }
+.toggle-config-arrow.is-open { transform: rotate(90deg); }
+
 /* Lists & Items */
 .summary-list {
   display: flex;

@@ -1,5 +1,25 @@
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
+const TRANSLATE_LANG_NAMES = {
+  'zh-CN': 'Simplified Chinese',
+  'zh-TW': 'Traditional Chinese',
+  'en':    'English',
+  'es':    'Spanish',
+  'fr':    'French',
+  'de':    'German',
+  'ja':    'Japanese',
+  'ko':    'Korean',
+  'pt':    'Portuguese',
+  'ru':    'Russian',
+  'ar':    'Arabic',
+  'hi':    'Hindi',
+  'it':    'Italian',
+  'nl':    'Dutch',
+  'tr':    'Turkish',
+  'vi':    'Vietnamese',
+  'th':    'Thai',
+};
+
 browser.browserAction.onClicked.addListener(() => {
   browser.sidebarAction.toggle();
 });
@@ -35,7 +55,7 @@ async function getApiSettings() {
   const settings = await browser.storage.local.get([STORAGE_KEYS.API_KEY, STORAGE_KEYS.MODEL]);
   const apiKey = settings[STORAGE_KEYS.API_KEY];
   const model = settings[STORAGE_KEYS.MODEL] || 'gpt-4o-mini';
-  if (!apiKey) throw new Error('未设置 API Key');
+  if (!apiKey) throw new Error(browser.i18n.getMessage('enterApiKey'));
   return { apiKey, model };
 }
 
@@ -52,13 +72,19 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'translateParagraph') {
-    getApiSettings()
-      .then(({ apiKey, model }) => callOpenAI(
-        'You are a professional translator. Translate the following text to Simplified Chinese. Output only the translation, no explanation.',
-        message.text,
-        apiKey,
-        model
-      ))
+    Promise.all([
+      getApiSettings(),
+      browser.storage.local.get(STORAGE_KEYS.TRANSLATE_LANG)
+    ])
+      .then(([{ apiKey, model }, { translateLang }]) => {
+        const targetLang = TRANSLATE_LANG_NAMES[translateLang] || 'Simplified Chinese';
+        return callOpenAI(
+          `You are a professional translator. Translate the following text to ${targetLang}. Output only the translation, no explanation.`,
+          message.text,
+          apiKey,
+          model
+        );
+      })
       .then(result => sendResponse({ success: true, result }))
       .catch(err => sendResponse({ success: false, error: err.message }));
     return true;

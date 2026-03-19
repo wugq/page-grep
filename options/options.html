@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PageGrep - 设置</title>
+  <title data-i18n="settingsTitle">PageGrep - 设置</title>
   <script src="../shared/storage-keys.js"></script>
   <script src="../shared/theme.js"></script>
   <link rel="stylesheet" href="options.css">
 </head>
-<body>
+<body style="visibility:hidden">
   <div id="app">
     <header>
       <img src="../icons/icon-48.svg" alt="icon" width="32" height="32">
       <div>
         <h1>PageGrep</h1>
-        <p>设置您的 OpenAI API 密钥</p>
+        <p data-i18n="settingsSubtitle">Manage your API key and preferences</p>
       </div>
     </header>
 
     <main>
       <form id="settings-form">
         <div class="form-group">
-          <label for="api-key">OpenAI API Key</label>
+          <label for="api-key" data-i18n="apiKeyLabel">OpenAI API Key</label>
           <div class="input-row">
             <input
               type="password"
@@ -30,57 +30,103 @@
               autocomplete="off"
               spellcheck="false"
             >
-            <button type="button" id="toggle-visibility" title="显示/隐藏">👁</button>
+            <button type="button" id="toggle-visibility" data-i18n-title="showHide" title="显示/隐藏">👁</button>
           </div>
-          <small>您的 API Key 仅存储在本地浏览器中，不会发送到任何第三方服务器。</small>
+          <small data-i18n="apiKeyPrivacy">您的 API Key 仅存储在本地浏览器中，不会发送到任何第三方服务器。</small>
         </div>
 
         <div class="form-group">
-          <label for="model-select">AI 模型</label>
+          <label for="model-select" data-i18n="modelLabel">AI 模型</label>
           <select id="model-select">
-            <option value="gpt-4o-mini">gpt-4o-mini（推荐，低成本）</option>
-            <option value="gpt-4o">gpt-4o（更高质量）</option>
+            <option value="gpt-4o-mini" data-i18n="modelMini">gpt-4o-mini（推荐，低成本）</option>
+            <option value="gpt-4o" data-i18n="modelFull">gpt-4o（更高质量）</option>
           </select>
-          <small>gpt-4o-mini 适合日常使用，成本约为 $0.15/百万输入tokens。</small>
+          <small data-i18n="modelInfo">gpt-4o-mini 适合日常使用，成本约为 $0.15/百万输入tokens。</small>
         </div>
 
         <div class="form-group">
-          <label for="theme-select">外观主题</label>
-          <select id="theme-select">
-            <option value="">跟随系统</option>
-            <option value="light">浅色</option>
-            <option value="dark">深色</option>
+          <label for="language-select" data-i18n="languageLabel">界面语言</label>
+          <select id="language-select">
+            <option value="" data-i18n="languageAuto">跟随浏览器</option>
+            <option value="zh_CN">中文 (简体)</option>
+            <option value="zh_TW">中文 (繁體)</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="pt_BR">Português (Brasil)</option>
+            <option value="ru">Русский</option>
+            <option value="it">Italiano</option>
+            <option value="tr">Türkçe</option>
+            <option value="vi">Tiếng Việt</option>
           </select>
-          <small>选择您偏好的界面主题。</small>
+          <small data-i18n="languageInfo">选择插件界面的显示语言，保存后自动生效。</small>
+        </div>
+
+        <div class="form-group">
+          <label for="translate-lang-select" data-i18n="translateLangLabel">翻译目标语言</label>
+          <select id="translate-lang-select">
+            <option value="zh-CN">中文（简体）</option>
+            <option value="zh-TW">中文（繁體）</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="pt">Português</option>
+            <option value="ru">Русский</option>
+            <option value="ar">العربية</option>
+            <option value="hi">हिन्दी</option>
+            <option value="it">Italiano</option>
+            <option value="nl">Nederlands</option>
+            <option value="tr">Türkçe</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="th">ภาษาไทย</option>
+          </select>
+          <small data-i18n="translateLangInfo">使用悬浮按钮翻译网页时，段落将被翻译为此语言。</small>
+        </div>
+
+        <div class="form-group">
+          <label for="theme-select" data-i18n="themeLabel">外观主题</label>
+          <select id="theme-select">
+            <option value="" data-i18n="themeSystem">跟随系统</option>
+            <option value="light" data-i18n="themeLight">浅色</option>
+            <option value="dark" data-i18n="themeDark">深色</option>
+          </select>
+          <small data-i18n="themeInfo">选择您偏好的界面主题。</small>
         </div>
 
         <div class="form-group">
           <label class="toggle-row">
             <input type="checkbox" id="show-float-btn">
-            <span>显示悬浮按钮</span>
+            <span data-i18n="showFloatBtn">显示悬浮按钮</span>
           </label>
-          <small>在网页右下角显示翻译和高亮快捷按钮。</small>
+          <small data-i18n="floatBtnInfo">在网页右下角显示翻译和高亮快捷按钮。</small>
         </div>
 
         <div class="form-actions">
-          <button type="submit" id="save-btn" class="btn-primary">保存设置</button>
-          <button type="button" id="clear-btn" class="btn-danger">清除 API Key</button>
+          <button type="submit" id="save-btn" class="btn-primary" data-i18n="saveSettings">保存设置</button>
+          <button type="button" id="clear-btn" class="btn-danger" data-i18n="clearApiKey">清除 API Key</button>
         </div>
       </form>
 
       <div id="save-status" class="hidden"></div>
 
       <div class="info-box">
-        <h3>使用说明</h3>
+        <h3 data-i18n="instructions">使用说明</h3>
         <ol>
-          <li>在 <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI 平台</a> 获取 API Key</li>
-          <li>将 API Key 粘贴到上方输入框并保存</li>
-          <li>访问任意网页，点击扩展图标开启悬浮按钮</li>
-          <li>使用页面右下角的悬浮按钮翻译或高亮感兴趣的内容</li>
+          <li data-i18n-html="instructionStep1">在 <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI 平台</a> 获取 API Key</li>
+          <li data-i18n="instructionStep2">将 API Key 粘贴到上方输入框并保存</li>
+          <li data-i18n="instructionStep3">访问任意网页，点击扩展图标开启悬浮按钮</li>
+          <li data-i18n="instructionStep4">使用页面右下角的悬浮按钮翻译或高亮感兴趣的内容</li>
         </ol>
       </div>
     </main>
   </div>
+  <script src="../shared/i18n.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

@@ -4,4 +4,6 @@ const STORAGE_KEYS = Object.freeze({
   THEME: 'theme',
   SHOW_FLOAT_BTN: 'showFloatBtn',
   USER_INTERESTS: 'userInterests',
+  UI_LANG: 'uiLang',
+  TRANSLATE_LANG: 'translateLang',
 });

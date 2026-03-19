@@ -8,12 +8,12 @@
     <script src="../shared/theme.js"></script>
     <link rel="stylesheet" href="sidebar.css" />
   </head>
-  <body>
+  <body style="visibility:hidden">
     <header class="app-header">
       <nav class="tab-nav">
         <div class="tabs-left">
-          <button id="tab-summary" class="tab-btn active" data-tab="summary">摘要</button>
-          <button id="tab-interests" class="tab-btn" data-tab="interests">兴趣</button>
+          <button id="tab-summary" class="tab-btn active" data-tab="summary" data-i18n="summaryTab">摘要</button>
+          <button id="tab-interests" class="tab-btn" data-tab="interests" data-i18n="interestsTab">兴趣</button>
         </div>
         <button id="options-btn" class="icon-btn" title="高级设置">⚙</button>
       </nav>
@@ -22,54 +22,55 @@
     <main id="main-content">
       <section id="summary-tab" class="tab-content active">
         <div class="tab-actions">
-          <button id="summary-btn" class="primary-btn">生成摘要</button>
+          <button id="summary-btn" class="primary-btn" data-i18n="generateSummary">生成摘要</button>
         </div>
         <div id="summary-list" class="summary-list"></div>
-        <div id="summary-empty" class="empty">点击上方按钮生成页面摘要</div>
+        <div id="summary-empty" class="empty" data-i18n="summaryPlaceholder">点击上方按钮生成页面摘要</div>
       </section>
 
       <section id="interests-tab" class="tab-content">
         <div class="config-section">
           <div class="config-header">
-            <span class="config-title">阅读兴趣</span>
-            <button id="toggle-config-btn" class="text-link">展开设置</button>
+            <span class="config-title" data-i18n="readingInterests">阅读兴趣</span>
+            <button id="toggle-config-btn" class="toggle-config-arrow">›</button>
           </div>
           <div id="interests-config" class="config-body hidden">
-            <textarea id="interests-input" rows="3" placeholder="描述你感兴趣的内容，如：AI科技、宏观经济..."></textarea>
+            <textarea id="interests-input" rows="3" data-i18n-placeholder="interestsPlaceholder" placeholder="描述你感兴趣的内容，如：AI科技、宏观经济..."></textarea>
             <div class="config-footer">
-              <button id="save-interests-btn" class="small-btn primary-btn">保存</button>
-              <button id="clear-interests-btn" class="small-btn ghost-btn hidden">清除</button>
-              <span id="interests-status" class="status-msg hidden">已保存 ✓</span>
+              <button id="save-interests-btn" class="small-btn primary-btn" data-i18n="save">保存</button>
+              <button id="clear-interests-btn" class="small-btn ghost-btn hidden" data-i18n="clear">清除</button>
+              <span id="interests-status" class="status-msg hidden" data-i18n="saved">已保存 ✓</span>
             </div>
           </div>
         </div>
         <div class="tab-actions">
-          <button id="highlight-btn" class="primary-btn">查找匹配</button>
+          <button id="highlight-btn" class="primary-btn" data-i18n="findMatches">查找匹配</button>
         </div>
         <div id="highlight-list" class="summary-list"></div>
-        <div id="highlight-empty" class="empty">点击上方按钮查找感兴趣的内容</div>
+        <div id="highlight-empty" class="empty" data-i18n="matchesPlaceholder">点击上方按钮查找感兴趣的内容</div>
       </section>
 
       <div id="global-error" class="error hidden"></div>
     </main>
 
     <footer class="app-footer">
-      <div class="toggle-row" title="切换深色/浅色模式">
+      <div class="toggle-row" data-i18n-title="toggleTheme" title="切换深色/浅色模式">
         <label class="switch">
           <input type="checkbox" id="theme-toggle">
           <span class="slider"></span>
         </label>
-        <span class="toggle-label">深色模式</span>
+        <span class="toggle-label" data-i18n="darkMode">深色模式</span>
       </div>
-      <div class="toggle-row" title="在页面右下角显示浮动操作按钮">
+      <div class="toggle-row" data-i18n-title="floatBtnTooltip" title="在页面右下角显示浮动操作按钮">
         <label class="switch">
           <input type="checkbox" id="show-float-btn">
           <span class="slider"></span>
         </label>
-        <span class="toggle-label">浮动按钮</span>
+        <span class="toggle-label" data-i18n="floatBtn">浮动按钮</span>
       </div>
     </footer>
 
+    <script src="../shared/i18n.js"></script>
     <script src="sidebar.js"></script>
   </body>
 </html>

@@ -20,6 +20,7 @@ const error = (...a) => devlog('error', ...a);
 
 const STYLE_ID = 'ai-reader-styles';
 const PANEL_ID = 'ai-reader-panel';
+const TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
 const FLOAT_BTN_ID = 'ai-translate-btn';
 const SUMMARY_STATE = {
   points: null,
@@ -161,7 +162,7 @@ function getOrCreatePanel() {
     const closeBtn = document.createElement('button');
     closeBtn.id = 'ai-panel-close';
     closeBtn.textContent = '×';
-    closeBtn.title = '隐藏';
+    closeBtn.title = browser.i18n.getMessage('hide');
     closeBtn.addEventListener('click', () => {
       log('[PageGrep] × panel dismissed');
       panel.remove();
@@ -188,17 +189,17 @@ async function runTranslateOnPage(btn) {
   const visible = findVisibleParagraphs();
   log(`[PageGrep] 译: found ${visible.length} visible paragraphs`);
   if (visible.length === 0) {
-    if (btn) { btn.title = '无可翻译内容'; setTimeout(() => { btn.title = '翻译屏幕内容'; }, 1500); }
+    if (btn) { btn.title = browser.i18n.getMessage('noTranslatableContent'); setTimeout(() => { btn.title = browser.i18n.getMessage('translateScreenContent'); }, 1500); }
     return;
   }
   if (btn) { btn.disabled = true; btn.textContent = '…'; }
   let done = 0;
   await Promise.all(visible.map(async el => {
     await wrapAndTranslate(el);
-    if (btn) btn.title = `翻译中 ${++done}/${visible.length}`;
+    if (btn) btn.title = browser.i18n.getMessage('translatingProgress', [String(++done), String(visible.length)]);
   }));
   log(`[PageGrep] 译: done, translated ${visible.length} paragraphs`);
-  if (btn) { btn.disabled = false; btn.textContent = '译'; btn.title = '翻译屏幕内容'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = TRANSLATE_ICON; btn.title = browser.i18n.getMessage('translateScreenContent'); }
 }
 
 function createFloatButton() {
@@ -207,8 +208,8 @@ function createFloatButton() {
   const btn = document.createElement('button');
   btn.id = FLOAT_BTN_ID;
   btn.className = 'ai-panel-btn';
-  btn.textContent = '译';
-  btn.title = '翻译屏幕内容';
+  btn.innerHTML = TRANSLATE_ICON;
+  btn.title = browser.i18n.getMessage('translateScreenContent');
   panel.appendChild(btn);
   btn.addEventListener('click', () => runTranslateOnPage(btn));
 }
@@ -275,7 +276,7 @@ async function wrapAndTranslate(el) {
   const btn = document.createElement('button');
   btn.className = 'ai-toggle-btn ai-loading-btn';
   btn.textContent = '…';
-  btn.title = '翻译中...';
+  btn.title = browser.i18n.getMessage('translating');
   el.appendChild(btn);
 
   const text = el.querySelector('.ai-para-original')?.innerText?.trim();
@@ -294,14 +295,14 @@ async function wrapAndTranslate(el) {
     el.querySelector('.ai-para-translated').textContent = response.result;
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
-    btn.textContent = '原';
-    btn.title = '显示原文';
+    btn.textContent = browser.i18n.getMessage('original');
+    btn.title = browser.i18n.getMessage('showOriginal');
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const showing = el.classList.toggle('show-translation');
       log(`[PageGrep] toggle paragraph → ${showing ? 'translation' : 'original'}`);
-      btn.textContent = showing ? '原' : '译';
-      btn.title = showing ? '显示原文' : '显示译文';
+      btn.textContent = browser.i18n.getMessage(showing ? 'original' : 'translated');
+      btn.title = browser.i18n.getMessage(showing ? 'showOriginal' : 'showTranslated');
     });
   } catch (err) {
     error('[PageGrep] paragraph translation failed:', err.message);
@@ -370,7 +371,7 @@ async function runSummaryFromPage() {
   const pageLanguage = detectPageLanguage();
   log(`[PageGrep] summary: collected ${elements.length} page elements, language: ${pageLanguage}`);
   if (elements.length === 0) {
-    browser.runtime.sendMessage({ action: 'summaryError', error: '无可分析内容' });
+    browser.runtime.sendMessage({ action: 'summaryError', error: browser.i18n.getMessage('noAnalyzableContent') });
     return;
   }
 
@@ -575,7 +576,7 @@ async function runInterestingFromPage() {
   const { userInterests } = await browser.storage.local.get([STORAGE_KEYS.USER_INTERESTS]);
   if (!userInterests) {
     warn('[PageGrep] ★: no user interests set');
-    browser.runtime.sendMessage({ action: 'highlightError', error: '请先在插件中设置兴趣' });
+    browser.runtime.sendMessage({ action: 'highlightError', error: browser.i18n.getMessage('setInterestsFirst') });
     return;
   }
 
@@ -583,7 +584,7 @@ async function runInterestingFromPage() {
   HIGHLIGHT_STATE.elements = elements;
   log(`[PageGrep] ★: collected ${elements.length} elements, interests: "${userInterests}"`);
   if (elements.length === 0) {
-    browser.runtime.sendMessage({ action: 'highlightError', error: '无可分析内容' });
+    browser.runtime.sendMessage({ action: 'highlightError', error: browser.i18n.getMessage('noAnalyzableContent') });
     return;
   }
 
@@ -679,10 +680,37 @@ browser.runtime.onMessage.addListener((message) => {
   }
 });
 
+// --- i18n initialization ---
+
+async function initI18n() {
+  try {
+    const { uiLang } = await browser.storage.local.get(STORAGE_KEYS.UI_LANG);
+    if (!uiLang) return;
+    const url = browser.runtime.getURL(`_locales/${uiLang}/messages.json`);
+    const resp = await fetch(url);
+    if (!resp.ok) return;
+    const messages = await resp.json();
+    const orig = browser.i18n.getMessage.bind(browser.i18n);
+    browser.i18n.getMessage = function(key, substitutions) {
+      const entry = messages[key];
+      if (!entry) return orig(key, substitutions);
+      let msg = entry.message;
+      if (substitutions && entry.placeholders) {
+        const subs = Array.isArray(substitutions) ? substitutions : [substitutions];
+        Object.keys(entry.placeholders).forEach((name, idx) => {
+          msg = msg.replace(new RegExp('\\$' + name + '\\$', 'gi'), subs[idx] ?? '');
+        });
+      }
+      return msg;
+    };
+  } catch (_) {}
+}
+
 // --- Initialization ---
 
 log('[PageGrep] content script loaded', location.href);
-browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN]).then(({ showFloatBtn }) => {
+browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN]).then(async ({ showFloatBtn }) => {
+  await initI18n();
   if (showFloatBtn !== false) createFloatButton();
 });
 

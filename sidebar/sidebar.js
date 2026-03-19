@@ -25,7 +25,7 @@ const interestsConfig = document.getElementById('interests-config');
 toggleConfigBtn.addEventListener('click', () => {
   const isHidden = interestsConfig.classList.contains('hidden');
   interestsConfig.classList.toggle('hidden', !isHidden);
-  toggleConfigBtn.textContent = isHidden ? '收起设置' : '展开设置';
+  toggleConfigBtn.classList.toggle('is-open', isHidden);
 });
 
 // --- Initialization ---
@@ -91,7 +91,7 @@ async function init() {
     const sent = await sendToActiveTab({ action: 'runSummary' });
     if (!sent) {
       setButtonLoading('summary-btn', false);
-      showError('无法连接到页面，请刷新后重试。');
+      showError(browser.i18n.getMessage('connectionError'));
     }
   });
 
@@ -100,7 +100,7 @@ async function init() {
     const sent = await sendToActiveTab({ action: 'runHighlight' });
     if (!sent) {
       setButtonLoading('highlight-btn', false);
-      showError('无法连接到页面，请刷新后重试。');
+      showError(browser.i18n.getMessage('connectionError'));
     }
   });
 
@@ -162,7 +162,7 @@ function setButtonLoading(id, isLoading) {
 
 function showError(message) {
   const errorEl = document.getElementById('global-error');
-  errorEl.textContent = message || '操作失败，请重试。';
+  errorEl.textContent = message || browser.i18n.getMessage('operationFailed');
   errorEl.classList.remove('hidden');
 }
 
@@ -254,7 +254,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
   }
 
   if (message.action === 'summaryError') {
-    showError(message.error || '摘要生成失败。');
+    showError(message.error || browser.i18n.getMessage('summaryFailed'));
     setButtonLoading('summary-btn', false);
   }
 
@@ -262,7 +262,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
     const items = Array.isArray(message.items) ? message.items : [];
     renderHighlights(items);
     if (items.length === 0) {
-      showError('未找到匹配内容。');
+      showError(browser.i18n.getMessage('noMatchFound'));
     } else {
       hideError();
     }
@@ -270,7 +270,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
   }
 
   if (message.action === 'highlightError') {
-    showError(message.error || '兴趣匹配失败。');
+    showError(message.error || browser.i18n.getMessage('matchFailed'));
     setButtonLoading('highlight-btn', false);
   }
 });
@@ -290,6 +290,10 @@ browser.storage.onChanged.addListener((changes) => {
     const floatCheckbox = document.getElementById('show-float-btn');
     if (floatCheckbox) floatCheckbox.checked = changes[STORAGE_KEYS.SHOW_FLOAT_BTN].newValue !== false;
   }
+  if (STORAGE_KEYS.UI_LANG in changes) {
+    location.reload();
+    return;
+  }
   if (STORAGE_KEYS.THEME in changes) {
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
@@ -301,4 +305,4 @@ browser.storage.onChanged.addListener((changes) => {
 });
 
 // Start
-init().catch(console.error);
+(window.i18nReady || Promise.resolve()).then(() => init().catch(console.error));
