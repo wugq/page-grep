@@ -44,8 +44,12 @@ function applyI18n() {
     const msg = browser.i18n.getMessage(el.getAttribute('data-i18n-title'));
     if (msg) el.title = msg;
   });
+  const parser = new DOMParser();
   document.querySelectorAll('[data-i18n-html]').forEach(el => {
     const msg = browser.i18n.getMessage(el.getAttribute('data-i18n-html'));
-    if (msg) el.innerHTML = msg;  // safe: content comes from trusted messages.json
+    if (msg) {
+      const doc = parser.parseFromString(msg, 'text/html');
+      el.replaceChildren(...doc.body.childNodes);
+    }
   });
 }

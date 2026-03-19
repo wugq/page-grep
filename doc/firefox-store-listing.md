@@ -28,27 +28,27 @@ Reading assistant powered by AI. Translate pages in-place, highlight content mat
 
 ## Full Description
 
-> Supports basic HTML. Shown on the extension's AMO detail page.
+> Supports a limited set of Markdown (see AMO docs). Shown on the extension's AMO detail page.
 
 ```
 PageGrep is a reading assistant that uses the OpenAI API to help you get more out of every web page — in any language.
 
-<b>Translate in place</b>
+**Translate in place**
 Click the floating 译 button to translate all visible paragraphs directly on the page. Each paragraph gets a toggle so you can switch between the original and translated text at any time. Supports 17+ target languages.
 
-<b>Highlight what interests you</b>
+**Highlight what interests you**
 Describe topics you care about — "AI, climate policy, Formula 1" — and PageGrep uses AI to scan the page and highlight the most relevant elements in yellow. A sidebar panel shows why each item was matched. Use the ▲ / ▼ buttons to jump between matches.
 
-<b>Summarize any page</b>
+**Summarize any page**
 One click generates a structured summary of the page, grouped into sections with bullet points. Click any item in the summary to scroll directly to that part of the page.
 
-<b>Designed to stay out of your way</b>
+**Designed to stay out of your way**
 The floating action panel is draggable. Drag it anywhere on screen, or drag it to the bottom trash zone to dismiss. Your API key and all preferences are stored locally — nothing leaves your browser except the page content you explicitly send to OpenAI.
 
-<b>Requirements</b>
+**Requirements**
 An OpenAI API key is required. gpt-4o-mini is recommended — fast, low cost (~$0.15 per million tokens), and accurate enough for everyday reading.
 
-<b>Supported languages</b>
+**Supported languages**
 Extension UI: English, Chinese (Simplified & Traditional), Japanese, Korean, French, German, Spanish, Italian, Portuguese (Brazil), Russian, Turkish, Vietnamese.
 Translation targets: Chinese (Simplified & Traditional), Japanese, Korean, English, French, German, Spanish, Italian, Portuguese, Russian, Arabic, Thai, Vietnamese, Turkish, Polish, Dutch, Indonesian.
 ```

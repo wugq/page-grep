@@ -21,6 +21,11 @@ const error = (...a) => devlog('error', ...a);
 const STYLE_ID = 'ai-reader-styles';
 const PANEL_ID = 'ai-reader-panel';
 const TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
+const _svgParser = new DOMParser();
+function setTranslateIcon(el) {
+  const doc = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml');
+  el.replaceChildren(doc.documentElement);
+}
 const FLOAT_BTN_ID = 'ai-translate-btn';
 const SUMMARY_STATE = {
   points: null,
@@ -188,7 +193,7 @@ async function runTranslateOnPage(btn) {
     if (btn) btn.title = browser.i18n.getMessage('translatingProgress', [String(++done), String(visible.length)]);
   }));
   log(`[PageGrep] 译: done, translated ${visible.length} paragraphs`);
-  if (btn) { btn.disabled = false; btn.innerHTML = TRANSLATE_ICON; btn.title = browser.i18n.getMessage('translateScreenContent'); }
+  if (btn) { btn.disabled = false; setTranslateIcon(btn); btn.title = browser.i18n.getMessage('translateScreenContent'); }
 }
 
 function createFloatButton() {
@@ -197,7 +202,7 @@ function createFloatButton() {
   const btn = document.createElement('button');
   btn.id = FLOAT_BTN_ID;
   btn.className = 'ai-panel-btn';
-  btn.innerHTML = TRANSLATE_ICON;
+  setTranslateIcon(btn);
   btn.title = browser.i18n.getMessage('translateScreenContent');
   panel.appendChild(btn);
   btn.addEventListener('click', () => runTranslateOnPage(btn));
@@ -228,7 +233,10 @@ function makeDraggable(panel) {
     if (!zone) {
       zone = document.createElement('div');
       zone.id = 'ai-trash-zone';
-      zone.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg><span>${browser.i18n.getMessage('dropToHide')}</span>`;
+      const trashSvg = _svgParser.parseFromString('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>', 'image/svg+xml').documentElement;
+      const trashLabel = document.createElement('span');
+      trashLabel.textContent = browser.i18n.getMessage('dropToHide');
+      zone.append(trashSvg, trashLabel);
       document.body.appendChild(zone);
     }
     return zone;
@@ -380,9 +388,21 @@ async function wrapAndTranslate(el) {
   const pos = window.getComputedStyle(el).position;
   if (pos === 'static') el.style.position = 'relative';
 
-  const originalHTML = el.innerHTML;
-  el.innerHTML = `<span class="ai-para-original">${originalHTML}</span><span class="ai-para-translated"></span>`;
+  const originalNodes = [...el.childNodes];
+  const originalSpan = document.createElement('span');
+  originalSpan.className = 'ai-para-original';
+  while (el.firstChild) originalSpan.appendChild(el.firstChild);
+  const translatedSpan = document.createElement('span');
+  translatedSpan.className = 'ai-para-translated';
+  el.append(originalSpan, translatedSpan);
   el.classList.add('ai-para-wrap');
+
+  function restore() {
+    el.replaceChildren(...originalNodes);
+    el.classList.remove('ai-para-wrap', 'show-translation');
+    delete el.dataset.aiWrapped;
+    if (pos === 'static') el.style.position = '';
+  }
 
   const btn = document.createElement('button');
   btn.className = 'ai-toggle-btn ai-loading-btn';
@@ -390,12 +410,9 @@ async function wrapAndTranslate(el) {
   btn.title = browser.i18n.getMessage('translating');
   el.appendChild(btn);
 
-  const text = el.querySelector('.ai-para-original')?.innerText?.trim();
+  const text = originalSpan.innerText?.trim();
   if (!text) {
-    el.innerHTML = originalHTML;
-    el.classList.remove('ai-para-wrap');
-    delete el.dataset.aiWrapped;
-    if (pos === 'static') el.style.position = '';
+    restore();
     return;
   }
 
@@ -403,7 +420,7 @@ async function wrapAndTranslate(el) {
     const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text });
     if (!response.success) throw new Error(response.error);
     log('[PageGrep] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
-    el.querySelector('.ai-para-translated').textContent = response.result;
+    translatedSpan.textContent = response.result;
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
     btn.textContent = '📄';
@@ -417,10 +434,7 @@ async function wrapAndTranslate(el) {
     });
   } catch (err) {
     error('[PageGrep] paragraph translation failed:', err.message);
-    el.innerHTML = originalHTML;
-    el.classList.remove('ai-para-wrap', 'show-translation');
-    delete el.dataset.aiWrapped;
-    if (pos === 'static') el.style.position = '';
+    restore();
   }
 }
 
