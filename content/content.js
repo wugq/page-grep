@@ -211,10 +211,21 @@ function createFloatButton() {
 
   browser.storage.local.get([STORAGE_KEYS.PANEL_POSITION]).then(({ panelPosition }) => {
     if (panelPosition) {
+      const MARGIN = 10;
+      const panelSize = 52;
+      // Support ratio-based (new) and legacy pixel-based (old) stored positions
+      const rawLeft = panelPosition.leftRatio != null
+        ? panelPosition.leftRatio * window.innerWidth
+        : parseFloat(panelPosition.left) || 0;
+      const rawTop = panelPosition.topRatio != null
+        ? panelPosition.topRatio * window.innerHeight
+        : parseFloat(panelPosition.top) || 0;
+      const left = Math.max(MARGIN, Math.min(window.innerWidth - panelSize - MARGIN, rawLeft));
+      const top = Math.max(MARGIN, Math.min(window.innerHeight - panelSize - MARGIN, rawTop));
       panel.style.bottom = 'auto';
       panel.style.right = 'auto';
-      panel.style.left = panelPosition.left;
-      panel.style.top = panelPosition.top;
+      panel.style.left = left + 'px';
+      panel.style.top = top + 'px';
     }
   });
 }
@@ -323,8 +334,8 @@ function makeDraggable(panel) {
 
     browser.storage.local.set({
       [STORAGE_KEYS.PANEL_POSITION]: {
-        left: panel.style.left,
-        top: panel.style.top,
+        leftRatio: parseFloat(panel.style.left) / window.innerWidth,
+        topRatio: parseFloat(panel.style.top) / window.innerHeight,
       }
     });
     panel.addEventListener('click', stopClick, { capture: true, once: true });
@@ -849,6 +860,7 @@ browser.storage.onChanged.addListener((changes) => {
   if (STORAGE_KEYS.SHOW_FLOAT_BTN in changes) {
     const show = changes[STORAGE_KEYS.SHOW_FLOAT_BTN].newValue !== false;
     if (show) {
+      browser.storage.local.remove(STORAGE_KEYS.PANEL_POSITION);
       createFloatButton();
     } else {
       document.getElementById(FLOAT_BTN_ID)?.remove();
