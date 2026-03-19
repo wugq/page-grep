@@ -139,7 +139,7 @@ function injectStyles() {
 // --- Theme helper ---
 
 async function applyThemeToPanel() {
-  const { theme } = await browser.storage.local.get('theme');
+  const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
   const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const panel = document.getElementById(PANEL_ID);
   if (panel) {
@@ -155,7 +155,7 @@ function getOrCreatePanel() {
     injectStyles();
     panel = document.createElement('div');
     panel.id = PANEL_ID;
-    
+
     applyThemeToPanel();
 
     const closeBtn = document.createElement('button');
@@ -165,7 +165,7 @@ function getOrCreatePanel() {
     closeBtn.addEventListener('click', () => {
       log('[Reader] × panel dismissed');
       panel.remove();
-      browser.storage.local.set({ showFloatBtn: false });
+      browser.storage.local.set({ [STORAGE_KEYS.SHOW_FLOAT_BTN]: false });
     });
     panel.appendChild(closeBtn);
 
@@ -184,13 +184,6 @@ function removePanelIfEmpty() {
 
 async function runTranslateOnPage(btn) {
   log('[Reader] 译 triggered');
-  const { openaiApiKey, preferredModel } = await browser.storage.local.get(['openaiApiKey', 'preferredModel']);
-  if (!openaiApiKey) {
-    warn('[Reader] 译: no API key set');
-    if (btn) { btn.title = '未设置 API Key'; btn.textContent = '!'; setTimeout(() => { btn.textContent = '译'; btn.title = '翻译屏幕内容'; }, 2000); }
-    return;
-  }
-  const model = preferredModel || 'gpt-4o-mini';
   injectStyles();
   const visible = findVisibleParagraphs();
   log(`[Reader] 译: found ${visible.length} visible paragraphs`);
@@ -201,7 +194,7 @@ async function runTranslateOnPage(btn) {
   if (btn) { btn.disabled = true; btn.textContent = '…'; }
   let done = 0;
   await Promise.all(visible.map(async el => {
-    await wrapAndTranslate(el, openaiApiKey, model);
+    await wrapAndTranslate(el);
     if (btn) btn.title = `翻译中 ${++done}/${visible.length}`;
   }));
   log(`[Reader] 译: done, translated ${visible.length} paragraphs`);
@@ -270,7 +263,7 @@ function findVisibleParagraphs() {
   });
 }
 
-async function wrapAndTranslate(el, apiKey, model) {
+async function wrapAndTranslate(el) {
   el.dataset.aiWrapped = '1';
   const pos = window.getComputedStyle(el).position;
   if (pos === 'static') el.style.position = 'relative';
@@ -290,11 +283,12 @@ async function wrapAndTranslate(el, apiKey, model) {
     el.innerHTML = originalHTML;
     el.classList.remove('ai-para-wrap');
     delete el.dataset.aiWrapped;
+    if (pos === 'static') el.style.position = '';
     return;
   }
 
   try {
-    const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text, apiKey, model });
+    const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text });
     if (!response.success) throw new Error(response.error);
     log('[Reader] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
     el.querySelector('.ai-para-translated').textContent = response.result;
@@ -311,10 +305,10 @@ async function wrapAndTranslate(el, apiKey, model) {
     });
   } catch (err) {
     error('[Reader] paragraph translation failed:', err.message);
-    btn.classList.remove('ai-loading-btn');
-    btn.classList.add('ai-error-btn');
-    btn.textContent = '!';
-    btn.title = '翻译失败：' + err.message;
+    el.innerHTML = originalHTML;
+    el.classList.remove('ai-para-wrap', 'show-translation');
+    delete el.dataset.aiWrapped;
+    if (pos === 'static') el.style.position = '';
   }
 }
 
@@ -372,14 +366,6 @@ function detectPageLanguage() {
 
 async function runSummaryFromPage() {
   log('[Reader] runSummary triggered');
-  const { openaiApiKey, preferredModel } = await browser.storage.local.get(['openaiApiKey', 'preferredModel']);
-  if (!openaiApiKey) {
-    warn('[Reader] summary: no API key set');
-    browser.runtime.sendMessage({ action: 'summaryError', error: '未设置 API Key' });
-    return;
-  }
-
-  const model = preferredModel || 'gpt-4o-mini';
   const elements = collectPageElements();
   const pageLanguage = detectPageLanguage();
   log(`[Reader] summary: collected ${elements.length} page elements, language: ${pageLanguage}`);
@@ -393,8 +379,6 @@ async function runSummaryFromPage() {
       action: 'summarize',
       elements: elements.map(e => e.text),
       pageLanguage,
-      apiKey: openaiApiKey,
-      model
     });
 
     if (!response.success) throw new Error(response.error);
@@ -417,7 +401,7 @@ function collectPageElements() {
   const scope = findMainContentScope();
 
   // 1. Detect if it is likely an article page first.
-  // We look for many long paragraphs. If we see a high density of text in paragraphs, 
+  // We look for many long paragraphs. If we see a high density of text in paragraphs,
   // it is almost certainly an article page, even if there are sidebar lists.
   const paras = Array.from(scope.querySelectorAll('p')).filter(p => {
     const text = p.innerText?.trim() || '';
@@ -432,7 +416,7 @@ function collectPageElements() {
 
   // 2. Otherwise try list-style collection (grouping headlines + snippets)
   const listItems = collectGenericListElements(scope);
-  if (listItems && listItems.length >= 4) { // Increased threshold from 3 to 4
+  if (listItems && listItems.length >= 4) {
     log(`[Reader] list-style collection: found ${listItems.length} items`);
     return listItems.slice(0, 140);
   }
@@ -446,12 +430,10 @@ function collectArticleElements(scope) {
   const excludeChrome = scope === document.body;
   const seen = new Set();
   const results = [];
-  // Use a more comprehensive set of tags for article content
   const candidates = scope.querySelectorAll('h1, h2, h3, h4, h5, h6, li, p, blockquote, dt, dd, figcaption');
   for (const el of candidates) {
     if (excludeChrome && el.closest(CHROME_SELECTOR)) continue;
     const text = el.innerText?.trim().replace(/\s+/g, ' ');
-    // Filter out very short text and very long boilerplate
     if (!text || text.length < 10 || text.length > 3000) continue;
     if (seen.has(text)) continue;
     seen.add(text);
@@ -462,35 +444,29 @@ function collectArticleElements(scope) {
 }
 
 function collectGenericListElements(scope) {
-  // 1. Try common semantic or class-based containers for list items
   const itemSelectors = [
     'article',
     'section',
     '.post', '.entry', '.item', '.card', '.story', '.topic',
     '[class*="post-"]', '[class*="item-"]', '[class*="card-"]', '[class*="article-"]',
-    'li' // moved li to end as it is most generic
+    'li'
   ];
-  
+
   let candidates = [];
   for (const sel of itemSelectors) {
     const found = Array.from(scope.querySelectorAll(sel)).filter(el => {
-      // Skip if the container itself is inside site-wide chrome (nav, footer, etc.)
       if (el.closest(CHROME_SELECTOR)) return false;
-      // Must contain at least one heading or a link that looks like a title
       return el.querySelector('h1, h2, h3, h4, h5, h6, a[class*="title"], a[class*="headline"]');
     });
-    // If we found a decent number of items, this selector is likely a good fit
-    if (found.length >= 4) { // Increased threshold
+    if (found.length >= 4) {
       candidates = found;
       break;
     }
   }
 
-  // 2. Fallback: if no clear containers, look for groups of headings
   if (candidates.length < 4) {
     const headings = scope.querySelectorAll('h2, h3, h4');
     if (headings.length >= 5) {
-      // Use the parent of the heading as the item container
       const parents = new Set();
       headings.forEach(h => {
         const parent = h.parentElement;
@@ -502,23 +478,19 @@ function collectGenericListElements(scope) {
     }
   }
 
-  // If we still don't have enough, it's probably not a list page
   if (candidates.length < 4) return null;
 
   const results = [];
   const seen = new Set();
-  
+
   candidates.forEach(container => {
-    // Find the headline: prefer H tags, then class-based titles
     const head = container.querySelector('h1, h2, h3, h4, h5, h6, .title, .headline, [class*="title"], [class*="headline"]');
     const title = head?.innerText?.trim();
     if (!title || title.length < 6) return;
-    
-    // Find a snippet: look for P or description-like classes
+
     const p = container.querySelector('p, .excerpt, .dek, .summary, .description, [class*="excerpt"], [class*="summary"], [class*="description"]');
     const snippet = p?.innerText?.trim();
-    
-    // Check for duplicate content
+
     if (seen.has(title)) return;
     seen.add(title);
 
@@ -527,10 +499,10 @@ function collectGenericListElements(scope) {
       const cleanSnippet = snippet.replace(/\s+/g, ' ').slice(0, 240);
       text += ` — ${cleanSnippet}${snippet.length > 240 ? '...' : ''}`;
     }
-    
+
     results.push({ el: container, text, label: title });
   });
-  
+
   return results.length >= 4 ? results : null;
 }
 
@@ -600,19 +572,13 @@ function inferHackerNewsTags(title, site) {
 
 async function runInterestingFromPage() {
   log('[Reader] ★ (highlight) clicked');
-  const { openaiApiKey, preferredModel, userInterests } = await browser.storage.local.get(['openaiApiKey', 'preferredModel', 'userInterests']);
-  if (!openaiApiKey) {
-    warn('[Reader] ★: no API key set');
-    browser.runtime.sendMessage({ action: 'highlightError', error: '未设置 API Key' });
-    return;
-  }
+  const { userInterests } = await browser.storage.local.get([STORAGE_KEYS.USER_INTERESTS]);
   if (!userInterests) {
     warn('[Reader] ★: no user interests set');
     browser.runtime.sendMessage({ action: 'highlightError', error: '请先在插件中设置兴趣' });
     return;
   }
 
-  const model = preferredModel || 'gpt-4o-mini';
   const elements = collectPageElements();
   HIGHLIGHT_STATE.elements = elements;
   log(`[Reader] ★: collected ${elements.length} elements, interests: "${userInterests}"`);
@@ -626,8 +592,6 @@ async function runInterestingFromPage() {
       action: 'findInteresting',
       interests: userInterests,
       elements: elements.map(e => e.text),
-      apiKey: openaiApiKey,
-      model
     });
 
     if (!response.success) throw new Error(response.error);
@@ -714,25 +678,23 @@ browser.runtime.onMessage.addListener((message) => {
     return;
   }
 });
+
 // --- Initialization ---
 
 log('[Reader] content script loaded', location.href);
-browser.storage.local.get(['showFloatBtn']).then(({ showFloatBtn }) => {
+browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN]).then(({ showFloatBtn }) => {
   if (showFloatBtn !== false) createFloatButton();
 });
-applyThemeToPanel();
 
 // Handle system theme changes if no explicit preference is set
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async (e) => {
-  const { theme } = await browser.storage.local.get('theme');
-  if (!theme) {
-    applyThemeToPanel();
-  }
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async () => {
+  const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
+  if (!theme) applyThemeToPanel();
 });
 
 browser.storage.onChanged.addListener((changes) => {
-  if ('showFloatBtn' in changes) {
-    const show = changes.showFloatBtn.newValue !== false;
+  if (STORAGE_KEYS.SHOW_FLOAT_BTN in changes) {
+    const show = changes[STORAGE_KEYS.SHOW_FLOAT_BTN].newValue !== false;
     if (show) {
       createFloatButton();
     } else {
@@ -741,7 +703,7 @@ browser.storage.onChanged.addListener((changes) => {
       removePanelIfEmpty();
     }
   }
-  if ('theme' in changes) {
+  if (STORAGE_KEYS.THEME in changes) {
     applyThemeToPanel();
   }
 });

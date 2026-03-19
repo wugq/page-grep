@@ -1,10 +1,12 @@
 async function loadSettings() {
-  const { openaiApiKey, preferredModel, theme, showFloatBtn } = await browser.storage.local.get(['openaiApiKey', 'preferredModel', 'theme', 'showFloatBtn']);
+  const { openaiApiKey, preferredModel, theme, showFloatBtn } = await browser.storage.local.get([
+    STORAGE_KEYS.API_KEY, STORAGE_KEYS.MODEL, STORAGE_KEYS.THEME, STORAGE_KEYS.SHOW_FLOAT_BTN
+  ]);
 
   if (openaiApiKey) document.getElementById('api-key').value = openaiApiKey;
   if (preferredModel) document.getElementById('model-select').value = preferredModel;
   if (theme !== undefined) document.getElementById('theme-select').value = theme || '';
-  
+
   const floatCheckbox = document.getElementById('show-float-btn');
   if (floatCheckbox) floatCheckbox.checked = showFloatBtn !== false;
 }
@@ -36,11 +38,11 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
   }
 
   try {
-    await browser.storage.local.set({ 
-      openaiApiKey: apiKey, 
-      preferredModel: model,
-      theme: theme || null,
-      showFloatBtn: showFloatBtn
+    await browser.storage.local.set({
+      [STORAGE_KEYS.API_KEY]: apiKey,
+      [STORAGE_KEYS.MODEL]: model,
+      [STORAGE_KEYS.THEME]: theme || null,
+      [STORAGE_KEYS.SHOW_FLOAT_BTN]: showFloatBtn
     });
     showStatus('✓ 设置已保存', 'success');
   } catch (err) {
@@ -51,7 +53,10 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
 document.getElementById('clear-btn').addEventListener('click', async () => {
   if (!confirm('确定要清除所有设置吗？')) return;
 
-  await browser.storage.local.remove(['openaiApiKey', 'preferredModel', 'theme', 'showFloatBtn', 'userInterests']);
+  await browser.storage.local.remove([
+    STORAGE_KEYS.API_KEY, STORAGE_KEYS.MODEL, STORAGE_KEYS.THEME,
+    STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.USER_INTERESTS
+  ]);
   document.getElementById('api-key').value = '';
   document.getElementById('model-select').value = 'gpt-4o-mini';
   document.getElementById('theme-select').value = '';

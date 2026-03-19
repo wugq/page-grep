@@ -8,10 +8,10 @@ const tabContents = document.querySelectorAll('.tab-content');
 tabBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     const targetTab = btn.getAttribute('data-tab');
-    
+
     tabBtns.forEach(b => b.classList.remove('active'));
     tabContents.forEach(c => c.classList.remove('active'));
-    
+
     btn.classList.add('active');
     document.getElementById(`${targetTab}-tab`).classList.add('active');
   });
@@ -31,29 +31,29 @@ toggleConfigBtn.addEventListener('click', () => {
 // --- Initialization ---
 
 async function init() {
-  const { showFloatBtn, userInterests, theme } = await browser.storage.local.get(['showFloatBtn', 'userInterests', 'theme']);
+  const { showFloatBtn, userInterests, theme } = await browser.storage.local.get([
+    STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.USER_INTERESTS, STORAGE_KEYS.THEME
+  ]);
 
   // Theme Toggle
   const themeToggle = document.getElementById('theme-toggle');
   const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
   themeToggle.checked = isDark;
   themeToggle.addEventListener('change', () => {
-    browser.storage.local.set({ theme: themeToggle.checked ? 'dark' : 'light' });
+    browser.storage.local.set({ [STORAGE_KEYS.THEME]: themeToggle.checked ? 'dark' : 'light' });
   });
 
   // Handle system theme changes if no explicit preference is set
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async (e) => {
-    const { theme } = await browser.storage.local.get('theme');
-    if (!theme) {
-      themeToggle.checked = e.matches;
-    }
+    const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
+    if (!theme) themeToggle.checked = e.matches;
   });
 
   // Global Toggles
   const floatCheckbox = document.getElementById('show-float-btn');
   floatCheckbox.checked = showFloatBtn !== false;
   floatCheckbox.addEventListener('change', () => {
-    browser.storage.local.set({ showFloatBtn: floatCheckbox.checked });
+    browser.storage.local.set({ [STORAGE_KEYS.SHOW_FLOAT_BTN]: floatCheckbox.checked });
   });
 
   // Interests Config
@@ -68,7 +68,7 @@ async function init() {
 
   document.getElementById('save-interests-btn').addEventListener('click', async () => {
     const val = interestsInput.value.trim();
-    await browser.storage.local.set({ userInterests: val || null });
+    await browser.storage.local.set({ [STORAGE_KEYS.USER_INTERESTS]: val || null });
     clearBtn.classList.toggle('hidden', !val);
     statusEl.classList.remove('hidden');
     setTimeout(() => statusEl.classList.add('hidden'), 2000);
@@ -77,7 +77,7 @@ async function init() {
   clearBtn.addEventListener('click', async () => {
     interestsInput.value = '';
     clearBtn.classList.add('hidden');
-    await browser.storage.local.set({ userInterests: null });
+    await browser.storage.local.set({ [STORAGE_KEYS.USER_INTERESTS]: null });
   });
 
   // Options Button
@@ -118,7 +118,7 @@ async function getActiveTabId() {
 }
 
 async function sendToActiveTab(message) {
-  const tabId = lastTabId || await getActiveTabId();
+  const tabId = await getActiveTabId();
   if (!tabId) return false;
   try {
     await browser.tabs.sendMessage(tabId, message);
@@ -174,7 +174,7 @@ function renderSummary(points) {
   const listEl = document.getElementById('summary-list');
   const emptyEl = document.getElementById('summary-empty');
   listEl.innerHTML = '';
-  
+
   if (!points || points.length === 0) {
     emptyEl.classList.remove('hidden');
     return;
@@ -184,7 +184,7 @@ function renderSummary(points) {
   points.forEach(point => {
     const item = document.createElement('div');
     item.className = 'summary-item';
-    
+
     const titleEl = document.createElement('div');
     titleEl.className = 'summary-item-title';
     titleEl.textContent = point.title;
@@ -286,14 +286,14 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
 });
 
 browser.storage.onChanged.addListener((changes) => {
-  if ('showFloatBtn' in changes) {
+  if (STORAGE_KEYS.SHOW_FLOAT_BTN in changes) {
     const floatCheckbox = document.getElementById('show-float-btn');
-    if (floatCheckbox) floatCheckbox.checked = changes.showFloatBtn.newValue !== false;
+    if (floatCheckbox) floatCheckbox.checked = changes[STORAGE_KEYS.SHOW_FLOAT_BTN].newValue !== false;
   }
-  if ('theme' in changes) {
+  if (STORAGE_KEYS.THEME in changes) {
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
-      const theme = changes.theme.newValue;
+      const theme = changes[STORAGE_KEYS.THEME].newValue;
       const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
       themeToggle.checked = isDark;
     }
