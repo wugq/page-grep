@@ -1,12 +1,16 @@
-# AI Reader Helper
+# PageGrep
 
-A Firefox extension that helps you read foreign-language web pages. It translates content in-place and highlights elements that match your personal interests — both powered by OpenAI.
+A Firefox extension that helps you read and discover content on web pages using AI. It translates content in-place, highlights elements matching your personal interests, and summarizes pages — all powered by OpenAI.
 
 ## Features
 
 - **In-place translation** — translates visible paragraphs on screen without leaving the page. Each element gets a toggle button to switch between the original and translated text.
 - **Interest highlighting** — describe topics you care about (e.g. "AI, macroeconomics, sports"), and the extension uses AI to find and highlight matching content on any page in yellow.
 - **Highlight navigation** — after highlighting, use ▲ / ▼ buttons to scroll through matches one by one with a smooth animation.
+- **Page summarization** — generates an AI-powered summary of the page, grouped into sections with bullet points, shown in the sidebar.
+- **Draggable floating panel** — a compact dark panel in the bottom-right corner. Drag it to reposition; drag it to the trash zone at the bottom to dismiss.
+- **Dark mode** — full dark/light/system theme support across all extension UI.
+- **Internationalization** — UI available in 13 languages: English, Chinese (Simplified & Traditional), Japanese, Korean, French, German, Spanish, Italian, Portuguese (Brazil), Russian, Turkish, and Vietnamese.
 
 ## Installation
 
@@ -18,9 +22,9 @@ Regular Firefox requires extensions to be signed by Mozilla. Developer Edition a
 2. Open `about:config` and set `xpinstall.signatures.required` to `false`
 3. Package the extension:
    ```bash
-   zip -r reader.xpi . -x "*.git*" -x "*.DS_Store" -x "web-ext-artifacts/*"
+   zip -r pagegrep.xpi . -x "*.git*" -x "*.DS_Store" -x "web-ext-artifacts/*"
    ```
-4. Open `about:addons` → gear icon → **Install Add-on From File** → select `reader.xpi`
+4. Open `about:addons` → gear icon → **Install Add-on From File** → select `pagegrep.xpi`
 
 ### Firefox (regular, permanently signed)
 
@@ -41,10 +45,12 @@ Regular Firefox requires extensions to be signed by Mozilla. Developer Edition a
 
 ## Setup
 
-1. Click the extension icon in the toolbar
-2. Click **设置** (Settings) at the bottom
+1. Click the extension icon in the toolbar to open the sidebar
+2. Click the **Settings** (⚙) button
 3. Enter your [OpenAI API key](https://platform.openai.com/api-keys)
 4. Choose a model — `gpt-4o-mini` is recommended for everyday use (low cost, fast)
+5. Select your target translation language
+6. Click **Save**
 
 ## Usage
 
@@ -57,25 +63,34 @@ A compact dark panel appears in the bottom-right corner of every page (when enab
 | `译` | Translate all visible paragraphs on screen |
 | `★` | Highlight content matching your interests |
 | `▲` / `▼` | Navigate to previous / next highlight (appears after highlighting) |
-| `×` | Dismiss the panel (hover to reveal, top-right corner) |
+| `×` | Dismiss the panel |
 
-The panel can be toggled on/off from the popup via the **显示悬浮按钮** checkbox.
+The panel is draggable — click and drag to reposition it. Drag it toward the bottom of the screen to reveal a trash zone; release there to dismiss it. Position is remembered across page loads.
+
+The panel can be toggled on/off from **Settings** via the **Show Floating Button** checkbox.
 
 ### Translate
 
-1. Navigate to any page with foreign-language content
+1. Navigate to any page with content you want to translate
 2. Click **译** in the floating panel
-3. Visible paragraphs are translated in-place — each gets a small toggle button (`原`/`译`) to switch between the original and translated text
+3. Visible paragraphs are translated in-place — each gets a small toggle button to switch between the original and translated text
 
 ### Interest Highlighting
 
-1. Click the extension icon
-2. In the **阅读兴趣** section, describe what you're interested in (e.g. `AI科技、宏观经济、体育赛事`)
-3. Click **保存**
+1. Click the extension icon to open the sidebar
+2. In the **Interests** tab, describe what you're interested in (e.g. `AI technology, macroeconomics, sports`)
+3. Click **Save**
 4. On any page, click **★** in the floating panel
-5. The extension sends page elements to OpenAI, which identifies relevant ones — they are highlighted in yellow
+5. The extension sends page elements to OpenAI, which identifies relevant ones — they are highlighted in yellow, with reasons shown in the sidebar
 6. Use **▲** / **▼** to jump between matches
 7. Click **★** again to clear all highlights
+
+### Page Summarization
+
+1. Click the extension icon to open the sidebar
+2. Click **Generate Summary**
+3. The page content is summarized into 2–5 sections with titles and bullet points
+4. Click any item in the summary to scroll to the corresponding section on the page
 
 ## Project Structure
 
@@ -83,22 +98,45 @@ The panel can be toggled on/off from the popup via the **显示悬浮按钮** ch
 reader/
 ├── manifest.json          # Extension manifest (MV2)
 ├── background/
-│   └── background.js      # OpenAI API calls (translate, interest matching)
+│   └── background.js      # OpenAI API calls (translate, summarize, highlight)
 ├── content/
 │   └── content.js         # Floating panel, in-place translation, highlighting
-├── popup/
-│   ├── popup.html
-│   ├── popup.js           # Panel toggle, interest input
-│   └── popup.css
+├── sidebar/
+│   ├── sidebar.html
+│   ├── sidebar.js         # Sidebar UI: summary, interests, settings link
+│   └── sidebar.css
 ├── options/
 │   ├── options.html
-│   ├── options.js         # API key and model settings
+│   ├── options.js         # API key, model, language, theme settings
 │   └── options.css
+├── shared/
+│   ├── storage-keys.js    # Shared storage key constants
+│   ├── i18n.js            # i18n initialization
+│   └── theme.js           # Dark/light theme management
+├── _locales/              # Translations for 13 languages
+│   ├── en/messages.json
+│   ├── zh_CN/messages.json
+│   └── ...
 └── icons/
+    ├── icon-16.svg
     ├── icon-48.svg
-    └── icon-96.svg
+    ├── icon-96.svg
+    └── icon-128.svg
 ```
+
+## Configuration
+
+All settings are stored locally in `browser.storage.local`:
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| OpenAI API Key | Required for all AI features | — |
+| Model | `gpt-4o-mini` or `gpt-4o` | `gpt-4o-mini` |
+| Translation Language | Target language for translation | Chinese (Simplified) |
+| Theme | Light, dark, or follow system | System |
+| Show Floating Button | Show/hide the floating panel | Enabled |
+| UI Language | Override the extension UI language | Browser default |
 
 ## Privacy
 
-Your API key is stored locally in the browser (`browser.storage.local`) and is never sent anywhere except directly to the OpenAI API. Page content is only sent to OpenAI when you explicitly trigger a translation or highlight action.
+Your API key is stored locally in the browser (`browser.storage.local`) and is never sent anywhere except directly to the OpenAI API. Page content is only sent to OpenAI when you explicitly trigger a translation, highlighting, or summarization action. There is no analytics, tracking, or telemetry.
