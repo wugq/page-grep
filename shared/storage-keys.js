@@ -6,4 +6,5 @@ const STORAGE_KEYS = Object.freeze({
   USER_INTERESTS: 'userInterests',
   UI_LANG: 'uiLang',
   TRANSLATE_LANG: 'translateLang',
+  PANEL_POSITION: 'panelPosition',
 });

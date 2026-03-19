@@ -70,5 +70,6 @@
   "translating": { "message": "Translating..." },
   "noAnalyzableContent": { "message": "No analyzable content" },
   "setInterestsFirst": { "message": "Please set your interests in the extension first" },
+  "dropToHide": { "message": "Drop to hide" },
   "extDescription": { "message": "Reading assistant: translate pages and highlight content matching your interests" }
 }

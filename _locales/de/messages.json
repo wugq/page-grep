@@ -67,5 +67,6 @@
   "translating": { "message": "Wird übersetzt..." },
   "noAnalyzableContent": { "message": "Kein analysierbarer Inhalt" },
   "setInterestsFirst": { "message": "Bitte lege zuerst deine Interessen in der Erweiterung fest" },
+  "dropToHide": { "message": "Hierher ziehen zum Ausblenden" },
   "extDescription": { "message": "Leseassistent: Seiten übersetzen und Inhalte hervorheben, die deinen Interessen entsprechen" }
 }

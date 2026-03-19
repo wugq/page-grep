@@ -67,5 +67,6 @@
   "translating": { "message": "Đang dịch..." },
   "noAnalyzableContent": { "message": "Không có nội dung có thể phân tích" },
   "setInterestsFirst": { "message": "Vui lòng thiết lập sở thích của bạn trong tiện ích trước" },
+  "dropToHide": { "message": "Thả để ẩn" },
   "extDescription": { "message": "Trợ lý đọc: dịch trang và tô sáng nội dung phù hợp với sở thích của bạn" }
 }

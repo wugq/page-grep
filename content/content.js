@@ -81,13 +81,14 @@ function injectStyles() {
       gap: 10px;
       z-index: 2147483647;
       padding: 0;
+      user-select: none;
     }
     .ai-panel-btn {
       width: 42px;
       height: 42px;
       border-radius: 50%;
       border: none;
-      cursor: pointer;
+      cursor: grab;
       font-size: 16px;
       font-weight: 700;
       color: white;
@@ -100,38 +101,38 @@ function injectStyles() {
       box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
     .ai-panel-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4); }
-    .ai-panel-btn:active { transform: translateY(0) scale(0.95); }
+    .ai-panel-btn:active { transform: translateY(0) scale(0.95); cursor: grabbing; }
     .ai-panel-btn:disabled { filter: grayscale(0.8); cursor: wait; }
     #ai-translate-btn { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-    #ai-panel-close {
-      position: absolute;
-      top: -12px;
-      right: -12px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.2);
-      cursor: pointer;
-      font-size: 14px;
-      line-height: 1;
-      color: white;
-      background: #1e293b;
-      padding: 0;
+    #ai-trash-zone {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(8px);
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+      white-space: nowrap;
+      z-index: 2147483646;
       opacity: 0;
       pointer-events: none;
-      transition: all 0.2s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: opacity 0.2s, transform 0.2s, background 0.15s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
-    .dark #ai-panel-close {
-      background: #475569;
-      border-color: rgba(255,255,255,0.3);
-    }
-    #ai-reader-panel:hover #ai-panel-close {
+    #ai-trash-zone.visible {
       opacity: 1;
-      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+    #ai-trash-zone.active {
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
     }
   `;
   document.head.appendChild(style);
@@ -159,17 +160,6 @@ function getOrCreatePanel() {
 
     applyThemeToPanel();
 
-    const closeBtn = document.createElement('button');
-    closeBtn.id = 'ai-panel-close';
-    closeBtn.textContent = '×';
-    closeBtn.title = browser.i18n.getMessage('hide');
-    closeBtn.addEventListener('click', () => {
-      log('[PageGrep] × panel dismissed');
-      panel.remove();
-      browser.storage.local.set({ [STORAGE_KEYS.SHOW_FLOAT_BTN]: false });
-    });
-    panel.appendChild(closeBtn);
-
     document.body.appendChild(panel);
   }
   return panel;
@@ -177,8 +167,7 @@ function getOrCreatePanel() {
 
 function removePanelIfEmpty() {
   const panel = document.getElementById(PANEL_ID);
-  // Only the close button remains — nothing useful left
-  if (panel && panel.children.length <= 1) panel.remove();
+  if (panel && panel.children.length === 0) panel.remove();
 }
 
 // --- Translation ---
@@ -212,6 +201,128 @@ function createFloatButton() {
   btn.title = browser.i18n.getMessage('translateScreenContent');
   panel.appendChild(btn);
   btn.addEventListener('click', () => runTranslateOnPage(btn));
+
+  makeDraggable(panel);
+
+  browser.storage.local.get([STORAGE_KEYS.PANEL_POSITION]).then(({ panelPosition }) => {
+    if (panelPosition) {
+      panel.style.bottom = 'auto';
+      panel.style.right = 'auto';
+      panel.style.left = panelPosition.left;
+      panel.style.top = panelPosition.top;
+    }
+  });
+}
+
+function makeDraggable(panel) {
+  let isDragging = false;
+  let hasMoved = false;
+  let startX, startY, startLeft, startTop;
+  const DRAG_THRESHOLD = 5;
+
+  panel.addEventListener('mousedown', onDragStart);
+  panel.addEventListener('touchstart', onDragStart, { passive: true });
+
+  function getOrCreateTrashZone() {
+    let zone = document.getElementById('ai-trash-zone');
+    if (!zone) {
+      zone = document.createElement('div');
+      zone.id = 'ai-trash-zone';
+      zone.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg><span>${browser.i18n.getMessage('dropToHide')}</span>`;
+      document.body.appendChild(zone);
+    }
+    return zone;
+  }
+
+  function isOverTrashZone(clientX, clientY) {
+    const zone = document.getElementById('ai-trash-zone');
+    if (!zone) return false;
+    const rect = zone.getBoundingClientRect();
+    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+  }
+
+  function onDragStart(e) {
+    const point = e.touches ? e.touches[0] : e;
+    startX = point.clientX;
+    startY = point.clientY;
+    const rect = panel.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop = rect.top;
+    isDragging = true;
+    hasMoved = false;
+
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('touchmove', onDragMove, { passive: false });
+    document.addEventListener('mouseup', onDragEnd);
+    document.addEventListener('touchend', onDragEnd);
+  }
+
+  function onDragMove(e) {
+    if (!isDragging) return;
+    if (e.cancelable) e.preventDefault();
+    const point = e.touches ? e.touches[0] : e;
+    const dx = point.clientX - startX;
+    const dy = point.clientY - startY;
+
+    if (!hasMoved && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+      hasMoved = true;
+      panel.style.bottom = 'auto';
+      panel.style.right = 'auto';
+      panel.style.left = startLeft + 'px';
+      panel.style.top = startTop + 'px';
+      panel.style.cursor = 'grabbing';
+      getOrCreateTrashZone().classList.add('visible');
+    }
+
+    if (!hasMoved) return;
+
+    const panelW = panel.offsetWidth;
+    const panelH = panel.offsetHeight;
+    const newLeft = Math.max(0, Math.min(window.innerWidth - panelW, startLeft + dx));
+    const newTop = Math.max(0, Math.min(window.innerHeight - panelH, startTop + dy));
+
+    panel.style.left = newLeft + 'px';
+    panel.style.top = newTop + 'px';
+
+    const zone = document.getElementById('ai-trash-zone');
+    if (zone) zone.classList.toggle('active', isOverTrashZone(point.clientX, point.clientY));
+  }
+
+  function onDragEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    panel.style.cursor = '';
+
+    document.removeEventListener('mousemove', onDragMove);
+    document.removeEventListener('touchmove', onDragMove);
+    document.removeEventListener('mouseup', onDragEnd);
+    document.removeEventListener('touchend', onDragEnd);
+
+    const zone = document.getElementById('ai-trash-zone');
+    if (zone) {
+      zone.classList.remove('visible', 'active');
+    }
+
+    if (!hasMoved) return;
+
+    const point = e.changedTouches ? e.changedTouches[0] : e;
+    if (isOverTrashZone(point.clientX, point.clientY)) {
+      panel.remove();
+      if (zone) zone.remove();
+      browser.storage.local.set({ [STORAGE_KEYS.SHOW_FLOAT_BTN]: false });
+      return;
+    }
+
+    browser.storage.local.set({
+      [STORAGE_KEYS.PANEL_POSITION]: {
+        left: panel.style.left,
+        top: panel.style.top,
+      }
+    });
+    panel.addEventListener('click', stopClick, { capture: true, once: true });
+  }
+
+  function stopClick(e) { e.stopPropagation(); }
 }
 
 function findMainContentScope() {
@@ -295,13 +406,13 @@ async function wrapAndTranslate(el) {
     el.querySelector('.ai-para-translated').textContent = response.result;
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
-    btn.textContent = browser.i18n.getMessage('original');
+    btn.textContent = '📄';
     btn.title = browser.i18n.getMessage('showOriginal');
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const showing = el.classList.toggle('show-translation');
       log(`[PageGrep] toggle paragraph → ${showing ? 'translation' : 'original'}`);
-      btn.textContent = browser.i18n.getMessage(showing ? 'original' : 'translated');
+      btn.textContent = showing ? '📄' : '🌐';
       btn.title = browser.i18n.getMessage(showing ? 'showOriginal' : 'showTranslated');
     });
   } catch (err) {

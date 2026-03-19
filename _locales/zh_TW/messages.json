@@ -67,5 +67,6 @@
   "translating": { "message": "翻譯中..." },
   "noAnalyzableContent": { "message": "沒有可分析的內容" },
   "setInterestsFirst": { "message": "請先在擴充功能中設定您的興趣" },
+  "dropToHide": { "message": "拖曳至此隱藏" },
   "extDescription": { "message": "閱讀助手：翻譯頁面並高亮顯示符合您興趣的內容" }
 }

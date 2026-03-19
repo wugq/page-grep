@@ -67,5 +67,6 @@
   "translating": { "message": "Çevriliyor..." },
   "noAnalyzableContent": { "message": "Analiz edilebilir içerik yok" },
   "setInterestsFirst": { "message": "Lütfen önce eklentide ilgi alanlarınızı belirleyin" },
+  "dropToHide": { "message": "Gizlemek için bırakın" },
   "extDescription": { "message": "Okuma asistanı: sayfaları çevirir ve ilgi alanlarınızla eşleşen içerikleri vurgular" }
 }

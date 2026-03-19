@@ -70,5 +70,6 @@
   "translating": { "message": "翻译中..." },
   "noAnalyzableContent": { "message": "无可分析内容" },
   "setInterestsFirst": { "message": "请先在插件中设置兴趣" },
+  "dropToHide": { "message": "拖到此处隐藏" },
   "extDescription": { "message": "阅读助手：翻译网页并高亮匹配兴趣的内容" }
 }

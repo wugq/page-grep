@@ -67,5 +67,6 @@
   "translating": { "message": "번역 중..." },
   "noAnalyzableContent": { "message": "분석 가능한 콘텐츠가 없습니다" },
   "setInterestsFirst": { "message": "먼저 확장 프로그램에서 관심사를 설정하세요" },
+  "dropToHide": { "message": "여기에 놓아 숨기기" },
   "extDescription": { "message": "독서 도우미: 페이지를 번역하고 관심사에 맞는 콘텐츠를 하이라이트합니다" }
 }

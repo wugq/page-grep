@@ -67,5 +67,6 @@
   "translating": { "message": "翻訳中..." },
   "noAnalyzableContent": { "message": "分析可能なコンテンツがありません" },
   "setInterestsFirst": { "message": "まず拡張機能で興味を設定してください" },
+  "dropToHide": { "message": "ここにドロップして非表示" },
   "extDescription": { "message": "読書アシスタント：ページを翻訳し、興味に一致するコンテンツをハイライト表示します" }
 }

@@ -67,5 +67,6 @@
   "translating": { "message": "Traduction en cours..." },
   "noAnalyzableContent": { "message": "Aucun contenu analysable" },
   "setInterestsFirst": { "message": "Veuillez d'abord définir vos intérêts dans l'extension" },
+  "dropToHide": { "message": "Déposer pour masquer" },
   "extDescription": { "message": "Assistant de lecture : traduit les pages et surligne le contenu correspondant à vos intérêts" }
 }
