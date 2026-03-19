@@ -3,7 +3,7 @@
 function devlog(level, ...args) {
   try {
     const fn = level === 'warn' ? console.warn : level === 'error' ? console.error : console.log;
-    fn('[Reader]', ...args);
+    fn('[PageGrep]', ...args);
   } catch (_) {}
   try {
     browser.runtime.sendMessage({
@@ -163,7 +163,7 @@ function getOrCreatePanel() {
     closeBtn.textContent = '×';
     closeBtn.title = '隐藏';
     closeBtn.addEventListener('click', () => {
-      log('[Reader] × panel dismissed');
+      log('[PageGrep] × panel dismissed');
       panel.remove();
       browser.storage.local.set({ [STORAGE_KEYS.SHOW_FLOAT_BTN]: false });
     });
@@ -183,10 +183,10 @@ function removePanelIfEmpty() {
 // --- Translation ---
 
 async function runTranslateOnPage(btn) {
-  log('[Reader] 译 triggered');
+  log('[PageGrep] 译 triggered');
   injectStyles();
   const visible = findVisibleParagraphs();
-  log(`[Reader] 译: found ${visible.length} visible paragraphs`);
+  log(`[PageGrep] 译: found ${visible.length} visible paragraphs`);
   if (visible.length === 0) {
     if (btn) { btn.title = '无可翻译内容'; setTimeout(() => { btn.title = '翻译屏幕内容'; }, 1500); }
     return;
@@ -197,7 +197,7 @@ async function runTranslateOnPage(btn) {
     await wrapAndTranslate(el);
     if (btn) btn.title = `翻译中 ${++done}/${visible.length}`;
   }));
-  log(`[Reader] 译: done, translated ${visible.length} paragraphs`);
+  log(`[PageGrep] 译: done, translated ${visible.length} paragraphs`);
   if (btn) { btn.disabled = false; btn.textContent = '译'; btn.title = '翻译屏幕内容'; }
 }
 
@@ -290,7 +290,7 @@ async function wrapAndTranslate(el) {
   try {
     const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text });
     if (!response.success) throw new Error(response.error);
-    log('[Reader] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
+    log('[PageGrep] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
     el.querySelector('.ai-para-translated').textContent = response.result;
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
@@ -299,12 +299,12 @@ async function wrapAndTranslate(el) {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const showing = el.classList.toggle('show-translation');
-      log(`[Reader] toggle paragraph → ${showing ? 'translation' : 'original'}`);
+      log(`[PageGrep] toggle paragraph → ${showing ? 'translation' : 'original'}`);
       btn.textContent = showing ? '原' : '译';
       btn.title = showing ? '显示原文' : '显示译文';
     });
   } catch (err) {
-    error('[Reader] paragraph translation failed:', err.message);
+    error('[PageGrep] paragraph translation failed:', err.message);
     el.innerHTML = originalHTML;
     el.classList.remove('ai-para-wrap', 'show-translation');
     delete el.dataset.aiWrapped;
@@ -365,10 +365,10 @@ function detectPageLanguage() {
 }
 
 async function runSummaryFromPage() {
-  log('[Reader] runSummary triggered');
+  log('[PageGrep] runSummary triggered');
   const elements = collectPageElements();
   const pageLanguage = detectPageLanguage();
-  log(`[Reader] summary: collected ${elements.length} page elements, language: ${pageLanguage}`);
+  log(`[PageGrep] summary: collected ${elements.length} page elements, language: ${pageLanguage}`);
   if (elements.length === 0) {
     browser.runtime.sendMessage({ action: 'summaryError', error: '无可分析内容' });
     return;
@@ -382,10 +382,10 @@ async function runSummaryFromPage() {
     });
 
     if (!response.success) throw new Error(response.error);
-    log(`[Reader] summary: received ${response.points.length} points`, response.points);
+    log(`[PageGrep] summary: received ${response.points.length} points`, response.points);
     updateSummarySidebar(response.points, elements);
   } catch (err) {
-    error('[Reader] summary: failed:', err.message);
+    error('[PageGrep] summary: failed:', err.message);
     browser.runtime.sendMessage({ action: 'summaryError', error: err.message });
   }
 }
@@ -410,19 +410,19 @@ function collectPageElements() {
 
   const isLikelyArticle = paras.length >= 3;
   if (isLikelyArticle) {
-    log(`[Reader] article-style collection (detected ${paras.length} long paragraphs)`);
+    log(`[PageGrep] article-style collection (detected ${paras.length} long paragraphs)`);
     return collectArticleElements(scope);
   }
 
   // 2. Otherwise try list-style collection (grouping headlines + snippets)
   const listItems = collectGenericListElements(scope);
   if (listItems && listItems.length >= 4) {
-    log(`[Reader] list-style collection: found ${listItems.length} items`);
+    log(`[PageGrep] list-style collection: found ${listItems.length} items`);
     return listItems.slice(0, 140);
   }
 
   // 3. Fallback to article-style collection if list items are few or detection failed
-  log(`[Reader] fallback to article-style collection`);
+  log(`[PageGrep] fallback to article-style collection`);
   return collectArticleElements(scope);
 }
 
@@ -571,17 +571,17 @@ function inferHackerNewsTags(title, site) {
 
 
 async function runInterestingFromPage() {
-  log('[Reader] ★ (highlight) clicked');
+  log('[PageGrep] ★ (highlight) clicked');
   const { userInterests } = await browser.storage.local.get([STORAGE_KEYS.USER_INTERESTS]);
   if (!userInterests) {
-    warn('[Reader] ★: no user interests set');
+    warn('[PageGrep] ★: no user interests set');
     browser.runtime.sendMessage({ action: 'highlightError', error: '请先在插件中设置兴趣' });
     return;
   }
 
   const elements = collectPageElements();
   HIGHLIGHT_STATE.elements = elements;
-  log(`[Reader] ★: collected ${elements.length} elements, interests: "${userInterests}"`);
+  log(`[PageGrep] ★: collected ${elements.length} elements, interests: "${userInterests}"`);
   if (elements.length === 0) {
     browser.runtime.sendMessage({ action: 'highlightError', error: '无可分析内容' });
     return;
@@ -595,16 +595,16 @@ async function runInterestingFromPage() {
     });
 
     if (!response.success) throw new Error(response.error);
-    log(`[Reader] ★: matched items:`, response.items);
+    log(`[PageGrep] ★: matched items:`, response.items);
 
     const items = response.items
       .filter(item => elements[item.index])
       .map(item => ({ index: item.index, text: elements[item.index].label || elements[item.index].text, reason: item.reason }));
     HIGHLIGHT_STATE.items = items;
     browser.runtime.sendMessage({ action: 'highlightDone', items });
-    log(`[Reader] ★: found ${items.length} interesting elements`);
+    log(`[PageGrep] ★: found ${items.length} interesting elements`);
   } catch (err) {
-    error('[Reader] ★: highlight failed:', err.message);
+    error('[PageGrep] ★: highlight failed:', err.message);
     browser.runtime.sendMessage({ action: 'highlightError', error: err.message });
   }
 }
@@ -638,7 +638,7 @@ browser.runtime.onMessage.addListener((message) => {
   if (message.action === 'summaryClick') {
     const target = SUMMARY_STATE.elements?.[message.index]?.el;
     if (target) {
-      log(`[Reader] summary item clicked (sidebar): index ${message.index}`);
+      log(`[PageGrep] summary item clicked (sidebar): index ${message.index}`);
       clearAllHighlights();
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       flashElement(target, 'summary');
@@ -671,7 +671,7 @@ browser.runtime.onMessage.addListener((message) => {
   if (message.action === 'highlightClick') {
     const target = HIGHLIGHT_STATE.elements?.[message.index]?.el;
     if (target) {
-      log(`[Reader] interesting item clicked (sidebar): index ${message.index}`);
+      log(`[PageGrep] interesting item clicked (sidebar): index ${message.index}`);
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       flashElement(target, 'highlight');
     }
@@ -681,7 +681,7 @@ browser.runtime.onMessage.addListener((message) => {
 
 // --- Initialization ---
 
-log('[Reader] content script loaded', location.href);
+log('[PageGrep] content script loaded', location.href);
 browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN]).then(({ showFloatBtn }) => {
   if (showFloatBtn !== false) createFloatButton();
 });

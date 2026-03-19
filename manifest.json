@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "Reader Helper",
+  "name": "PageGrep",
   "version": "1.1",
   "description": "Reading assistant: translate pages and highlight content matching your interests",
   "icons": {
@@ -26,10 +26,10 @@
       "96": "icons/icon-96.svg",
       "128": "icons/icon-128.svg"
     },
-    "default_title": "Reader Helper"
+    "default_title": "PageGrep"
   },
   "sidebar_action": {
-    "default_title": "阅读助手",
+    "default_title": "PageGrep",
     "default_panel": "sidebar/sidebar.html",
     "default_icon": {
       "48": "icons/icon-48.svg"
