@@ -68,5 +68,15 @@
   "noAnalyzableContent": { "message": "Нет анализируемого контента" },
   "setInterestsFirst": { "message": "Пожалуйста, сначала задайте интересы в расширении" },
   "dropToHide": { "message": "Перетащите сюда, чтобы скрыть" },
-  "extDescription": { "message": "Помощник для чтения: переводит страницы и выделяет контент, соответствующий вашим интересам" }
+  "extDescription": { "message": "Помощник для чтения: переводит страницы и выделяет контент, соответствующий вашим интересам" },
+  "translateSelection": { "message": "Перевести" },
+  "hideOnSite": {
+    "message": "Скрыть на $domain$",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "Заблокированные домены" },
+  "blockedDomainsInfo": { "message": "Плавающая кнопка скрыта на этих доменах. Щёлкните правой кнопкой мыши по кнопке на любой странице, чтобы добавить сайт." },
+  "noBlockedDomains": { "message": "Нет заблокированных доменов" },
+  "removeDomain": { "message": "Удалить" },
+  "hideOnThisSite": { "message": "Скрыть на этом сайте" }
 }

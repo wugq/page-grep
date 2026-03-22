@@ -139,6 +139,73 @@ function injectStyles() {
       background: rgba(239, 68, 68, 0.9);
       color: white;
     }
+    #ai-selection-btn {
+      position: fixed;
+      z-index: 2147483647;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+      transition: filter 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      pointer-events: all;
+    }
+    #ai-selection-btn:hover { filter: brightness(1.1); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.5); }
+    #ai-selection-result {
+      position: fixed;
+      z-index: 2147483647;
+      background: rgba(15, 23, 42, 0.95);
+      color: #f1f5f9;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      max-width: min(360px, 90vw);
+      line-height: 1.6;
+      user-select: text;
+      white-space: pre-wrap;
+      word-break: break-word;
+      pointer-events: all;
+    }
+    #ai-selection-result.ai-sel-loading { color: #94a3b8; font-style: italic; }
+    #ai-selection-result.ai-sel-error { color: #fca5a5; }
+    #ai-panel-menu {
+      position: fixed;
+      z-index: 2147483647;
+      background: white;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px;
+      padding: 4px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      min-width: 180px;
+    }
+    #ai-panel-menu button {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      background: none;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+      color: #0f172a;
+      text-align: left;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    #ai-panel-menu button:hover { background: rgba(99,102,241,0.08); color: #6366f1; }
   `;
   document.head.appendChild(style);
 }
@@ -206,6 +273,11 @@ function createFloatButton() {
   btn.title = browser.i18n.getMessage('translateScreenContent');
   panel.appendChild(btn);
   btn.addEventListener('click', () => runTranslateOnPage(btn));
+
+  panel.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showPanelContextMenu(e.clientX, e.clientY);
+  });
 
   makeDraggable(panel);
 
@@ -816,6 +888,140 @@ browser.runtime.onMessage.addListener((message) => {
   }
 });
 
+// --- Domain Block (right-click float panel) ---
+
+function showPanelContextMenu(x, y) {
+  document.getElementById('ai-panel-menu')?.remove();
+  const hostname = location.hostname;
+  const menu = document.createElement('div');
+  menu.id = 'ai-panel-menu';
+  const item = document.createElement('button');
+  item.textContent = browser.i18n.getMessage('hideOnSite', [hostname]) || `Hide on ${hostname}`;
+  item.addEventListener('click', async () => {
+    document.removeEventListener('mousedown', onOutsideMousedown);
+    menu.remove();
+    const { blockedDomains } = await browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS);
+    const list = Array.isArray(blockedDomains) ? blockedDomains : [];
+    if (!list.includes(hostname)) {
+      await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: [...list, hostname] });
+    }
+    document.getElementById(PANEL_ID)?.remove();
+    document.getElementById('ai-trash-zone')?.remove();
+  });
+  menu.appendChild(item);
+  menu.style.cssText = `left:${x}px;top:${y}px`;
+  document.body.appendChild(menu);
+  requestAnimationFrame(() => {
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) menu.style.left = (x - rect.width) + 'px';
+    if (rect.bottom > window.innerHeight - 8) menu.style.top = (y - rect.height) + 'px';
+  });
+  const onOutsideMousedown = (e) => {
+    if (menu.contains(e.target)) return;
+    menu.remove();
+    document.removeEventListener('mousedown', onOutsideMousedown);
+  };
+  setTimeout(() => document.addEventListener('mousedown', onOutsideMousedown), 0);
+}
+
+// --- Text Selection Translate ---
+
+const SELECTION_BTN_ID = 'ai-selection-btn';
+const SELECTION_RESULT_ID = 'ai-selection-result';
+
+function removeSelectionUI() {
+  document.getElementById(SELECTION_BTN_ID)?.remove();
+  document.getElementById(SELECTION_RESULT_ID)?.remove();
+}
+
+function positionSelectionEl(el, anchorLeft, anchorTop, anchorBottom) {
+  requestAnimationFrame(() => {
+    const GAP = 8;
+    const MARGIN = 8;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const left = Math.max(w / 2 + MARGIN, Math.min(window.innerWidth - w / 2 - MARGIN, anchorLeft));
+    const top = (anchorTop - h - GAP >= MARGIN) ? anchorTop - h - GAP : anchorBottom + GAP;
+    el.style.left = (left - w / 2) + 'px';
+    el.style.top = top + 'px';
+  });
+}
+
+function showSelectionResult(anchorLeft, anchorTop, anchorBottom, text) {
+  document.getElementById(SELECTION_BTN_ID)?.remove();
+  const popup = document.createElement('div');
+  popup.id = SELECTION_RESULT_ID;
+  popup.classList.add('ai-sel-loading');
+  popup.textContent = browser.i18n.getMessage('translating');
+  popup.style.cssText = 'left:-9999px;top:-9999px';
+  document.body.appendChild(popup);
+  positionSelectionEl(popup, anchorLeft, anchorTop, anchorBottom);
+
+  browser.runtime.sendMessage({ action: 'translateParagraph', text })
+    .then(response => {
+      if (!response.success) throw new Error(response.error || 'Translation failed');
+      popup.classList.remove('ai-sel-loading');
+      popup.textContent = response.result;
+      positionSelectionEl(popup, anchorLeft, anchorTop, anchorBottom);
+    })
+    .catch(err => {
+      popup.classList.remove('ai-sel-loading');
+      popup.classList.add('ai-sel-error');
+      popup.textContent = '\u26a0 ' + (err.message || 'Translation failed');
+    });
+}
+
+function onTextSelectionEnd(e) {
+  if (e.target.closest('#' + SELECTION_BTN_ID) || e.target.closest('#' + SELECTION_RESULT_ID)) return;
+
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed) {
+    document.getElementById(SELECTION_BTN_ID)?.remove();
+    return;
+  }
+  if (sel.toString().trim().length < 3) {
+    document.getElementById(SELECTION_BTN_ID)?.remove();
+    return;
+  }
+
+  let rect;
+  try { rect = sel.getRangeAt(0).getBoundingClientRect(); } catch (_) { return; }
+  if (!rect || (!rect.width && !rect.height)) return;
+
+  const anchorLeft = rect.left + rect.width / 2;
+  const anchorTop = rect.top;
+  const anchorBottom = rect.bottom;
+  const capturedText = sel.toString().trim();
+
+  document.getElementById(SELECTION_BTN_ID)?.remove();
+  injectStyles();
+
+  const btn = document.createElement('button');
+  btn.id = SELECTION_BTN_ID;
+  const svgEl = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml').documentElement;
+  svgEl.setAttribute('width', '13');
+  svgEl.setAttribute('height', '13');
+  svgEl.style.pointerEvents = 'none';
+  btn.appendChild(svgEl);
+  btn.appendChild(document.createTextNode('\u00a0' + (browser.i18n.getMessage('translateSelection') || 'Translate')));
+  btn.style.cssText = 'left:-9999px;top:-9999px';
+  document.body.appendChild(btn);
+  positionSelectionEl(btn, anchorLeft, anchorTop, anchorBottom);
+
+  btn.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.getSelection()?.removeAllRanges();
+    showSelectionResult(anchorLeft, anchorTop, anchorBottom, capturedText);
+  });
+}
+
+document.addEventListener('mouseup', onTextSelectionEnd);
+document.addEventListener('mousedown', (e) => {
+  if (e.target.closest('#' + SELECTION_BTN_ID) || e.target.closest('#' + SELECTION_RESULT_ID)) return;
+  removeSelectionUI();
+});
+
 // --- i18n initialization ---
 
 async function initI18n() {
@@ -845,9 +1051,10 @@ async function initI18n() {
 // --- Initialization ---
 
 log('[PageGrep] content script loaded', location.href);
-browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN]).then(async ({ showFloatBtn }) => {
+browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS]).then(async ({ showFloatBtn, blockedDomains }) => {
   await initI18n();
-  if (showFloatBtn !== false) createFloatButton();
+  const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
+  if (showFloatBtn !== false && !blocked.includes(location.hostname)) createFloatButton();
 });
 
 // Handle system theme changes if no explicit preference is set
@@ -860,15 +1067,36 @@ browser.storage.onChanged.addListener((changes) => {
   if (STORAGE_KEYS.SHOW_FLOAT_BTN in changes) {
     const show = changes[STORAGE_KEYS.SHOW_FLOAT_BTN].newValue !== false;
     if (show) {
-      browser.storage.local.remove(STORAGE_KEYS.PANEL_POSITION);
-      createFloatButton();
+      browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS).then(({ blockedDomains }) => {
+        const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
+        if (!blocked.includes(location.hostname)) {
+          browser.storage.local.remove(STORAGE_KEYS.PANEL_POSITION);
+          createFloatButton();
+        }
+      });
     } else {
       document.getElementById(FLOAT_BTN_ID)?.remove();
       clearAllHighlights();
       removePanelIfEmpty();
     }
   }
+  if (STORAGE_KEYS.BLOCKED_DOMAINS in changes) {
+    const blocked = Array.isArray(changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue)
+      ? changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue : [];
+    if (blocked.includes(location.hostname)) {
+      document.getElementById(FLOAT_BTN_ID)?.remove();
+      clearAllHighlights();
+      removePanelIfEmpty();
+    } else {
+      browser.storage.local.get(STORAGE_KEYS.SHOW_FLOAT_BTN).then(({ showFloatBtn }) => {
+        if (showFloatBtn !== false) createFloatButton();
+      });
+    }
+  }
   if (STORAGE_KEYS.THEME in changes) {
     applyThemeToPanel();
+  }
+  if (STORAGE_KEYS.UI_LANG in changes) {
+    initI18n();
   }
 });

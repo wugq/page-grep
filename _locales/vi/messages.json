@@ -68,5 +68,15 @@
   "noAnalyzableContent": { "message": "Không có nội dung có thể phân tích" },
   "setInterestsFirst": { "message": "Vui lòng thiết lập sở thích của bạn trong tiện ích trước" },
   "dropToHide": { "message": "Thả để ẩn" },
-  "extDescription": { "message": "Trợ lý đọc: dịch trang và tô sáng nội dung phù hợp với sở thích của bạn" }
+  "extDescription": { "message": "Trợ lý đọc: dịch trang và tô sáng nội dung phù hợp với sở thích của bạn" },
+  "translateSelection": { "message": "Dịch" },
+  "hideOnSite": {
+    "message": "Ẩn trên $domain$",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "Tên miền bị chặn" },
+  "blockedDomainsInfo": { "message": "Nút nổi bị ẩn trên các tên miền này. Nhấp chuột phải vào nút nổi trên bất kỳ trang nào để thêm." },
+  "noBlockedDomains": { "message": "Không có tên miền bị chặn" },
+  "removeDomain": { "message": "Xóa" },
+  "hideOnThisSite": { "message": "Ẩn trên trang này" }
 }

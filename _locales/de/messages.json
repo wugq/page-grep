@@ -68,5 +68,15 @@
   "noAnalyzableContent": { "message": "Kein analysierbarer Inhalt" },
   "setInterestsFirst": { "message": "Bitte lege zuerst deine Interessen in der Erweiterung fest" },
   "dropToHide": { "message": "Hierher ziehen zum Ausblenden" },
-  "extDescription": { "message": "Leseassistent: Seiten übersetzen und Inhalte hervorheben, die deinen Interessen entsprechen" }
+  "extDescription": { "message": "Leseassistent: Seiten übersetzen und Inhalte hervorheben, die deinen Interessen entsprechen" },
+  "translateSelection": { "message": "Übersetzen" },
+  "hideOnSite": {
+    "message": "Auf $domain$ ausblenden",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "Gesperrte Domains" },
+  "blockedDomainsInfo": { "message": "Der Float-Button wird auf diesen Domains ausgeblendet. Rechtsklick auf den Float-Button auf einer Seite, um die Domain hinzuzufügen." },
+  "noBlockedDomains": { "message": "Keine gesperrten Domains" },
+  "removeDomain": { "message": "Entfernen" },
+  "hideOnThisSite": { "message": "Auf dieser Seite ausblenden" }
 }

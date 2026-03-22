@@ -68,5 +68,15 @@
   "noAnalyzableContent": { "message": "분석 가능한 콘텐츠가 없습니다" },
   "setInterestsFirst": { "message": "먼저 확장 프로그램에서 관심사를 설정하세요" },
   "dropToHide": { "message": "여기에 놓아 숨기기" },
-  "extDescription": { "message": "독서 도우미: 페이지를 번역하고 관심사에 맞는 콘텐츠를 하이라이트합니다" }
+  "extDescription": { "message": "독서 도우미: 페이지를 번역하고 관심사에 맞는 콘텐츠를 하이라이트합니다" },
+  "translateSelection": { "message": "번역" },
+  "hideOnSite": {
+    "message": "$domain$에서 숨기기",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "차단된 도메인" },
+  "blockedDomainsInfo": { "message": "이 도메인에서는 플로트 버튼이 숨겨집니다. 페이지에서 플로트 버튼을 우클릭하여 추가할 수 있습니다." },
+  "noBlockedDomains": { "message": "차단된 도메인 없음" },
+  "removeDomain": { "message": "제거" },
+  "hideOnThisSite": { "message": "이 사이트에서 숨기기" }
 }

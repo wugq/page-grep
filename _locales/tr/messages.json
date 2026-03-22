@@ -68,5 +68,15 @@
   "noAnalyzableContent": { "message": "Analiz edilebilir içerik yok" },
   "setInterestsFirst": { "message": "Lütfen önce eklentide ilgi alanlarınızı belirleyin" },
   "dropToHide": { "message": "Gizlemek için bırakın" },
-  "extDescription": { "message": "Okuma asistanı: sayfaları çevirir ve ilgi alanlarınızla eşleşen içerikleri vurgular" }
+  "extDescription": { "message": "Okuma asistanı: sayfaları çevirir ve ilgi alanlarınızla eşleşen içerikleri vurgular" },
+  "translateSelection": { "message": "Çevir" },
+  "hideOnSite": {
+    "message": "$domain$ üzerinde gizle",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "Engellenen Alanlar" },
+  "blockedDomainsInfo": { "message": "Yüzen düğme bu alanlarda gizlenir. Herhangi bir sayfada yüzen düğmeye sağ tıklayarak ekleyebilirsiniz." },
+  "noBlockedDomains": { "message": "Engellenen alan yok" },
+  "removeDomain": { "message": "Kaldır" },
+  "hideOnThisSite": { "message": "Bu sitede gizle" }
 }

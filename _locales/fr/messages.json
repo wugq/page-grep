@@ -68,5 +68,15 @@
   "noAnalyzableContent": { "message": "Aucun contenu analysable" },
   "setInterestsFirst": { "message": "Veuillez d'abord définir vos intérêts dans l'extension" },
   "dropToHide": { "message": "Déposer pour masquer" },
-  "extDescription": { "message": "Assistant de lecture : traduit les pages et surligne le contenu correspondant à vos intérêts" }
+  "extDescription": { "message": "Assistant de lecture : traduit les pages et surligne le contenu correspondant à vos intérêts" },
+  "translateSelection": { "message": "Traduire" },
+  "hideOnSite": {
+    "message": "Masquer sur $domain$",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "Domaines bloqués" },
+  "blockedDomainsInfo": { "message": "Le bouton flottant est masqué sur ces domaines. Faites un clic droit sur le bouton flottant pour ajouter le site actuel." },
+  "noBlockedDomains": { "message": "Aucun domaine bloqué" },
+  "removeDomain": { "message": "Supprimer" },
+  "hideOnThisSite": { "message": "Masquer sur ce site" }
 }

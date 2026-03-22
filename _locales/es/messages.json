@@ -68,5 +68,15 @@
   "noAnalyzableContent": { "message": "No hay contenido analizable" },
   "setInterestsFirst": { "message": "Por favor, configura primero tus intereses en la extensión" },
   "dropToHide": { "message": "Soltar para ocultar" },
-  "extDescription": { "message": "Asistente de lectura: traduce páginas y resalta el contenido que coincide con tus intereses" }
+  "extDescription": { "message": "Asistente de lectura: traduce páginas y resalta el contenido que coincide con tus intereses" },
+  "translateSelection": { "message": "Traducir" },
+  "hideOnSite": {
+    "message": "Ocultar en $domain$",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "Dominios bloqueados" },
+  "blockedDomainsInfo": { "message": "El botón flotante está oculto en estos dominios. Haz clic derecho en el botón flotante en cualquier página para añadir el sitio." },
+  "noBlockedDomains": { "message": "Sin dominios bloqueados" },
+  "removeDomain": { "message": "Eliminar" },
+  "hideOnThisSite": { "message": "Ocultar en este sitio" }
 }

@@ -71,5 +71,15 @@
   "noAnalyzableContent": { "message": "No analyzable content" },
   "setInterestsFirst": { "message": "Please set your interests in the extension first" },
   "dropToHide": { "message": "Drop to hide" },
-  "extDescription": { "message": "Reading assistant: translate pages and highlight content matching your interests" }
+  "extDescription": { "message": "Reading assistant: translate pages and highlight content matching your interests" },
+  "translateSelection": { "message": "Translate" },
+  "hideOnSite": {
+    "message": "Hide on $domain$",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "Blocked Domains" },
+  "blockedDomainsInfo": { "message": "The float button is hidden on these domains. Right-click the float button on any page to add it." },
+  "noBlockedDomains": { "message": "No blocked domains" },
+  "removeDomain": { "message": "Remove" },
+  "hideOnThisSite": { "message": "Hide on this site" }
 }

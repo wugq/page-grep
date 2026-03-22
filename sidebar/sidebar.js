@@ -54,6 +54,20 @@ async function init() {
   floatCheckbox.checked = showFloatBtn !== false;
   floatCheckbox.addEventListener('change', () => {
     browser.storage.local.set({ [STORAGE_KEYS.SHOW_FLOAT_BTN]: floatCheckbox.checked });
+    updateHideOnSiteToggle();
+  });
+
+  // Hide on this site toggle
+  const hideOnSiteToggle = document.getElementById('hide-on-site-toggle');
+  hideOnSiteToggle.addEventListener('change', async () => {
+    const hostname = hideOnSiteToggle.dataset.hostname;
+    if (!hostname) return;
+    const { blockedDomains } = await browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS);
+    const list = Array.isArray(blockedDomains) ? blockedDomains : [];
+    const updated = hideOnSiteToggle.checked
+      ? [...new Set([...list, hostname])]
+      : list.filter(d => d !== hostname);
+    await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: updated });
   });
 
   // Interests Config
@@ -106,6 +120,7 @@ async function init() {
 
   // Initial Data Load
   loadFromActiveTab();
+  updateHideOnSiteToggle();
 }
 
 // --- Messaging ---
@@ -126,6 +141,30 @@ async function sendToActiveTab(message) {
   } catch (_) {
     return false;
   }
+}
+
+async function updateHideOnSiteToggle() {
+  const hideOnSiteRow = document.getElementById('hide-on-site-row');
+  const hideOnSiteToggle = document.getElementById('hide-on-site-toggle');
+  const { showFloatBtn, blockedDomains } = await browser.storage.local.get([
+    STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS
+  ]);
+  if (showFloatBtn === false) {
+    hideOnSiteRow.classList.add('hidden');
+    return;
+  }
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+  const url = tabs[0]?.url || '';
+  let hostname;
+  try { hostname = new URL(url).hostname; } catch (_) { hostname = ''; }
+  if (!hostname) {
+    hideOnSiteRow.classList.add('hidden');
+    return;
+  }
+  hideOnSiteToggle.dataset.hostname = hostname;
+  const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
+  hideOnSiteToggle.checked = blocked.includes(hostname);
+  hideOnSiteRow.classList.remove('hidden');
 }
 
 async function loadFromActiveTab() {
@@ -149,6 +188,7 @@ async function loadFromActiveTab() {
     renderSummary([]);
     renderHighlights([]);
   }
+  updateHideOnSiteToggle();
 }
 
 // --- UI Helpers ---
@@ -289,6 +329,10 @@ browser.storage.onChanged.addListener((changes) => {
   if (STORAGE_KEYS.SHOW_FLOAT_BTN in changes) {
     const floatCheckbox = document.getElementById('show-float-btn');
     if (floatCheckbox) floatCheckbox.checked = changes[STORAGE_KEYS.SHOW_FLOAT_BTN].newValue !== false;
+    updateHideOnSiteToggle();
+  }
+  if (STORAGE_KEYS.BLOCKED_DOMAINS in changes) {
+    updateHideOnSiteToggle();
   }
   if (STORAGE_KEYS.UI_LANG in changes) {
     location.reload();

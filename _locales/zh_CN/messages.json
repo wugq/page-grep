@@ -71,5 +71,15 @@
   "noAnalyzableContent": { "message": "无可分析内容" },
   "setInterestsFirst": { "message": "请先在插件中设置兴趣" },
   "dropToHide": { "message": "拖到此处隐藏" },
-  "extDescription": { "message": "阅读助手：翻译网页并高亮匹配兴趣的内容" }
+  "extDescription": { "message": "阅读助手：翻译网页并高亮匹配兴趣的内容" },
+  "translateSelection": { "message": "翻译" },
+  "hideOnSite": {
+    "message": "在 $domain$ 上隐藏",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "已屏蔽的域名" },
+  "blockedDomainsInfo": { "message": "悬浮按钮在这些域名上会被隐藏。右键点击悬浮按钮可添加当前网站。" },
+  "noBlockedDomains": { "message": "暂无屏蔽的域名" },
+  "removeDomain": { "message": "移除" },
+  "hideOnThisSite": { "message": "在此网站上隐藏" }
 }

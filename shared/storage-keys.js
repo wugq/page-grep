@@ -7,4 +7,5 @@ const STORAGE_KEYS = Object.freeze({
   UI_LANG: 'uiLang',
   TRANSLATE_LANG: 'translateLang',
   PANEL_POSITION: 'panelPosition',
+  BLOCKED_DOMAINS: 'blockedDomains',
 });

@@ -68,5 +68,15 @@
   "noAnalyzableContent": { "message": "Nessun contenuto analizzabile" },
   "setInterestsFirst": { "message": "Imposta prima i tuoi interessi nell'estensione" },
   "dropToHide": { "message": "Rilascia per nascondere" },
-  "extDescription": { "message": "Assistente di lettura: traduce le pagine ed evidenzia i contenuti che corrispondono ai tuoi interessi" }
+  "extDescription": { "message": "Assistente di lettura: traduce le pagine ed evidenzia i contenuti che corrispondono ai tuoi interessi" },
+  "translateSelection": { "message": "Traduci" },
+  "hideOnSite": {
+    "message": "Nascondi su $domain$",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "Domini bloccati" },
+  "blockedDomainsInfo": { "message": "Il pulsante flottante è nascosto su questi domini. Fai clic destro sul pulsante flottante su qualsiasi pagina per aggiungere il sito." },
+  "noBlockedDomains": { "message": "Nessun dominio bloccato" },
+  "removeDomain": { "message": "Rimuovi" },
+  "hideOnThisSite": { "message": "Nascondi su questo sito" }
 }

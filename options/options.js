@@ -1,6 +1,35 @@
+function renderBlockedDomains(domains) {
+  const list = document.getElementById('blocked-domains-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!domains || domains.length === 0) {
+    const empty = document.createElement('span');
+    empty.id = 'blocked-domains-empty';
+    empty.textContent = browser.i18n.getMessage('noBlockedDomains') || 'No blocked domains';
+    list.appendChild(empty);
+    return;
+  }
+  domains.forEach(domain => {
+    const tag = document.createElement('span');
+    tag.className = 'domain-tag';
+    tag.appendChild(document.createTextNode(domain));
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = '×';
+    removeBtn.title = browser.i18n.getMessage('removeDomain') || 'Remove';
+    removeBtn.addEventListener('click', async () => {
+      const { blockedDomains } = await browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS);
+      const updated = (Array.isArray(blockedDomains) ? blockedDomains : []).filter(d => d !== domain);
+      await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: updated });
+      renderBlockedDomains(updated);
+    });
+    tag.appendChild(removeBtn);
+    list.appendChild(tag);
+  });
+}
+
 async function loadSettings() {
-  const { openaiApiKey, preferredModel, theme, showFloatBtn, uiLang, translateLang } = await browser.storage.local.get([
-    STORAGE_KEYS.API_KEY, STORAGE_KEYS.MODEL, STORAGE_KEYS.THEME, STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.UI_LANG, STORAGE_KEYS.TRANSLATE_LANG
+  const { openaiApiKey, preferredModel, theme, showFloatBtn, uiLang, translateLang, blockedDomains } = await browser.storage.local.get([
+    STORAGE_KEYS.API_KEY, STORAGE_KEYS.MODEL, STORAGE_KEYS.THEME, STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.UI_LANG, STORAGE_KEYS.TRANSLATE_LANG, STORAGE_KEYS.BLOCKED_DOMAINS
   ]);
 
   if (openaiApiKey) document.getElementById('api-key').value = openaiApiKey;
@@ -11,6 +40,8 @@ async function loadSettings() {
 
   const floatCheckbox = document.getElementById('show-float-btn');
   if (floatCheckbox) floatCheckbox.checked = showFloatBtn !== false;
+
+  renderBlockedDomains(Array.isArray(blockedDomains) ? blockedDomains : []);
 }
 
 function showStatus(message, type) {
@@ -66,7 +97,8 @@ document.getElementById('clear-btn').addEventListener('click', async () => {
 
   await browser.storage.local.remove([
     STORAGE_KEYS.API_KEY, STORAGE_KEYS.MODEL, STORAGE_KEYS.THEME,
-    STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.USER_INTERESTS, STORAGE_KEYS.UI_LANG, STORAGE_KEYS.TRANSLATE_LANG
+    STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.USER_INTERESTS, STORAGE_KEYS.UI_LANG, STORAGE_KEYS.TRANSLATE_LANG,
+    STORAGE_KEYS.BLOCKED_DOMAINS
   ]);
   document.getElementById('api-key').value = '';
   document.getElementById('model-select').value = 'gpt-4o-mini';
@@ -74,6 +106,7 @@ document.getElementById('clear-btn').addEventListener('click', async () => {
   document.getElementById('language-select').value = '';
   document.getElementById('translate-lang-select').value = 'zh-CN';
   document.getElementById('show-float-btn').checked = true;
+  renderBlockedDomains([]);
   showStatus(browser.i18n.getMessage('settingsCleared'), 'success');
 });
 
@@ -88,6 +121,11 @@ browser.storage.onChanged.addListener((changes) => {
   }
   if (STORAGE_KEYS.SHOW_FLOAT_BTN in changes) {
     document.getElementById('show-float-btn').checked = changes[STORAGE_KEYS.SHOW_FLOAT_BTN].newValue !== false;
+  }
+  if (STORAGE_KEYS.BLOCKED_DOMAINS in changes) {
+    const domains = Array.isArray(changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue)
+      ? changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue : [];
+    renderBlockedDomains(domains);
   }
 });
 

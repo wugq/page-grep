@@ -68,5 +68,15 @@
   "noAnalyzableContent": { "message": "Sem conteúdo analisável" },
   "setInterestsFirst": { "message": "Por favor, defina seus interesses na extensão primeiro" },
   "dropToHide": { "message": "Soltar para ocultar" },
-  "extDescription": { "message": "Assistente de leitura: traduz páginas e destaca conteúdo que corresponde aos seus interesses" }
+  "extDescription": { "message": "Assistente de leitura: traduz páginas e destaca conteúdo que corresponde aos seus interesses" },
+  "translateSelection": { "message": "Traduzir" },
+  "hideOnSite": {
+    "message": "Ocultar em $domain$",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "blockedDomainsLabel": { "message": "Domínios bloqueados" },
+  "blockedDomainsInfo": { "message": "O botão flutuante está oculto nestes domínios. Clique com o botão direito no botão flutuante em qualquer página para adicionar o site." },
+  "noBlockedDomains": { "message": "Nenhum domínio bloqueado" },
+  "removeDomain": { "message": "Remover" },
+  "hideOnThisSite": { "message": "Ocultar neste site" }
 }
