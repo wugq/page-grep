@@ -1,5 +1,7 @@
 # PageGrep
 
+[![Firefox Add-on](https://img.shields.io/badge/Firefox-Add--on-orange)](https://addons.mozilla.org/en-US/firefox/addon/pagegrep/)
+
 A Firefox extension that helps you read and discover content on web pages using AI. It translates content in-place, highlights elements matching your personal interests, and summarizes pages — all powered by OpenAI.
 
 ## Features
@@ -8,7 +10,9 @@ A Firefox extension that helps you read and discover content on web pages using 
 - **Interest highlighting** — describe topics you care about (e.g. "AI, macroeconomics, sports"), and the extension uses AI to find and highlight matching content on any page in yellow.
 - **Highlight navigation** — after highlighting, use ▲ / ▼ buttons to scroll through matches one by one with a smooth animation.
 - **Page summarization** — generates an AI-powered summary of the page, grouped into sections with bullet points, shown in the sidebar.
+- **Text selection translate** — select any text on a page to get a floating "Translate" pill button; clicking it translates the selection and shows the result in a popup tooltip.
 - **Draggable floating panel** — a compact dark panel in the bottom-right corner. Drag it to reposition; drag it to the trash zone at the bottom to dismiss.
+- **Per-domain blocking** — right-click the floating panel to hide it on the current site. A "Hide on this site" toggle in the sidebar also reflects and controls this state. Blocked domains are managed in Settings.
 - **Dark mode** — full dark/light/system theme support across all extension UI.
 - **Internationalization** — UI available in 13 languages: English, Chinese (Simplified & Traditional), Japanese, Korean, French, German, Spanish, Italian, Portuguese (Brazil), Russian, Turkish, and Vietnamese.
 
@@ -67,13 +71,19 @@ A compact dark panel appears in the bottom-right corner of every page (when enab
 
 The panel is draggable — click and drag to reposition it. Drag it toward the bottom of the screen to reveal a trash zone; release there to dismiss it. Position is remembered across page loads.
 
-The panel can be toggled on/off from **Settings** via the **Show Floating Button** checkbox.
+The panel is toggled on/off globally via **Show Floating Button** in Settings. To hide it on a specific site, right-click the panel and choose **Hide on this site**, or use the **Hide on this site** toggle in the sidebar.
 
 ### Translate
 
+**Full-page translation:**
 1. Navigate to any page with content you want to translate
 2. Click **译** in the floating panel
 3. Visible paragraphs are translated in-place — each gets a small toggle button to switch between the original and translated text
+
+**Selection translation:**
+1. Select any text on a page
+2. A floating **Translate** pill appears above the selection
+3. Click it to see the translation in a popup tooltip; click anywhere else to dismiss
 
 ### Interest Highlighting
 
@@ -134,7 +144,8 @@ All settings are stored locally in `browser.storage.local`:
 | Model | `gpt-4o-mini` or `gpt-4o` | `gpt-4o-mini` |
 | Translation Language | Target language for translation | Chinese (Simplified) |
 | Theme | Light, dark, or follow system | System |
-| Show Floating Button | Show/hide the floating panel | Enabled |
+| Show Floating Button | Show/hide the floating panel globally | Enabled |
+| Blocked Domains | Per-domain list to hide the float button; managed via right-click or sidebar toggle | — |
 | UI Language | Override the extension UI language | Browser default |
 
 ## Privacy

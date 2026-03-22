@@ -10,7 +10,7 @@ Reference document for submitting PageGrep to [addons.mozilla.org](https://addon
 |-------|-------|
 | **Name** | PageGrep |
 | **Extension ID** | ai-reader-helper@local *(update to a unique ID before submission, e.g. `pagegrep@yourname`)* |
-| **Version** | 1.1 |
+| **Version** | 1.3 |
 | **Category** | Productivity |
 | **License** | *(choose before submission, e.g. MIT)* |
 
@@ -21,7 +21,7 @@ Reference document for submitting PageGrep to [addons.mozilla.org](https://addon
 > Max 250 characters. Shown in search results and the AMO listing header.
 
 ```
-Reading assistant powered by AI. Translate pages in-place, highlight content matching your interests, and summarize any page — all without leaving your tab.
+Reading assistant powered by AI. Translate pages or selected text in-place, highlight content matching your interests, and summarize any page — all without leaving your tab.
 ```
 
 ---
@@ -41,6 +41,12 @@ Describe topics you care about — "AI, climate policy, Formula 1" — and PageG
 
 **Summarize any page**
 One click generates a structured summary of the page, grouped into sections with bullet points. Click any item in the summary to scroll directly to that part of the page.
+
+**Translate selected text**
+Select any text on a page and a floating "Translate" pill appears above the selection. Click it to see the translation in a tooltip — no need to open the panel or leave the page.
+
+**Block the panel on specific sites**
+Right-click the floating panel to hide it on the current site, or use the "Hide on this site" toggle in the sidebar. Blocked domains are listed in Settings and can be removed individually.
 
 **Designed to stay out of your way**
 The floating action panel is draggable. Drag it anywhere on screen, or drag it to the bottom trash zone to dismiss. Your API key and all preferences are stored locally — nothing leaves your browser except the page content you explicitly send to OpenAI.
@@ -67,7 +73,8 @@ Data stored locally:
 - Your interest descriptions, UI preferences, and panel position are stored locally in browser.storage.local.
 
 Data sent to third parties:
-- When you explicitly trigger a translation, highlight, or summarization action, the visible text content of the current page is sent to the OpenAI API (api.openai.com) along with your API key.
+- When you trigger a full-page translation, highlight, or summarization action, the visible text content of the current page is sent to the OpenAI API (api.openai.com) along with your API key.
+- When you trigger a selection translation, only the selected text is sent to the OpenAI API.
 - No data is ever sent to the extension developer or any other third party.
 - No analytics, crash reporting, or telemetry of any kind is collected.
 
