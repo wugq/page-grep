@@ -38,7 +38,12 @@
         <div class="form-group">
           <label for="model-select" data-i18n="modelLabel">AI 模型</label>
           <select id="model-select">
+            <option value="gpt-4.1-nano" data-i18n="model41Nano">gpt-4.1-nano (ultra low cost, $0.10/M tokens)</option>
             <option value="gpt-4o-mini" data-i18n="modelMini">gpt-4o-mini（推荐，低成本）</option>
+            <option value="gpt-4.1-mini" data-i18n="model41Mini">gpt-4.1-mini (low cost, $0.40/M tokens)</option>
+            <option value="o3-mini" data-i18n="modelO3Mini">o3-mini (reasoning, $1.10/M tokens)</option>
+            <option value="gpt-4.1" data-i18n="model41">gpt-4.1 (high quality, $2.00/M tokens)</option>
+            <option value="o3" data-i18n="modelO3">o3 (reasoning, $2.00/M tokens)</option>
             <option value="gpt-4o" data-i18n="modelFull">gpt-4o（更高质量）</option>
           </select>
           <small data-i18n="modelInfo">gpt-4o-mini 适合日常使用，成本约为 $0.15/百万输入tokens。</small>
