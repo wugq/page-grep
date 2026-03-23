@@ -61,6 +61,9 @@ function injectStyles() {
       right: 2px;
       width: 22px;
       height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
       color: white;
       border: none;
