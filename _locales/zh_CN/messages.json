@@ -92,5 +92,6 @@
   "saveArticle": { "message": "复制文章到剪贴板" },
   "resetAllSettings": { "message": "重置所有设置" },
   "advancedSettings": { "message": "高级设置" },
-  "copyWithOriginal": { "message": "复制 + 原文" }
+  "copyWithOriginal": { "message": "复制 + 原文" },
+  "requestTimeout": { "message": "请求超时" }
 }

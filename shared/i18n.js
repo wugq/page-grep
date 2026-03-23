@@ -44,6 +44,10 @@ function applyI18n() {
     const msg = browser.i18n.getMessage(el.getAttribute('data-i18n-title'));
     if (msg) el.title = msg;
   });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    const msg = browser.i18n.getMessage(el.getAttribute('data-i18n-aria-label'));
+    if (msg) el.setAttribute('aria-label', msg);
+  });
   const parser = new DOMParser();
   document.querySelectorAll('[data-i18n-html]').forEach(el => {
     const msg = browser.i18n.getMessage(el.getAttribute('data-i18n-html'));

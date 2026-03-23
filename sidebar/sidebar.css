@@ -133,6 +133,8 @@ body {
   justify-content: space-between;
   padding: 12px 14px;
   background: var(--header-bg);
+  cursor: pointer;
+  user-select: none;
 }
 
 .config-title {
@@ -414,7 +416,7 @@ input:checked + .slider:before { transform: translateX(16px); }
 
 .error {
   padding: 14px;
-  margin: 16px 0;
+  margin: 0 0 16px;
   background-color: #fef2f2;
   color: #dc2626;
   border: 1px solid #fee2e2;

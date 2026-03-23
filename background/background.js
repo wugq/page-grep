@@ -24,6 +24,8 @@ browser.browserAction.onClicked.addListener(() => {
   browser.sidebarAction.toggle();
 });
 
+const API_TIMEOUT_MS = 30000;
+
 async function callOpenAI(systemPrompt, userContent, apiKey, model, jsonMode = false) {
   const body = {
     model,
@@ -35,14 +37,27 @@ async function callOpenAI(systemPrompt, userContent, apiKey, model, jsonMode = f
   };
   if (jsonMode) body.response_format = { type: 'json_object' };
 
-  const response = await fetch(OPENAI_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify(body)
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+  let response;
+  try {
+    response = await fetch(OPENAI_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error(browser.i18n.getMessage('requestTimeout') || 'Request timed out');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.error?.message || `API error: ${response.status}`);

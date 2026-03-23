@@ -89,5 +89,6 @@
   "saveArticle": { "message": "複製文章到剪貼簿" },
   "resetAllSettings": { "message": "重置所有設定" },
   "advancedSettings": { "message": "進階設定" },
-  "copyWithOriginal": { "message": "複製 + 原文" }
+  "copyWithOriginal": { "message": "複製 + 原文" },
+  "requestTimeout": { "message": "請求逾時" }
 }

@@ -92,5 +92,6 @@
   "saveArticle": { "message": "Copy article to clipboard" },
   "resetAllSettings": { "message": "Reset All Settings" },
   "advancedSettings": { "message": "Advanced Settings" },
-  "copyWithOriginal": { "message": "Copy + Original" }
+  "copyWithOriginal": { "message": "Copy + Original" },
+  "requestTimeout": { "message": "Request timed out" }
 }

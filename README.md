@@ -6,12 +6,13 @@ A Firefox extension that helps you read and discover content on web pages using 
 
 ## Features
 
-- **In-place translation** — translates visible paragraphs on screen without leaving the page. Each element gets a toggle button to switch between the original and translated text.
-- **Interest highlighting** — describe topics you care about (e.g. "AI, macroeconomics, sports"), and the extension uses AI to find and highlight matching content on any page in yellow.
-- **Highlight navigation** — after highlighting, use ▲ / ▼ buttons to scroll through matches one by one with a smooth animation.
-- **Page summarization** — generates an AI-powered summary of the page, grouped into sections with bullet points, shown in the sidebar.
-- **Text selection translate** — select any text on a page to get a floating "Translate" pill button; clicking it translates the selection and shows the result in a popup tooltip.
-- **Draggable floating panel** — a compact dark panel in the bottom-right corner. Drag it to reposition; drag it to the trash zone at the bottom to dismiss.
+- **In-place translation** — translates visible paragraphs on screen without leaving the page. Each paragraph gets a hover-revealed toggle button to switch between original and translated text.
+- **Smart selection toolbar** — select any text on a translated paragraph to get "↩ Original" (revert that paragraph) and "Copy + Original" (copy source + translation together). On untranslated text, get "Translate" and "Copy" instead.
+- **Copy article to clipboard** — the clipboard button in the floating panel extracts the page article as clean Markdown and copies it instantly.
+- **Interest highlighting** — describe topics you care about (e.g. "AI, macroeconomics, sports"), and the extension uses AI to find and highlight matching content on any page, with reasons shown in the sidebar.
+- **Page summarization** — generates an AI-powered summary of the page, grouped into sections with bullet points, shown in the sidebar. Click any item to scroll to that section.
+- **Text selection translate** — select any text on a page to get a floating "Translate" pill; clicking it shows the translation in a popup tooltip.
+- **Draggable floating panel** — a compact panel in the bottom-right corner. Drag it to reposition; drag it to the trash zone at the bottom to dismiss. Position is saved across page loads.
 - **Per-domain blocking** — right-click the floating panel to hide it on the current site. A "Hide on this site" toggle in the sidebar also reflects and controls this state. Blocked domains are managed in Settings.
 - **Dark mode** — full dark/light/system theme support across all extension UI.
 - **Internationalization** — UI available in 13 languages: English, Chinese (Simplified & Traditional), Japanese, Korean, French, German, Spanish, Italian, Portuguese (Brazil), Russian, Turkish, and Vietnamese.
@@ -60,30 +61,30 @@ Regular Firefox requires extensions to be signed by Mozilla. Developer Edition a
 
 ### Floating Panel
 
-A compact dark panel appears in the bottom-right corner of every page (when enabled). It contains:
+A compact panel appears in the bottom-right corner of every page (when enabled). It contains:
 
 | Button | Action |
 |--------|--------|
-| `译` | Translate all visible paragraphs on screen |
-| `★` | Highlight content matching your interests |
-| `▲` / `▼` | Navigate to previous / next highlight (appears after highlighting) |
-| `×` | Dismiss the panel |
+| Translate icon | Translate all visible paragraphs on screen in-place |
+| Clipboard icon | Extract the page article as Markdown and copy it to the clipboard |
 
-The panel is draggable — click and drag to reposition it. Drag it toward the bottom of the screen to reveal a trash zone; release there to dismiss it. Position is remembered across page loads.
+The panel is draggable — click and drag to reposition it. Drag it toward the bottom of the screen to reveal a trash zone; release there to hide the panel on the current site. Position is remembered across page loads.
 
-The panel is toggled on/off globally via **Show Floating Button** in Settings. To hide it on a specific site, right-click the panel and choose **Hide on this site**, or use the **Hide on this site** toggle in the sidebar.
+Right-click the panel for a **Hide on this site** context menu option. The panel can also be toggled globally via **Show Floating Button** in Settings, or per-site via the sidebar's **Hide on this site** toggle.
 
 ### Translate
 
 **Full-page translation:**
 1. Navigate to any page with content you want to translate
-2. Click **译** in the floating panel
-3. Visible paragraphs are translated in-place — each gets a small toggle button to switch between the original and translated text
+2. Click the translate button in the floating panel
+3. Visible paragraphs are translated in-place — hover over a paragraph to reveal a toggle button to switch between original and translated text
 
 **Selection translation:**
 1. Select any text on a page
-2. A floating **Translate** pill appears above the selection
-3. Click it to see the translation in a popup tooltip; click anywhere else to dismiss
+2. A floating toolbar appears above the selection:
+   - On **untranslated text**: "Translate" and "Copy" buttons
+   - On **already-translated text**: "↩ Original" (revert that paragraph) and "Copy + Original" (copies the original source alongside your selected translation)
+3. Click anywhere else to dismiss
 
 ### Interest Highlighting
 
@@ -141,7 +142,7 @@ All settings are stored locally in `browser.storage.local`:
 | Setting | Description | Default |
 |---------|-------------|---------|
 | OpenAI API Key | Required for all AI features | — |
-| Model | `gpt-4o-mini` or `gpt-4o` | `gpt-4o-mini` |
+| Model | `gpt-4o-mini`, `gpt-4o`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `o3`, `o3-mini` | `gpt-4o-mini` |
 | Translation Language | Target language for translation | Chinese (Simplified) |
 | Theme | Light, dark, or follow system | System |
 | Show Floating Button | Show/hide the floating panel globally | Enabled |

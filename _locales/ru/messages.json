@@ -89,5 +89,6 @@
   "saveArticle": { "message": "Копировать статью в буфер обмена" },
   "resetAllSettings": { "message": "Сбросить все настройки" },
   "advancedSettings": { "message": "Расширенные настройки" },
-  "copyWithOriginal": { "message": "Копировать + оригинал" }
+  "copyWithOriginal": { "message": "Копировать + оригинал" },
+  "requestTimeout": { "message": "Время запроса истекло" }
 }

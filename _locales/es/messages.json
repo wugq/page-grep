@@ -89,5 +89,6 @@
   "saveArticle": { "message": "Copiar artículo al portapapeles" },
   "resetAllSettings": { "message": "Restablecer toda la configuración" },
   "advancedSettings": { "message": "Configuración avanzada" },
-  "copyWithOriginal": { "message": "Copiar + Original" }
+  "copyWithOriginal": { "message": "Copiar + Original" },
+  "requestTimeout": { "message": "Tiempo de solicitud agotado" }
 }

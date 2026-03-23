@@ -89,5 +89,6 @@
   "saveArticle": { "message": "Makaleyi panoya kopyala" },
   "resetAllSettings": { "message": "Tüm ayarları sıfırla" },
   "advancedSettings": { "message": "Gelişmiş ayarlar" },
-  "copyWithOriginal": { "message": "Kopyala + Orijinal" }
+  "copyWithOriginal": { "message": "Kopyala + Orijinal" },
+  "requestTimeout": { "message": "İstek zaman aşımına uğradı" }
 }

@@ -10,7 +10,7 @@ Reference document for submitting PageGrep to [addons.mozilla.org](https://addon
 |-------|-------|
 | **Name** | PageGrep |
 | **Extension ID** | ai-reader-helper@local *(update to a unique ID before submission, e.g. `pagegrep@yourname`)* |
-| **Version** | 1.3 |
+| **Version** | 1.4 |
 | **Category** | Productivity |
 | **License** | *(choose before submission, e.g. MIT)* |
 
@@ -34,22 +34,28 @@ Reading assistant powered by AI. Translate pages or selected text in-place, high
 PageGrep is a reading assistant that uses the OpenAI API to help you get more out of every web page — in any language.
 
 **Translate in place**
-Click the floating 译 button to translate all visible paragraphs directly on the page. Each paragraph gets a toggle so you can switch between the original and translated text at any time. Supports 17+ target languages.
+Click the translate button in the floating panel to translate all visible paragraphs directly on the page. Each paragraph gets a hover-revealed toggle so you can switch between the original and translated text at any time. Supports 17+ target languages.
+
+**Smart selection on translated text**
+Select text inside a translated paragraph and the toolbar adapts: instead of a redundant Translate button, you get "↩ Original" to revert that paragraph, and "Copy + Original" to copy the source text alongside your selected translation — perfect for note-taking and citation.
+
+**Copy article to clipboard**
+A second button in the floating panel extracts the page article as clean Markdown (headings, paragraphs, lists) and copies it to your clipboard in one click.
 
 **Highlight what interests you**
-Describe topics you care about — "AI, climate policy, Formula 1" — and PageGrep uses AI to scan the page and highlight the most relevant elements in yellow. A sidebar panel shows why each item was matched. Use the ▲ / ▼ buttons to jump between matches.
+Describe topics you care about — "AI, climate policy, Formula 1" — and PageGrep uses AI to scan the page and highlight the most relevant elements. A sidebar panel shows why each item was matched with a concrete reason.
 
 **Summarize any page**
 One click generates a structured summary of the page, grouped into sections with bullet points. Click any item in the summary to scroll directly to that part of the page.
 
 **Translate selected text**
-Select any text on a page and a floating "Translate" pill appears above the selection. Click it to see the translation in a tooltip — no need to open the panel or leave the page.
+Select any text on a page and a floating toolbar appears above the selection. Click Translate to see the translation in a tooltip — no need to open the panel or leave the page.
 
 **Block the panel on specific sites**
 Right-click the floating panel to hide it on the current site, or use the "Hide on this site" toggle in the sidebar. Blocked domains are listed in Settings and can be removed individually.
 
 **Designed to stay out of your way**
-The floating action panel is draggable. Drag it anywhere on screen, or drag it to the bottom trash zone to dismiss. Your API key and all preferences are stored locally — nothing leaves your browser except the page content you explicitly send to OpenAI.
+The floating action panel is draggable. Drag it anywhere on screen, or drag it to the bottom trash zone to dismiss it on the current site. Your API key and all preferences are stored locally — nothing leaves your browser except the page content you explicitly send to OpenAI.
 
 **Requirements**
 An OpenAI API key is required. gpt-4o-mini is recommended — fast, low cost (~$0.15 per million tokens), and accurate enough for everyday reading.

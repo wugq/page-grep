@@ -89,5 +89,6 @@
   "saveArticle": { "message": "기사를 클립보드에 복사" },
   "resetAllSettings": { "message": "모든 설정 초기화" },
   "advancedSettings": { "message": "고급 설정" },
-  "copyWithOriginal": { "message": "복사 + 원문" }
+  "copyWithOriginal": { "message": "복사 + 원문" },
+  "requestTimeout": { "message": "요청 시간이 초과되었습니다" }
 }

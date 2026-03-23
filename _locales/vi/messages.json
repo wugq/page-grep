@@ -89,5 +89,6 @@
   "saveArticle": { "message": "Sao chép bài viết vào clipboard" },
   "resetAllSettings": { "message": "Đặt lại tất cả cài đặt" },
   "advancedSettings": { "message": "Cài đặt nâng cao" },
-  "copyWithOriginal": { "message": "Sao chép + Gốc" }
+  "copyWithOriginal": { "message": "Sao chép + Gốc" },
+  "requestTimeout": { "message": "Yêu cầu hết thời gian" }
 }

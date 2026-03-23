@@ -89,5 +89,6 @@
   "saveArticle": { "message": "Copier l'article dans le presse-papiers" },
   "resetAllSettings": { "message": "Réinitialiser tous les paramètres" },
   "advancedSettings": { "message": "Paramètres avancés" },
-  "copyWithOriginal": { "message": "Copier + Original" }
+  "copyWithOriginal": { "message": "Copier + Original" },
+  "requestTimeout": { "message": "Délai de la requête dépassé" }
 }

@@ -15,11 +15,12 @@
           <button id="tab-summary" class="tab-btn active" data-tab="summary" data-i18n="summaryTab">摘要</button>
           <button id="tab-interests" class="tab-btn" data-tab="interests" data-i18n="interestsTab">兴趣</button>
         </div>
-        <button id="options-btn" class="icon-btn" title="高级设置">⚙</button>
+        <button id="options-btn" class="icon-btn" data-i18n-title="advancedSettings" data-i18n-aria-label="advancedSettings" title="高级设置" aria-label="高级设置">⚙</button>
       </nav>
     </header>
 
     <main id="main-content">
+      <div id="global-error" class="error hidden"></div>
       <section id="summary-tab" class="tab-content active">
         <div class="tab-actions">
           <button id="summary-btn" class="primary-btn" data-i18n="generateSummary">生成摘要</button>
@@ -49,8 +50,6 @@
         <div id="highlight-list" class="summary-list"></div>
         <div id="highlight-empty" class="empty" data-i18n="matchesPlaceholder">点击上方按钮查找感兴趣的内容</div>
       </section>
-
-<div id="global-error" class="error hidden"></div>
     </main>
 
     <footer class="app-footer">
@@ -68,7 +67,7 @@
         </label>
         <span class="toggle-label" data-i18n="floatBtn">浮动按钮</span>
       </div>
-      <div class="toggle-row hidden" id="hide-on-site-row">
+      <div class="toggle-row hidden" id="hide-on-site-row" style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 0;">
         <label class="switch">
           <input type="checkbox" id="hide-on-site-toggle">
           <span class="slider"></span>

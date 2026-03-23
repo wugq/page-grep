@@ -89,5 +89,6 @@
   "saveArticle": { "message": "Artikel in Zwischenablage kopieren" },
   "resetAllSettings": { "message": "Alle Einstellungen zurücksetzen" },
   "advancedSettings": { "message": "Erweiterte Einstellungen" },
-  "copyWithOriginal": { "message": "Kopieren + Original" }
+  "copyWithOriginal": { "message": "Kopieren + Original" },
+  "requestTimeout": { "message": "Zeitüberschreitung der Anfrage" }
 }

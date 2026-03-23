@@ -89,5 +89,6 @@
   "saveArticle": { "message": "記事をクリップボードにコピー" },
   "resetAllSettings": { "message": "すべての設定をリセット" },
   "advancedSettings": { "message": "詳細設定" },
-  "copyWithOriginal": { "message": "コピー + 原文" }
+  "copyWithOriginal": { "message": "コピー + 原文" },
+  "requestTimeout": { "message": "リクエストがタイムアウトしました" }
 }

@@ -195,11 +195,22 @@ async function loadFromActiveTab() {
 
 // --- UI Helpers ---
 
+const LOADING_TIMEOUT_MS = 45000;
+const _loadingTimers = {};
+
 function setButtonLoading(id, isLoading) {
   const btn = document.getElementById(id);
   if (!btn) return;
   btn.disabled = isLoading;
   btn.classList.toggle('is-loading', isLoading);
+
+  clearTimeout(_loadingTimers[id]);
+  if (isLoading) {
+    _loadingTimers[id] = setTimeout(() => {
+      setButtonLoading(id, false);
+      showError(browser.i18n.getMessage('requestTimeout'));
+    }, LOADING_TIMEOUT_MS);
+  }
 }
 
 function showError(message, code) {
