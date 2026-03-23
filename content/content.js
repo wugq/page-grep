@@ -21,6 +21,7 @@ const error = (...a) => devlog('error', ...a);
 const STYLE_ID = 'ai-reader-styles';
 const PANEL_ID = 'ai-reader-panel';
 const TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
+const NOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" style="pointer-events:none"><rect x="3.5" y="1.5" width="13" height="17" rx="1.5" stroke="currentColor" stroke-width="1.5"/><line x1="6.5" y1="7" x2="13.5" y2="7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="10" x2="13.5" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="13" x2="10.5" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`;
 const _svgParser = new DOMParser();
 function setTranslateIcon(el) {
   const doc = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml');
@@ -142,6 +143,12 @@ function injectStyles() {
     #ai-selection-btn {
       position: fixed;
       z-index: 2147483647;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      pointer-events: all;
+    }
+    .ai-sel-action-btn {
       background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
       color: white;
       border: none;
@@ -158,9 +165,41 @@ function injectStyles() {
       display: flex;
       align-items: center;
       gap: 5px;
-      pointer-events: all;
     }
-    #ai-selection-btn:hover { filter: brightness(1.1); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.5); }
+    .ai-sel-action-btn:hover { filter: brightness(1.1); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.5); }
+    .ai-sel-save-link {
+      display: block;
+      background: none;
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      color: rgba(241,245,249,0.6);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 6px 0 0;
+      margin-top: 6px;
+      width: 100%;
+      text-align: left;
+      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+      transition: color 0.15s;
+    }
+    .ai-sel-save-link:hover { color: #f1f5f9; }
+    #ai-toast {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      background: rgba(15,23,42,0.9);
+      color: #f1f5f9;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+      z-index: 2147483646;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #ai-toast.ai-toast-show { opacity: 1; }
     #ai-selection-result {
       position: fixed;
       z-index: 2147483647;
@@ -273,6 +312,17 @@ function createFloatButton() {
   btn.title = browser.i18n.getMessage('translateScreenContent');
   panel.appendChild(btn);
   btn.addEventListener('click', () => runTranslateOnPage(btn));
+
+  const saveBtn = document.createElement('button');
+  saveBtn.id = 'ai-scratchpad-btn';
+  saveBtn.className = 'ai-panel-btn';
+  const noteSvg = _svgParser.parseFromString(NOTE_ICON, 'image/svg+xml').documentElement;
+  noteSvg.setAttribute('width', '18');
+  noteSvg.setAttribute('height', '18');
+  saveBtn.appendChild(noteSvg);
+  saveBtn.title = browser.i18n.getMessage('saveArticle') || 'Save article to scratchpad';
+  panel.appendChild(saveBtn);
+  saveBtn.addEventListener('click', () => saveArticleToScratchpad(saveBtn));
 
   panel.addEventListener('contextmenu', (e) => {
     e.preventDefault();
@@ -931,6 +981,38 @@ const SELECTION_RESULT_ID = 'ai-selection-result';
 
 let selectionTranslateEnabled = false;
 
+function showToast(msg) {
+  let toast = document.getElementById('ai-toast');
+  if (!toast) {
+    injectStyles();
+    toast = document.createElement('div');
+    toast.id = 'ai-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.add('ai-toast-show');
+  clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(() => toast.classList.remove('ai-toast-show'), 2000);
+}
+
+async function appendToScratchpad(text) {
+  const { scratchpad } = await browser.storage.local.get(STORAGE_KEYS.SCRATCHPAD);
+  const current = typeof scratchpad === 'string' ? scratchpad : '';
+  await browser.storage.local.set({ [STORAGE_KEYS.SCRATCHPAD]: current + text });
+  showToast(browser.i18n.getMessage('savedToScratchpad') || 'Saved ✓');
+}
+
+async function saveArticleToScratchpad(btn) {
+  const elements = collectPageElements();
+  if (elements.length === 0) return;
+  if (btn) btn.disabled = true;
+  const title = document.title || location.hostname;
+  const content = elements.map(e => e.text).join('\n\n');
+  const markdown = `# ${title}\n\n${location.href}\n\n${content}\n\n---\n\n`;
+  await appendToScratchpad(markdown);
+  if (btn) btn.disabled = false;
+}
+
 function removeSelectionUI() {
   document.getElementById(SELECTION_BTN_ID)?.remove();
   document.getElementById(SELECTION_RESULT_ID)?.remove();
@@ -964,6 +1046,16 @@ function showSelectionResult(anchorLeft, anchorTop, anchorBottom, text) {
       if (!response.success) throw new Error(response.error || 'Translation failed');
       popup.classList.remove('ai-sel-loading');
       popup.textContent = response.result;
+      const saveLink = document.createElement('button');
+      saveLink.className = 'ai-sel-save-link';
+      saveLink.textContent = browser.i18n.getMessage('saveToScratchpad') || 'Save to scratchpad';
+      saveLink.addEventListener('mousedown', (ev) => {
+        ev.preventDefault();
+        appendToScratchpad(`> ${text}\n\n**Translation:** ${response.result}\n\n*[${document.title}](${location.href})*\n\n---\n\n`);
+        saveLink.textContent = browser.i18n.getMessage('savedToScratchpad') || 'Saved ✓';
+        saveLink.disabled = true;
+      });
+      popup.appendChild(saveLink);
       positionSelectionEl(popup, anchorLeft, anchorTop, anchorBottom);
     })
     .catch(err => {
@@ -999,24 +1091,40 @@ function onTextSelectionEnd(e) {
   document.getElementById(SELECTION_BTN_ID)?.remove();
   injectStyles();
 
-  const btn = document.createElement('button');
-  btn.id = SELECTION_BTN_ID;
+  const container = document.createElement('div');
+  container.id = SELECTION_BTN_ID;
+  container.style.cssText = 'left:-9999px;top:-9999px';
+
+  const translateBtn = document.createElement('button');
+  translateBtn.className = 'ai-sel-action-btn';
   const svgEl = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml').documentElement;
   svgEl.setAttribute('width', '13');
   svgEl.setAttribute('height', '13');
   svgEl.style.pointerEvents = 'none';
-  btn.appendChild(svgEl);
-  btn.appendChild(document.createTextNode('\u00a0' + (browser.i18n.getMessage('translateSelection') || 'Translate')));
-  btn.style.cssText = 'left:-9999px;top:-9999px';
-  document.body.appendChild(btn);
-  positionSelectionEl(btn, anchorLeft, anchorTop, anchorBottom);
-
-  btn.addEventListener('mousedown', (e) => {
+  translateBtn.appendChild(svgEl);
+  translateBtn.appendChild(document.createTextNode('\u00a0' + (browser.i18n.getMessage('translateSelection') || 'Translate')));
+  translateBtn.addEventListener('mousedown', (e) => {
     e.preventDefault();
     e.stopPropagation();
     window.getSelection()?.removeAllRanges();
     showSelectionResult(anchorLeft, anchorTop, anchorBottom, capturedText);
   });
+
+  const saveSelBtn = document.createElement('button');
+  saveSelBtn.className = 'ai-sel-action-btn';
+  saveSelBtn.textContent = browser.i18n.getMessage('saveToScratchpad') || 'Save';
+  saveSelBtn.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.getSelection()?.removeAllRanges();
+    document.getElementById(SELECTION_BTN_ID)?.remove();
+    appendToScratchpad(`> ${capturedText}\n\n*[${document.title}](${location.href})*\n\n---\n\n`);
+  });
+
+  container.appendChild(translateBtn);
+  container.appendChild(saveSelBtn);
+  document.body.appendChild(container);
+  positionSelectionEl(container, anchorLeft, anchorTop, anchorBottom);
 }
 
 document.addEventListener('mouseup', onTextSelectionEnd);
@@ -1085,6 +1193,7 @@ browser.storage.onChanged.addListener((changes) => {
       selectionTranslateEnabled = false;
       removeSelectionUI();
       document.getElementById(FLOAT_BTN_ID)?.remove();
+      document.getElementById('ai-scratchpad-btn')?.remove();
       clearAllHighlights();
       removePanelIfEmpty();
     }
@@ -1096,6 +1205,7 @@ browser.storage.onChanged.addListener((changes) => {
       selectionTranslateEnabled = false;
       removeSelectionUI();
       document.getElementById(FLOAT_BTN_ID)?.remove();
+      document.getElementById('ai-scratchpad-btn')?.remove();
       clearAllHighlights();
       removePanelIfEmpty();
     } else {
