@@ -122,7 +122,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .then(({ apiKey, model }) => {
         const elementList = message.elements.map((t, i) => `${i}: ${t}`).join('\n');
         return callOpenAI(
-          'You are a content relevance analyzer. Given a list of page elements and user interests, identify which elements are relevant. Return ONLY valid JSON - an object with a "matches" array of objects with keys "index" (integer) and "reason" (one short sentence, max 12 words, explaining why it matches the user\'s interests). If nothing matches, return {"matches": []}.',
+          'You are a strict content relevance filter. Given page elements and user interests, return ONLY elements with a clear, direct, specific match — not tangential or coincidental overlap. Apply a HIGH confidence threshold: when in doubt, exclude it. Never fabricate a connection. If no elements genuinely match, return {"matches": []}. Return ONLY valid JSON: an object with a "matches" array of objects with keys "index" (integer) and "reason" (one short sentence, max 12 words, stating the concrete, specific reason it matches the interests).',
           `User interests: ${message.interests}\n\nPage elements:\n${elementList}`,
           apiKey,
           model,
