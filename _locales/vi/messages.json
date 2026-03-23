@@ -86,5 +86,8 @@
   "hideOnThisSite": { "message": "Ẩn trên trang này" },
   "copyMarkdown": { "message": "Sao chép" },
   "copied": { "message": "Đã sao chép ✓" },
-  "saveArticle": { "message": "Sao chép bài viết vào clipboard" }
+  "saveArticle": { "message": "Sao chép bài viết vào clipboard" },
+  "resetAllSettings": { "message": "Đặt lại tất cả cài đặt" },
+  "advancedSettings": { "message": "Cài đặt nâng cao" },
+  "copyWithOriginal": { "message": "Sao chép + Gốc" }
 }

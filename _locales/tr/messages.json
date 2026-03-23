@@ -86,5 +86,8 @@
   "hideOnThisSite": { "message": "Bu sitede gizle" },
   "copyMarkdown": { "message": "Kopyala" },
   "copied": { "message": "Kopyalandı ✓" },
-  "saveArticle": { "message": "Makaleyi panoya kopyala" }
+  "saveArticle": { "message": "Makaleyi panoya kopyala" },
+  "resetAllSettings": { "message": "Tüm ayarları sıfırla" },
+  "advancedSettings": { "message": "Gelişmiş ayarlar" },
+  "copyWithOriginal": { "message": "Kopyala + Orijinal" }
 }

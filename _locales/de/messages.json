@@ -86,5 +86,8 @@
   "hideOnThisSite": { "message": "Auf dieser Seite ausblenden" },
   "copyMarkdown": { "message": "Kopieren" },
   "copied": { "message": "Kopiert ✓" },
-  "saveArticle": { "message": "Artikel in Zwischenablage kopieren" }
+  "saveArticle": { "message": "Artikel in Zwischenablage kopieren" },
+  "resetAllSettings": { "message": "Alle Einstellungen zurücksetzen" },
+  "advancedSettings": { "message": "Erweiterte Einstellungen" },
+  "copyWithOriginal": { "message": "Kopieren + Original" }
 }

@@ -86,5 +86,8 @@
   "hideOnThisSite": { "message": "このサイトで非表示" },
   "copyMarkdown": { "message": "コピー" },
   "copied": { "message": "コピー済み ✓" },
-  "saveArticle": { "message": "記事をクリップボードにコピー" }
+  "saveArticle": { "message": "記事をクリップボードにコピー" },
+  "resetAllSettings": { "message": "すべての設定をリセット" },
+  "advancedSettings": { "message": "詳細設定" },
+  "copyWithOriginal": { "message": "コピー + 原文" }
 }

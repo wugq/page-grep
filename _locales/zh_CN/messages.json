@@ -89,5 +89,8 @@
   "hideOnThisSite": { "message": "在此网站上隐藏" },
   "copyMarkdown": { "message": "复制" },
   "copied": { "message": "已复制 ✓" },
-  "saveArticle": { "message": "复制文章到剪贴板" }
+  "saveArticle": { "message": "复制文章到剪贴板" },
+  "resetAllSettings": { "message": "重置所有设置" },
+  "advancedSettings": { "message": "高级设置" },
+  "copyWithOriginal": { "message": "复制 + 原文" }
 }

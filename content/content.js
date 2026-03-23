@@ -1303,38 +1303,87 @@ function onTextSelectionEnd(e) {
   document.getElementById(SELECTION_BTN_ID)?.remove();
   injectStyles();
 
+  // Detect if selection is inside an already-translated paragraph
+  let translatedWrap = null;
+  try {
+    const range = sel.getRangeAt(0);
+    const node = range.commonAncestorContainer;
+    const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    translatedWrap = el?.closest('.ai-para-wrap.show-translation') || null;
+  } catch (_) {}
+
   const container = document.createElement('div');
   container.id = SELECTION_BTN_ID;
   container.style.cssText = 'left:-9999px;top:-9999px';
 
-  const translateBtn = document.createElement('button');
-  translateBtn.className = 'ai-sel-action-btn ai-sel-translate-btn';
-  const svgEl = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml').documentElement;
-  svgEl.setAttribute('width', '13');
-  svgEl.setAttribute('height', '13');
-  svgEl.style.pointerEvents = 'none';
-  translateBtn.appendChild(svgEl);
-  translateBtn.appendChild(document.createTextNode('\u00a0' + (browser.i18n.getMessage('translateSelection') || 'Translate')));
-  translateBtn.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    window.getSelection()?.removeAllRanges();
-    showSelectionResult(anchorLeft, anchorTop, anchorBottom, capturedText);
-  });
+  if (translatedWrap) {
+    // Selection is inside a translated paragraph — replace translate btn with "↩ Original"
+    const showOrigBtn = document.createElement('button');
+    showOrigBtn.className = 'ai-sel-action-btn ai-sel-translate-btn';
+    const undoSvg = _svgParser.parseFromString(TOGGLE_ORIGINAL_ICON, 'image/svg+xml').documentElement;
+    undoSvg.setAttribute('width', '13');
+    undoSvg.setAttribute('height', '13');
+    showOrigBtn.appendChild(undoSvg);
+    showOrigBtn.appendChild(document.createTextNode('\u00a0' + (browser.i18n.getMessage('showOriginal') || 'Original')));
+    showOrigBtn.addEventListener('mousedown', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      window.getSelection()?.removeAllRanges();
+      document.getElementById(SELECTION_BTN_ID)?.remove();
+      translatedWrap.classList.remove('show-translation');
+      const toggleBtn = translatedWrap.querySelector('.ai-toggle-btn');
+      if (toggleBtn) setToggleIcon(toggleBtn, false);
+    });
 
-  const saveSelBtn = document.createElement('button');
-  saveSelBtn.className = 'ai-sel-action-btn ai-sel-save-btn';
-  saveSelBtn.textContent = browser.i18n.getMessage('copyMarkdown') || 'Copy';
-  saveSelBtn.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    window.getSelection()?.removeAllRanges();
-    document.getElementById(SELECTION_BTN_ID)?.remove();
-    copyToClipboard(`> ${capturedText}\n\n*[${document.title}](${location.href})*\n`);
-  });
+    const copyOrigBtn = document.createElement('button');
+    copyOrigBtn.className = 'ai-sel-action-btn ai-sel-save-btn';
+    copyOrigBtn.textContent = browser.i18n.getMessage('copyWithOriginal') || 'Copy + Original';
+    copyOrigBtn.addEventListener('mousedown', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      window.getSelection()?.removeAllRanges();
+      document.getElementById(SELECTION_BTN_ID)?.remove();
+      const originalText = translatedWrap.querySelector('.ai-para-original')?.innerText?.trim() || '';
+      const text = originalText
+        ? `${originalText}\n\n↳ ${capturedText}\n\n*[${document.title}](${location.href})*\n`
+        : `> ${capturedText}\n\n*[${document.title}](${location.href})*\n`;
+      copyToClipboard(text);
+    });
 
-  container.appendChild(translateBtn);
-  container.appendChild(saveSelBtn);
+    container.appendChild(showOrigBtn);
+    container.appendChild(copyOrigBtn);
+  } else {
+    // Normal selection — original behavior
+    const translateBtn = document.createElement('button');
+    translateBtn.className = 'ai-sel-action-btn ai-sel-translate-btn';
+    const svgEl = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml').documentElement;
+    svgEl.setAttribute('width', '13');
+    svgEl.setAttribute('height', '13');
+    svgEl.style.pointerEvents = 'none';
+    translateBtn.appendChild(svgEl);
+    translateBtn.appendChild(document.createTextNode('\u00a0' + (browser.i18n.getMessage('translateSelection') || 'Translate')));
+    translateBtn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.getSelection()?.removeAllRanges();
+      showSelectionResult(anchorLeft, anchorTop, anchorBottom, capturedText);
+    });
+
+    const saveSelBtn = document.createElement('button');
+    saveSelBtn.className = 'ai-sel-action-btn ai-sel-save-btn';
+    saveSelBtn.textContent = browser.i18n.getMessage('copyMarkdown') || 'Copy';
+    saveSelBtn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.getSelection()?.removeAllRanges();
+      document.getElementById(SELECTION_BTN_ID)?.remove();
+      copyToClipboard(`> ${capturedText}\n\n*[${document.title}](${location.href})*\n`);
+    });
+
+    container.appendChild(translateBtn);
+    container.appendChild(saveSelBtn);
+  }
+
   document.body.appendChild(container);
   positionSelectionEl(container, anchorLeft, anchorTop, anchorBottom);
 }

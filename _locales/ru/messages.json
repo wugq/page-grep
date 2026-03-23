@@ -86,5 +86,8 @@
   "hideOnThisSite": { "message": "Скрыть на этом сайте" },
   "copyMarkdown": { "message": "Копировать" },
   "copied": { "message": "Скопировано ✓" },
-  "saveArticle": { "message": "Копировать статью в буфер обмена" }
+  "saveArticle": { "message": "Копировать статью в буфер обмена" },
+  "resetAllSettings": { "message": "Сбросить все настройки" },
+  "advancedSettings": { "message": "Расширенные настройки" },
+  "copyWithOriginal": { "message": "Копировать + оригинал" }
 }

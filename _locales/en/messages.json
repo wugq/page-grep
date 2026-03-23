@@ -89,5 +89,8 @@
   "hideOnThisSite": { "message": "Hide on this site" },
   "copyMarkdown": { "message": "Copy" },
   "copied": { "message": "Copied ✓" },
-  "saveArticle": { "message": "Copy article to clipboard" }
+  "saveArticle": { "message": "Copy article to clipboard" },
+  "resetAllSettings": { "message": "Reset All Settings" },
+  "advancedSettings": { "message": "Advanced Settings" },
+  "copyWithOriginal": { "message": "Copy + Original" }
 }

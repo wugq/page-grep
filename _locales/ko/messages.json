@@ -86,5 +86,8 @@
   "hideOnThisSite": { "message": "이 사이트에서 숨기기" },
   "copyMarkdown": { "message": "복사" },
   "copied": { "message": "복사됨 ✓" },
-  "saveArticle": { "message": "기사를 클립보드에 복사" }
+  "saveArticle": { "message": "기사를 클립보드에 복사" },
+  "resetAllSettings": { "message": "모든 설정 초기화" },
+  "advancedSettings": { "message": "고급 설정" },
+  "copyWithOriginal": { "message": "복사 + 원문" }
 }
