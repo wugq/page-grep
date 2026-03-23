@@ -15,7 +15,6 @@ tabBtns.forEach(btn => {
     btn.classList.add('active');
     document.getElementById(`${targetTab}-tab`).classList.add('active');
 
-    if (targetTab === 'scratchpad') loadScratchpad();
   });
 });
 
@@ -100,9 +99,6 @@ async function init() {
   document.getElementById('options-btn').addEventListener('click', () => {
     browser.runtime.openOptionsPage();
   });
-
-  // Scratchpad
-  initScratchpadHandlers();
 
   // Action Buttons
   document.getElementById('summary-btn').addEventListener('click', async () => {
@@ -286,80 +282,6 @@ function renderHighlights(items) {
   });
 }
 
-// --- Scratchpad ---
-
-let scratchpadSaveTimer = null;
-
-async function loadScratchpad() {
-  const { scratchpad } = await browser.storage.local.get(STORAGE_KEYS.SCRATCHPAD);
-  const area = document.getElementById('scratchpad-area');
-  if (area !== document.activeElement) {
-    area.value = typeof scratchpad === 'string' ? scratchpad : '';
-  }
-}
-
-function showScratchpadStatus(msg) {
-  const el = document.getElementById('scratchpad-status');
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.remove('hidden');
-  setTimeout(() => el.classList.add('hidden'), 2000);
-}
-
-function initScratchpadHandlers() {
-  const area = document.getElementById('scratchpad-area');
-
-  area.addEventListener('input', () => {
-    clearTimeout(scratchpadSaveTimer);
-    scratchpadSaveTimer = setTimeout(() => {
-      browser.storage.local.set({ [STORAGE_KEYS.SCRATCHPAD]: area.value });
-    }, 500);
-  });
-
-  document.getElementById('scratchpad-translate-btn').addEventListener('click', async () => {
-    const hasSelection = area.selectionStart !== area.selectionEnd;
-    const text = hasSelection
-      ? area.value.slice(area.selectionStart, area.selectionEnd)
-      : area.value;
-    if (!text.trim()) return;
-
-    setButtonLoading('scratchpad-translate-btn', true);
-    try {
-      const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text });
-      if (!response.success) throw new Error(response.error);
-      if (hasSelection) {
-        const before = area.value.slice(0, area.selectionStart);
-        const after = area.value.slice(area.selectionEnd);
-        area.value = before + response.result + after;
-      } else {
-        area.value = response.result;
-      }
-      browser.storage.local.set({ [STORAGE_KEYS.SCRATCHPAD]: area.value });
-      showScratchpadStatus('Translated ✓');
-    } catch (_) {
-      showScratchpadStatus('Translation failed');
-    } finally {
-      setButtonLoading('scratchpad-translate-btn', false);
-    }
-  });
-
-  document.getElementById('scratchpad-copy-btn').addEventListener('click', async () => {
-    if (!area.value.trim()) return;
-    try {
-      await navigator.clipboard.writeText(area.value);
-    } catch (_) {
-      area.select();
-      document.execCommand('copy');
-    }
-    showScratchpadStatus(browser.i18n.getMessage('copied') || 'Copied ✓');
-  });
-
-  document.getElementById('scratchpad-clear-btn').addEventListener('click', async () => {
-    area.value = '';
-    await browser.storage.local.set({ [STORAGE_KEYS.SCRATCHPAD]: '' });
-  });
-}
-
 // --- Listeners ---
 
 browser.runtime.onMessage.addListener((message, sender) => {
@@ -392,6 +314,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
     showError(message.error || browser.i18n.getMessage('matchFailed'));
     setButtonLoading('highlight-btn', false);
   }
+
 });
 
 browser.tabs.onActivated.addListener(() => {
@@ -423,13 +346,6 @@ browser.storage.onChanged.addListener((changes) => {
       const theme = changes[STORAGE_KEYS.THEME].newValue;
       const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
       themeToggle.checked = isDark;
-    }
-  }
-  if (STORAGE_KEYS.SCRATCHPAD in changes) {
-    const scratchpadTab = document.getElementById('scratchpad-tab');
-    const area = document.getElementById('scratchpad-area');
-    if (scratchpadTab.classList.contains('active') && area !== document.activeElement) {
-      area.value = changes[STORAGE_KEYS.SCRATCHPAD].newValue || '';
     }
   }
 });

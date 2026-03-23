@@ -84,14 +84,21 @@ function injectStyles() {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       z-index: 2147483647;
-      padding: 0;
+      padding: 10px 7px;
       user-select: none;
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
     }
     .ai-panel-btn {
-      width: 42px;
-      height: 42px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       border: none;
       cursor: grab;
@@ -103,13 +110,15 @@ function injectStyles() {
       align-items: center;
       justify-content: center;
       font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s, opacity 0.18s;
     }
-    .ai-panel-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4); }
-    .ai-panel-btn:active { transform: translateY(0) scale(0.95); cursor: grabbing; }
-    .ai-panel-btn:disabled { filter: grayscale(0.8); cursor: wait; }
-    #ai-translate-btn { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+    .ai-panel-btn:hover { transform: scale(1.12); box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16); }
+    .ai-panel-btn:active { transform: scale(0.92); cursor: grabbing; }
+    .ai-panel-btn:disabled { opacity: 0.45; cursor: wait; }
+    #ai-translate-btn { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); box-shadow: 0 2px 10px rgba(99, 102, 241, 0.45); }
+    #ai-scratchpad-btn { background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); box-shadow: 0 2px 10px rgba(14, 165, 233, 0.4); }
+    #ai-translate-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16), 0 4px 16px rgba(99,102,241,0.55); }
+    #ai-scratchpad-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16), 0 4px 16px rgba(14,165,233,0.5); }
     #ai-trash-zone {
       position: fixed;
       bottom: 24px;
@@ -149,24 +158,36 @@ function injectStyles() {
       pointer-events: all;
     }
     .ai-sel-action-btn {
-      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
       color: white;
       border: none;
       border-radius: 20px;
-      padding: 5px 10px;
+      padding: 5px 11px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
-      transition: filter 0.15s, box-shadow 0.15s;
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
       white-space: nowrap;
       user-select: none;
       display: flex;
       align-items: center;
       gap: 5px;
     }
-    .ai-sel-action-btn:hover { filter: brightness(1.1); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.5); }
+    .ai-sel-action-btn:hover { transform: scale(1.05); }
+    .ai-sel-translate-btn {
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+    }
+    .ai-sel-translate-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.14), 0 4px 14px rgba(99,102,241,0.5); }
+    .ai-sel-save-btn {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.22) !important;
+      color: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+    .ai-sel-save-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3); }
     .ai-sel-save-link {
       display: block;
       background: none;
@@ -185,8 +206,9 @@ function injectStyles() {
     .ai-sel-save-link:hover { color: #f1f5f9; }
     #ai-toast {
       position: fixed;
-      bottom: 80px;
-      right: 20px;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
       background: rgba(15,23,42,0.9);
       color: #f1f5f9;
       padding: 7px 14px;
@@ -281,6 +303,105 @@ function removePanelIfEmpty() {
   if (panel && panel.children.length === 0) panel.remove();
 }
 
+// --- Article detection ---
+
+// Recursively descend the DOM following the widest / most text-rich block
+// at each level to locate the true article column.
+function findWidestTextBlock(container, depth) {
+  if (depth > 8) return container;
+  // If we already have ≥3 direct paragraphs, this is the content node.
+  const directParas = Array.from(container.children).filter(
+    c => c.tagName === 'P' && (c.innerText?.trim() || '').length > 40
+  );
+  if (directParas.length >= 3) return container;
+  const blockChildren = Array.from(container.children).filter(el => {
+    if (!['DIV', 'SECTION', 'ARTICLE', 'MAIN'].includes(el.tagName)) return false;
+    if (el.tagName === 'ASIDE') return false;
+    if (el.closest(CHROME_SELECTOR)) return false;
+    return (el.innerText?.trim() || '').length > 300;
+  });
+  if (blockChildren.length === 0) return container;
+  if (blockChildren.length === 1) return findWidestTextBlock(blockChildren[0], depth + 1);
+  // Multiple candidates: if widths differ significantly, pick the widest.
+  const maxW = Math.max(...blockChildren.map(c => c.offsetWidth));
+  const minW = Math.min(...blockChildren.map(c => c.offsetWidth));
+  if (maxW / (minW || 1) > 1.4) {
+    const widest = blockChildren.reduce((a, b) => a.offsetWidth > b.offsetWidth ? a : b);
+    return findWidestTextBlock(widest, depth + 1);
+  }
+  // Otherwise follow the longest text block.
+  return findWidestTextBlock(
+    blockChildren.reduce((a, b) => (a.innerText?.length || 0) > (b.innerText?.length || 0) ? a : b),
+    depth + 1
+  );
+}
+
+function findArticleBodyEl() {
+  // 1. Explicit semantic/class markers
+  const explicit = document.querySelector(
+    '[itemprop="articleBody"],[class*="article-body"],[class*="article-content"],' +
+    '[class*="post-content"],[class*="entry-content"],[class*="news-content"],' +
+    '[class*="story-body"],[class*="article__body"],[class*="post-body"]'
+  );
+  if (explicit) return explicit;
+
+  // 2. Single <article> element
+  const articleEls = document.querySelectorAll('article');
+  if (articleEls.length === 1) return articleEls[0];
+
+  // 3. Recursive width-based descent from main content scope
+  return findWidestTextBlock(findMainContentScope(), 0);
+}
+
+function collectArticleText() {
+  const body = findArticleBodyEl();
+  const INLINE_EXCLUDE = 'aside,[class*="related"],[class*="recommend"],[class*="sidebar"],[class*="widget"]';
+  const seen = new Set();
+  const lines = [];
+  const HEADING_PREFIX = { H1: '# ', H2: '## ', H3: '### ', H4: '#### ', H5: '##### ', H6: '###### ' };
+  for (const el of body.querySelectorAll('h1,h2,h3,h4,h5,h6,p,blockquote,li')) {
+    if (el.closest(CHROME_SELECTOR) || el.closest(INLINE_EXCLUDE)) continue;
+    // Skip <li> nested inside another <li> (sub-items handled via their direct parent li)
+    if (el.tagName === 'LI' && el.parentElement?.closest('li')) continue;
+
+    // For LI, strip nested list elements so sub-items don't bleed into parent text
+    let raw;
+    if (el.tagName === 'LI') {
+      const clone = el.cloneNode(true);
+      clone.querySelectorAll('ul,ol').forEach(n => n.remove());
+      raw = clone.innerText?.trim().replace(/\s+/g, ' ') || '';
+    } else {
+      raw = el.innerText?.trim().replace(/\s+/g, ' ');
+    }
+
+    const minLen = el.tagName === 'LI' ? 2 : (el.tagName.startsWith('H') ? 2 : 20);
+    if (!raw || raw.length < minLen || seen.has(raw)) continue;
+    seen.add(raw);
+
+    let formatted;
+    if (HEADING_PREFIX[el.tagName]) {
+      formatted = HEADING_PREFIX[el.tagName] + raw;
+    } else if (el.tagName === 'BLOCKQUOTE') {
+      formatted = '> ' + raw.replace(/\n/g, '\n> ');
+    } else if (el.tagName === 'LI') {
+      // Use parentElement directly (not closest) for correct index among siblings
+      const isOrdered = el.parentElement?.tagName === 'OL';
+      if (isOrdered) {
+        const siblings = Array.from(el.parentElement.children).filter(c => c.tagName === 'LI');
+        const idx = siblings.indexOf(el) + 1;
+        formatted = `${idx}. ${raw}`;
+      } else {
+        formatted = `- ${raw}`;
+      }
+    } else {
+      formatted = raw;
+    }
+    lines.push(formatted);
+    if (lines.length >= 200) break;
+  }
+  return lines;
+}
+
 // --- Translation ---
 
 async function runTranslateOnPage(btn) {
@@ -320,9 +441,9 @@ function createFloatButton() {
   noteSvg.setAttribute('width', '18');
   noteSvg.setAttribute('height', '18');
   saveBtn.appendChild(noteSvg);
-  saveBtn.title = browser.i18n.getMessage('saveArticle') || 'Save article to scratchpad';
+  saveBtn.title = browser.i18n.getMessage('saveArticle') || 'Copy article to clipboard';
   panel.appendChild(saveBtn);
-  saveBtn.addEventListener('click', () => saveArticleToScratchpad(saveBtn));
+  saveBtn.addEventListener('click', () => saveArticleToClipboard(saveBtn));
 
   panel.addEventListener('contextmenu', (e) => {
     e.preventDefault();
@@ -995,22 +1116,33 @@ function showToast(msg) {
   toast._hideTimer = setTimeout(() => toast.classList.remove('ai-toast-show'), 2000);
 }
 
-async function appendToScratchpad(text) {
-  const { scratchpad } = await browser.storage.local.get(STORAGE_KEYS.SCRATCHPAD);
-  const current = typeof scratchpad === 'string' ? scratchpad : '';
-  await browser.storage.local.set({ [STORAGE_KEYS.SCRATCHPAD]: current + text });
-  showToast(browser.i18n.getMessage('savedToScratchpad') || 'Saved ✓');
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (_) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  }
+  showToast(browser.i18n.getMessage('copied') || 'Copied ✓');
 }
 
-async function saveArticleToScratchpad(btn) {
-  const elements = collectPageElements();
-  if (elements.length === 0) return;
+async function saveArticleToClipboard(btn) {
   if (btn) btn.disabled = true;
-  const title = document.title || location.hostname;
-  const content = elements.map(e => e.text).join('\n\n');
-  const markdown = `# ${title}\n\n${location.href}\n\n${content}\n\n---\n\n`;
-  await appendToScratchpad(markdown);
-  if (btn) btn.disabled = false;
+  try {
+    const lines = collectArticleText();
+    if (lines.length === 0) { showToast('No content found'); return; }
+    const markdown = `# ${document.title || location.hostname}\n\n${location.href}\n\n${lines.join('\n\n')}\n`;
+    await copyToClipboard(markdown);
+  } catch (_) {
+    showToast('Copy failed');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 function removeSelectionUI() {
@@ -1048,11 +1180,11 @@ function showSelectionResult(anchorLeft, anchorTop, anchorBottom, text) {
       popup.textContent = response.result;
       const saveLink = document.createElement('button');
       saveLink.className = 'ai-sel-save-link';
-      saveLink.textContent = browser.i18n.getMessage('saveToScratchpad') || 'Save to scratchpad';
+      saveLink.textContent = browser.i18n.getMessage('copyMarkdown') || 'Copy';
       saveLink.addEventListener('mousedown', (ev) => {
         ev.preventDefault();
-        appendToScratchpad(`> ${text}\n\n**Translation:** ${response.result}\n\n*[${document.title}](${location.href})*\n\n---\n\n`);
-        saveLink.textContent = browser.i18n.getMessage('savedToScratchpad') || 'Saved ✓';
+        copyToClipboard(`> ${text}\n\n**Translation:** ${response.result}\n\n*[${document.title}](${location.href})*\n`);
+        saveLink.textContent = browser.i18n.getMessage('copied') || 'Copied ✓';
         saveLink.disabled = true;
       });
       popup.appendChild(saveLink);
@@ -1096,7 +1228,7 @@ function onTextSelectionEnd(e) {
   container.style.cssText = 'left:-9999px;top:-9999px';
 
   const translateBtn = document.createElement('button');
-  translateBtn.className = 'ai-sel-action-btn';
+  translateBtn.className = 'ai-sel-action-btn ai-sel-translate-btn';
   const svgEl = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml').documentElement;
   svgEl.setAttribute('width', '13');
   svgEl.setAttribute('height', '13');
@@ -1111,14 +1243,14 @@ function onTextSelectionEnd(e) {
   });
 
   const saveSelBtn = document.createElement('button');
-  saveSelBtn.className = 'ai-sel-action-btn';
-  saveSelBtn.textContent = browser.i18n.getMessage('saveToScratchpad') || 'Save';
+  saveSelBtn.className = 'ai-sel-action-btn ai-sel-save-btn';
+  saveSelBtn.textContent = browser.i18n.getMessage('copyMarkdown') || 'Copy';
   saveSelBtn.addEventListener('mousedown', (e) => {
     e.preventDefault();
     e.stopPropagation();
     window.getSelection()?.removeAllRanges();
     document.getElementById(SELECTION_BTN_ID)?.remove();
-    appendToScratchpad(`> ${capturedText}\n\n*[${document.title}](${location.href})*\n\n---\n\n`);
+    copyToClipboard(`> ${capturedText}\n\n*[${document.title}](${location.href})*\n`);
   });
 
   container.appendChild(translateBtn);

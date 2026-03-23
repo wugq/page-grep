@@ -83,5 +83,8 @@
   "blockedDomainsInfo": { "message": "Il pulsante flottante è nascosto su questi domini. Fai clic destro sul pulsante flottante su qualsiasi pagina per aggiungere il sito." },
   "noBlockedDomains": { "message": "Nessun dominio bloccato" },
   "removeDomain": { "message": "Rimuovi" },
-  "hideOnThisSite": { "message": "Nascondi su questo sito" }
+  "hideOnThisSite": { "message": "Nascondi su questo sito" },
+  "copyMarkdown": { "message": "Copia" },
+  "copied": { "message": "Copiato ✓" },
+  "saveArticle": { "message": "Copia articolo negli appunti" }
 }

@@ -83,5 +83,8 @@
   "blockedDomainsInfo": { "message": "Der Float-Button wird auf diesen Domains ausgeblendet. Rechtsklick auf den Float-Button auf einer Seite, um die Domain hinzuzufügen." },
   "noBlockedDomains": { "message": "Keine gesperrten Domains" },
   "removeDomain": { "message": "Entfernen" },
-  "hideOnThisSite": { "message": "Auf dieser Seite ausblenden" }
+  "hideOnThisSite": { "message": "Auf dieser Seite ausblenden" },
+  "copyMarkdown": { "message": "Kopieren" },
+  "copied": { "message": "Kopiert ✓" },
+  "saveArticle": { "message": "Artikel in Zwischenablage kopieren" }
 }

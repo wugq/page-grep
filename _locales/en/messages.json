@@ -87,12 +87,7 @@
   "noBlockedDomains": { "message": "No blocked domains" },
   "removeDomain": { "message": "Remove" },
   "hideOnThisSite": { "message": "Hide on this site" },
-  "scratchpadTab": { "message": "Scratchpad" },
-  "scratchpadPlaceholder": { "message": "Saved clips appear here. You can also type or paste directly." },
-  "scratchpadTranslate": { "message": "Translate" },
   "copyMarkdown": { "message": "Copy" },
   "copied": { "message": "Copied ✓" },
-  "savedToScratchpad": { "message": "Saved ✓" },
-  "saveToScratchpad": { "message": "Save" },
-  "saveArticle": { "message": "Save article to scratchpad" }
+  "saveArticle": { "message": "Copy article to clipboard" }
 }

@@ -83,5 +83,8 @@
   "blockedDomainsInfo": { "message": "Yüzen düğme bu alanlarda gizlenir. Herhangi bir sayfada yüzen düğmeye sağ tıklayarak ekleyebilirsiniz." },
   "noBlockedDomains": { "message": "Engellenen alan yok" },
   "removeDomain": { "message": "Kaldır" },
-  "hideOnThisSite": { "message": "Bu sitede gizle" }
+  "hideOnThisSite": { "message": "Bu sitede gizle" },
+  "copyMarkdown": { "message": "Kopyala" },
+  "copied": { "message": "Kopyalandı ✓" },
+  "saveArticle": { "message": "Makaleyi panoya kopyala" }
 }

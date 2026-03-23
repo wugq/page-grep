@@ -441,26 +441,6 @@ input:checked + .slider:before { transform: translateX(16px); }
 
 .hidden { display: none !important; }
 
-/* Scratchpad */
-#scratchpad-tab.active { display: flex; flex-direction: column; }
-
-.scratchpad-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-#scratchpad-area {
-  height: calc(100vh - 230px);
-  resize: none;
-}
-
-.scratchpad-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
 
 /* Loading State for buttons */
 .primary-btn.is-loading {

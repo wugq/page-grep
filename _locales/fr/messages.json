@@ -83,5 +83,8 @@
   "blockedDomainsInfo": { "message": "Le bouton flottant est masqué sur ces domaines. Faites un clic droit sur le bouton flottant pour ajouter le site actuel." },
   "noBlockedDomains": { "message": "Aucun domaine bloqué" },
   "removeDomain": { "message": "Supprimer" },
-  "hideOnThisSite": { "message": "Masquer sur ce site" }
+  "hideOnThisSite": { "message": "Masquer sur ce site" },
+  "copyMarkdown": { "message": "Copier" },
+  "copied": { "message": "Copié ✓" },
+  "saveArticle": { "message": "Copier l'article dans le presse-papiers" }
 }

@@ -83,5 +83,8 @@
   "blockedDomainsInfo": { "message": "Nút nổi bị ẩn trên các tên miền này. Nhấp chuột phải vào nút nổi trên bất kỳ trang nào để thêm." },
   "noBlockedDomains": { "message": "Không có tên miền bị chặn" },
   "removeDomain": { "message": "Xóa" },
-  "hideOnThisSite": { "message": "Ẩn trên trang này" }
+  "hideOnThisSite": { "message": "Ẩn trên trang này" },
+  "copyMarkdown": { "message": "Sao chép" },
+  "copied": { "message": "Đã sao chép ✓" },
+  "saveArticle": { "message": "Sao chép bài viết vào clipboard" }
 }

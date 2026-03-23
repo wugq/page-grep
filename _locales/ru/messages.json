@@ -83,5 +83,8 @@
   "blockedDomainsInfo": { "message": "Плавающая кнопка скрыта на этих доменах. Щёлкните правой кнопкой мыши по кнопке на любой странице, чтобы добавить сайт." },
   "noBlockedDomains": { "message": "Нет заблокированных доменов" },
   "removeDomain": { "message": "Удалить" },
-  "hideOnThisSite": { "message": "Скрыть на этом сайте" }
+  "hideOnThisSite": { "message": "Скрыть на этом сайте" },
+  "copyMarkdown": { "message": "Копировать" },
+  "copied": { "message": "Скопировано ✓" },
+  "saveArticle": { "message": "Копировать статью в буфер обмена" }
 }

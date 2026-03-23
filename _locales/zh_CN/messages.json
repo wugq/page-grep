@@ -86,5 +86,8 @@
   "blockedDomainsInfo": { "message": "悬浮按钮在这些域名上会被隐藏。右键点击悬浮按钮可添加当前网站。" },
   "noBlockedDomains": { "message": "暂无屏蔽的域名" },
   "removeDomain": { "message": "移除" },
-  "hideOnThisSite": { "message": "在此网站上隐藏" }
+  "hideOnThisSite": { "message": "在此网站上隐藏" },
+  "copyMarkdown": { "message": "复制" },
+  "copied": { "message": "已复制 ✓" },
+  "saveArticle": { "message": "复制文章到剪贴板" }
 }

@@ -83,5 +83,8 @@
   "blockedDomainsInfo": { "message": "これらのドメインではフロートボタンが非表示になります。任意のページでフロートボタンを右クリックして追加できます。" },
   "noBlockedDomains": { "message": "ブロック済みドメインなし" },
   "removeDomain": { "message": "削除" },
-  "hideOnThisSite": { "message": "このサイトで非表示" }
+  "hideOnThisSite": { "message": "このサイトで非表示" },
+  "copyMarkdown": { "message": "コピー" },
+  "copied": { "message": "コピー済み ✓" },
+  "saveArticle": { "message": "記事をクリップボードにコピー" }
 }
