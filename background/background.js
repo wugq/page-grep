@@ -55,7 +55,7 @@ async function getApiSettings() {
   const settings = await browser.storage.local.get([STORAGE_KEYS.API_KEY, STORAGE_KEYS.MODEL]);
   const apiKey = settings[STORAGE_KEYS.API_KEY];
   const model = settings[STORAGE_KEYS.MODEL] || 'gpt-4o-mini';
-  if (!apiKey) throw new Error(browser.i18n.getMessage('enterApiKey'));
+  if (!apiKey) { const e = new Error(browser.i18n.getMessage('enterApiKey')); e.code = 'NO_API_KEY'; throw e; }
   return { apiKey, model };
 }
 
@@ -68,6 +68,11 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.action === 'openSidebar') {
     browser.sidebarAction.open().catch(() => {});
+    return;
+  }
+
+  if (message.action === 'openOptionsPage') {
+    browser.runtime.openOptionsPage().catch(() => {});
     return;
   }
 
@@ -86,7 +91,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         );
       })
       .then(result => sendResponse({ success: true, result }))
-      .catch(err => sendResponse({ success: false, error: err.message }));
+      .catch(err => sendResponse({ success: false, error: err.message, code: err.code }));
     return true;
   }
 
@@ -108,7 +113,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const points = Array.isArray(data.sections) ? data.sections : [];
         sendResponse({ success: true, points });
       })
-      .catch(err => sendResponse({ success: false, error: err.message }));
+      .catch(err => sendResponse({ success: false, error: err.message, code: err.code }));
     return true;
   }
 
@@ -130,7 +135,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           .filter(x => typeof x?.index === 'number');
         sendResponse({ success: true, items });
       })
-      .catch(err => sendResponse({ success: false, error: err.message }));
+      .catch(err => sendResponse({ success: false, error: err.message, code: err.code }));
     return true;
   }
 });

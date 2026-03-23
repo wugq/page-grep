@@ -22,8 +22,9 @@ tabBtns.forEach(btn => {
 
 const toggleConfigBtn = document.getElementById('toggle-config-btn');
 const interestsConfig = document.getElementById('interests-config');
+const configHeader = document.querySelector('.config-header');
 
-toggleConfigBtn.addEventListener('click', () => {
+configHeader.addEventListener('click', () => {
   const isHidden = interestsConfig.classList.contains('hidden');
   interestsConfig.classList.toggle('hidden', !isHidden);
   toggleConfigBtn.classList.toggle('is-open', isHidden);
@@ -86,7 +87,7 @@ async function init() {
     await browser.storage.local.set({ [STORAGE_KEYS.USER_INTERESTS]: val || null });
     clearBtn.classList.toggle('hidden', !val);
     statusEl.classList.remove('hidden');
-    setTimeout(() => statusEl.classList.add('hidden'), 2000);
+    setTimeout(() => statusEl.classList.add('hidden'), 3000);
   });
 
   clearBtn.addEventListener('click', async () => {
@@ -201,9 +202,21 @@ function setButtonLoading(id, isLoading) {
   btn.classList.toggle('is-loading', isLoading);
 }
 
-function showError(message) {
+function showError(message, code) {
   const errorEl = document.getElementById('global-error');
-  errorEl.textContent = message || browser.i18n.getMessage('operationFailed');
+  const noKeyMsg = browser.i18n.getMessage('enterApiKey');
+  if (code === 'NO_API_KEY' || message === noKeyMsg) {
+    errorEl.innerHTML = '';
+    errorEl.appendChild(document.createTextNode(message + ' — '));
+    const link = document.createElement('a');
+    link.href = '#';
+    link.style.cssText = 'color:inherit;font-weight:700;text-decoration:underline;cursor:pointer;';
+    link.textContent = browser.i18n.getMessage('settingsTitle').replace('PageGrep - ', '') || 'Settings';
+    link.addEventListener('click', (e) => { e.preventDefault(); browser.runtime.openOptionsPage(); });
+    errorEl.appendChild(link);
+  } else {
+    errorEl.textContent = message || browser.i18n.getMessage('operationFailed');
+  }
   errorEl.classList.remove('hidden');
 }
 
@@ -238,7 +251,7 @@ function renderSummary(points) {
       line.className = 'summary-subitem';
       line.textContent = `• ${sub.text}`;
       line.addEventListener('mouseenter', () => sendToActiveTab({ action: 'summaryHover', index: sub.index }));
-      line.addEventListener('mouseleave', () => sendToActiveTab({ action: 'summaryUnhover' }));
+      line.addEventListener('mouseleave', () => sendToActiveTab({ action: 'summaryUnhover', index: sub.index }));
       line.addEventListener('click', () => sendToActiveTab({ action: 'summaryClick', index: sub.index }));
       list.appendChild(line);
     });
@@ -295,7 +308,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
   }
 
   if (message.action === 'summaryError') {
-    showError(message.error || browser.i18n.getMessage('summaryFailed'));
+    showError(message.error || browser.i18n.getMessage('summaryFailed'), message.code);
     setButtonLoading('summary-btn', false);
   }
 
@@ -311,7 +324,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
   }
 
   if (message.action === 'highlightError') {
-    showError(message.error || browser.i18n.getMessage('matchFailed'));
+    showError(message.error || browser.i18n.getMessage('matchFailed'), message.code);
     setButtonLoading('highlight-btn', false);
   }
 

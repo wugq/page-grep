@@ -443,9 +443,16 @@ function collectArticleText() {
 
 // --- API key error helpers ---
 
-function isApiKeyError(msg) {
+function isApiKeyError(msg, code) {
+  if (code === 'NO_API_KEY') return true;
   const noKeyMsg = browser.i18n.getMessage('enterApiKey');
-  return msg === noKeyMsg || msg === 'Please enter an API Key' || msg === '请输入 API Key';
+  return msg === noKeyMsg;
+}
+
+function throwFromResponse(response) {
+  const err = new Error(response.error);
+  if (response.code) err.code = response.code;
+  throw err;
 }
 
 function showApiKeyToast() {
@@ -749,7 +756,7 @@ async function wrapAndTranslate(el) {
 
   try {
     const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text });
-    if (!response.success) throw new Error(response.error);
+    if (!response.success) throwFromResponse(response);
     log('[PageGrep] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
     translatedSpan.textContent = response.result;
     el.classList.add('show-translation');
@@ -766,7 +773,7 @@ async function wrapAndTranslate(el) {
   } catch (err) {
     error('[PageGrep] paragraph translation failed:', err.message);
     restore();
-    if (isApiKeyError(err.message)) showApiKeyToast();
+    if (isApiKeyError(err.message, err.code)) showApiKeyToast();
   }
 }
 
@@ -839,12 +846,12 @@ async function runSummaryFromPage() {
       pageLanguage,
     });
 
-    if (!response.success) throw new Error(response.error);
+    if (!response.success) throwFromResponse(response);
     log(`[PageGrep] summary: received ${response.points.length} points`, response.points);
     updateSummarySidebar(response.points, elements);
   } catch (err) {
     error('[PageGrep] summary: failed:', err.message);
-    browser.runtime.sendMessage({ action: 'summaryError', error: err.message });
+    browser.runtime.sendMessage({ action: 'summaryError', error: err.message, code: err.code });
   }
 }
 
@@ -1052,7 +1059,7 @@ async function runInterestingFromPage() {
       elements: elements.map(e => e.text),
     });
 
-    if (!response.success) throw new Error(response.error);
+    if (!response.success) throwFromResponse(response);
     log(`[PageGrep] ★: matched items:`, response.items);
 
     const items = response.items
@@ -1063,7 +1070,7 @@ async function runInterestingFromPage() {
     log(`[PageGrep] ★: found ${items.length} interesting elements`);
   } catch (err) {
     error('[PageGrep] ★: highlight failed:', err.message);
-    browser.runtime.sendMessage({ action: 'highlightError', error: err.message });
+    browser.runtime.sendMessage({ action: 'highlightError', error: err.message, code: err.code });
   }
 }
 
@@ -1257,7 +1264,7 @@ function showSelectionResult(anchorLeft, anchorTop, anchorBottom, text) {
 
   browser.runtime.sendMessage({ action: 'translateParagraph', text })
     .then(response => {
-      if (!response.success) throw new Error(response.error || 'Translation failed');
+      if (!response.success) throwFromResponse(response);
       popup.classList.remove('ai-sel-loading');
       popup.textContent = response.result;
       const saveLink = document.createElement('button');
@@ -1276,7 +1283,7 @@ function showSelectionResult(anchorLeft, anchorTop, anchorBottom, text) {
       popup.classList.remove('ai-sel-loading');
       popup.classList.add('ai-sel-error');
       popup.textContent = '\u26a0 ' + (err.message || 'Translation failed');
-      if (isApiKeyError(err.message)) showApiKeyToast();
+      if (isApiKeyError(err.message, err.code)) showApiKeyToast();
     });
 }
 
