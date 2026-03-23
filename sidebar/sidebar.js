@@ -267,6 +267,7 @@ function renderHighlights(items) {
   listEl.innerHTML = '';
 
   if (!items || items.length === 0) {
+    emptyEl.textContent = browser.i18n.getMessage('matchesPlaceholder');
     emptyEl.classList.remove('hidden');
     return;
   }
@@ -316,7 +317,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
     const items = Array.isArray(message.items) ? message.items : [];
     renderHighlights(items);
     if (items.length === 0) {
-      showError(browser.i18n.getMessage('noMatchFound'));
+      document.getElementById('highlight-empty').textContent = browser.i18n.getMessage('noMatchFound');
     } else {
       hideError();
     }
