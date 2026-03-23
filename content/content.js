@@ -22,10 +22,18 @@ const STYLE_ID = 'ai-reader-styles';
 const PANEL_ID = 'ai-reader-panel';
 const TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
 const NOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" style="pointer-events:none"><rect x="3.5" y="1.5" width="13" height="17" rx="1.5" stroke="currentColor" stroke-width="1.5"/><line x1="6.5" y1="7" x2="13.5" y2="7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="10" x2="13.5" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="13" x2="10.5" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`;
+// Toggle btn icons: translate icon (show translated) vs undo/back arrow (show original)
+const TOGGLE_TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
+const TOGGLE_ORIGINAL_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>`;
 const _svgParser = new DOMParser();
 function setTranslateIcon(el) {
   const doc = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml');
   el.replaceChildren(doc.documentElement);
+}
+function setToggleIcon(btn, showingTranslation) {
+  const src = showingTranslation ? TOGGLE_ORIGINAL_ICON : TOGGLE_TRANSLATE_ICON;
+  const doc = _svgParser.parseFromString(src, 'image/svg+xml');
+  btn.replaceChildren(doc.documentElement);
 }
 const FLOAT_BTN_ID = 'ai-translate-btn';
 const SUMMARY_STATE = {
@@ -50,9 +58,9 @@ function injectStyles() {
     .ai-toggle-btn {
       position: absolute;
       top: 2px;
-      right: -34px;
-      width: 26px;
-      height: 26px;
+      right: 2px;
+      width: 22px;
+      height: 22px;
       background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
       color: white;
       border: none;
@@ -60,13 +68,18 @@ function injectStyles() {
       cursor: pointer;
       font-size: 11px;
       font-weight: bold;
-      opacity: 0.8;
-      transition: all 0.2s;
+      opacity: 0;
+      transition: opacity 0.15s, transform 0.15s;
       z-index: 9999;
       padding: 0;
       box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+      pointer-events: none;
     }
-    .ai-toggle-btn:hover { opacity: 1; transform: scale(1.1); }
+    .ai-para-wrap:hover .ai-toggle-btn {
+      opacity: 0.85;
+      pointer-events: auto;
+    }
+    .ai-toggle-btn:hover { opacity: 1 !important; transform: scale(1.1); }
     .ai-loading-btn {
       background: #94a3b8;
       cursor: wait;
@@ -78,37 +91,53 @@ function injectStyles() {
       50% { opacity: 1; }
     }
     #ai-reader-panel {
-      position: fixed;
+      position: fixed !important;
       bottom: 24px;
       right: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      z-index: 2147483647;
-      padding: 10px 7px;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      z-index: 2147483647 !important;
+      width: 46px !important;
+      padding: 8px 0 !important;
+      margin: 0 !important;
       user-select: none;
-      background: rgba(15, 23, 42, 0.78);
+      background: rgba(248, 250, 252, 0.92);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border-radius: 32px;
+      border-radius: 28px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      resize: none !important;
+      box-sizing: content-box !important;
+    }
+    #ai-reader-panel.dark {
+      background: rgba(15, 23, 42, 0.78);
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-      overflow: hidden;
     }
     .ai-panel-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      border: none;
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      max-width: 34px !important;
+      max-height: 34px !important;
+      border-radius: 50% !important;
+      border: none !important;
       cursor: grab;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 700;
       color: white;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-shrink: 0 !important;
       font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
       transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s, opacity 0.18s;
     }
@@ -251,6 +280,11 @@ function injectStyles() {
       box-shadow: 0 8px 24px rgba(0,0,0,0.15);
       min-width: 180px;
     }
+    #ai-panel-menu.dark {
+      background: #1e293b;
+      border-color: rgba(255,255,255,0.1);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
     #ai-panel-menu button {
       display: block;
       width: 100%;
@@ -266,7 +300,9 @@ function injectStyles() {
       font-weight: 500;
       white-space: nowrap;
     }
+    #ai-panel-menu.dark button { color: #f8fafc; }
     #ai-panel-menu button:hover { background: rgba(99,102,241,0.08); color: #6366f1; }
+    #ai-panel-menu.dark button:hover { background: rgba(129,140,248,0.15); color: #818cf8; }
   `;
   document.head.appendChild(style);
 }
@@ -402,6 +438,36 @@ function collectArticleText() {
   return lines;
 }
 
+// --- API key error helpers ---
+
+function isApiKeyError(msg) {
+  const noKeyMsg = browser.i18n.getMessage('enterApiKey');
+  return msg === noKeyMsg || msg === 'Please enter an API Key' || msg === '请输入 API Key';
+}
+
+function showApiKeyToast() {
+  injectStyles();
+  let toast = document.getElementById('ai-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'ai-toast';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = '';
+  const msgNode = document.createTextNode((browser.i18n.getMessage('enterApiKey') || 'No API key set') + ' — ');
+  const link = document.createElement('a');
+  link.href = '#';
+  link.style.cssText = 'color:#818cf8;text-decoration:underline;cursor:pointer;';
+  link.textContent = browser.i18n.getMessage('settingsTitle').replace('PageGrep - ', '') || 'Settings';
+  link.addEventListener('click', (e) => { e.preventDefault(); browser.runtime.sendMessage({ action: 'openOptionsPage' }); });
+  toast.appendChild(msgNode);
+  toast.appendChild(link);
+  toast.style.pointerEvents = 'auto';
+  clearTimeout(toast._hideTimer);
+  toast.classList.add('ai-toast-show');
+  toast._hideTimer = setTimeout(() => { toast.classList.remove('ai-toast-show'); toast.style.pointerEvents = ''; }, 4000);
+}
+
 // --- Translation ---
 
 async function runTranslateOnPage(btn) {
@@ -438,8 +504,8 @@ function createFloatButton() {
   saveBtn.id = 'ai-scratchpad-btn';
   saveBtn.className = 'ai-panel-btn';
   const noteSvg = _svgParser.parseFromString(NOTE_ICON, 'image/svg+xml').documentElement;
-  noteSvg.setAttribute('width', '18');
-  noteSvg.setAttribute('height', '18');
+  noteSvg.setAttribute('width', '16');
+  noteSvg.setAttribute('height', '16');
   saveBtn.appendChild(noteSvg);
   saveBtn.title = browser.i18n.getMessage('saveArticle') || 'Copy article to clipboard';
   panel.appendChild(saveBtn);
@@ -455,7 +521,7 @@ function createFloatButton() {
   browser.storage.local.get([STORAGE_KEYS.PANEL_POSITION]).then(({ panelPosition }) => {
     if (panelPosition) {
       const MARGIN = 10;
-      const panelSize = 52;
+      const panelSize = panel.offsetWidth || 48;
       // Support ratio-based (new) and legacy pixel-based (old) stored positions
       const rawLeft = panelPosition.leftRatio != null
         ? panelPosition.leftRatio * window.innerWidth
@@ -571,7 +637,15 @@ function makeDraggable(panel) {
     if (isOverTrashZone(point.clientX, point.clientY)) {
       panel.remove();
       if (zone) zone.remove();
-      browser.storage.local.set({ [STORAGE_KEYS.SHOW_FLOAT_BTN]: false });
+      const hostname = location.hostname;
+      if (hostname) {
+        browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS).then(({ blockedDomains }) => {
+          const list = Array.isArray(blockedDomains) ? blockedDomains : [];
+          if (!list.includes(hostname)) {
+            browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: [...list, hostname] });
+          }
+        });
+      }
       return;
     }
 
@@ -677,18 +751,19 @@ async function wrapAndTranslate(el) {
     translatedSpan.textContent = response.result;
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
-    btn.textContent = '📄';
+    setToggleIcon(btn, true);
     btn.title = browser.i18n.getMessage('showOriginal');
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const showing = el.classList.toggle('show-translation');
       log(`[PageGrep] toggle paragraph → ${showing ? 'translation' : 'original'}`);
-      btn.textContent = showing ? '📄' : '🌐';
+      setToggleIcon(btn, showing);
       btn.title = browser.i18n.getMessage(showing ? 'showOriginal' : 'showTranslated');
     });
   } catch (err) {
     error('[PageGrep] paragraph translation failed:', err.message);
     restore();
+    if (isApiKeyError(err.message)) showApiKeyToast();
   }
 }
 
@@ -1005,7 +1080,6 @@ browser.runtime.onMessage.addListener((message) => {
     if (target) {
       clearAllHighlights();
       hoverElement(target, 'summary');
-      target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
     return;
   }
@@ -1066,6 +1140,10 @@ function showPanelContextMenu(x, y) {
   const hostname = location.hostname;
   const menu = document.createElement('div');
   menu.id = 'ai-panel-menu';
+  browser.storage.local.get(STORAGE_KEYS.THEME).then(({ theme }) => {
+    const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) menu.classList.add('dark');
+  });
   const item = document.createElement('button');
   item.textContent = browser.i18n.getMessage('hideOnSite', [hostname]) || `Hide on ${hostname}`;
   item.addEventListener('click', async () => {
@@ -1111,8 +1189,9 @@ function showToast(msg) {
     document.body.appendChild(toast);
   }
   toast.textContent = msg;
-  toast.classList.add('ai-toast-show');
+  toast.style.pointerEvents = '';
   clearTimeout(toast._hideTimer);
+  toast.classList.add('ai-toast-show');
   toast._hideTimer = setTimeout(() => toast.classList.remove('ai-toast-show'), 2000);
 }
 
@@ -1132,16 +1211,16 @@ async function copyToClipboard(text) {
 }
 
 async function saveArticleToClipboard(btn) {
-  if (btn) btn.disabled = true;
+  if (btn) { btn.disabled = true; btn.classList.add('ai-loading-btn'); }
   try {
     const lines = collectArticleText();
-    if (lines.length === 0) { showToast('No content found'); return; }
+    if (lines.length === 0) { showToast(browser.i18n.getMessage('noAnalyzableContent') || 'No content found'); return; }
     const markdown = `# ${document.title || location.hostname}\n\n${location.href}\n\n${lines.join('\n\n')}\n`;
     await copyToClipboard(markdown);
   } catch (_) {
-    showToast('Copy failed');
+    showToast(browser.i18n.getMessage('operationFailed') || 'Copy failed');
   } finally {
-    if (btn) btn.disabled = false;
+    if (btn) { btn.disabled = false; btn.classList.remove('ai-loading-btn'); }
   }
 }
 
@@ -1194,6 +1273,7 @@ function showSelectionResult(anchorLeft, anchorTop, anchorBottom, text) {
       popup.classList.remove('ai-sel-loading');
       popup.classList.add('ai-sel-error');
       popup.textContent = '\u26a0 ' + (err.message || 'Translation failed');
+      if (isApiKeyError(err.message)) showApiKeyToast();
     });
 }
 
@@ -1296,9 +1376,9 @@ async function initI18n() {
 log('[PageGrep] content script loaded', location.href);
 browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS]).then(async ({ showFloatBtn, blockedDomains }) => {
   await initI18n();
+  selectionTranslateEnabled = true;
   const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
   if (showFloatBtn !== false && !blocked.includes(location.hostname)) {
-    selectionTranslateEnabled = true;
     createFloatButton();
   }
 });
@@ -1316,14 +1396,11 @@ browser.storage.onChanged.addListener((changes) => {
       browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS).then(({ blockedDomains }) => {
         const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
         if (!blocked.includes(location.hostname)) {
-          selectionTranslateEnabled = true;
           browser.storage.local.remove(STORAGE_KEYS.PANEL_POSITION);
           createFloatButton();
         }
       });
     } else {
-      selectionTranslateEnabled = false;
-      removeSelectionUI();
       document.getElementById(FLOAT_BTN_ID)?.remove();
       document.getElementById('ai-scratchpad-btn')?.remove();
       clearAllHighlights();
@@ -1334,8 +1411,6 @@ browser.storage.onChanged.addListener((changes) => {
     const blocked = Array.isArray(changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue)
       ? changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue : [];
     if (blocked.includes(location.hostname)) {
-      selectionTranslateEnabled = false;
-      removeSelectionUI();
       document.getElementById(FLOAT_BTN_ID)?.remove();
       document.getElementById('ai-scratchpad-btn')?.remove();
       clearAllHighlights();
@@ -1343,7 +1418,6 @@ browser.storage.onChanged.addListener((changes) => {
     } else {
       browser.storage.local.get(STORAGE_KEYS.SHOW_FLOAT_BTN).then(({ showFloatBtn }) => {
         if (showFloatBtn !== false) {
-          selectionTranslateEnabled = true;
           createFloatButton();
         }
       });
