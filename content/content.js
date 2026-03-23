@@ -929,6 +929,8 @@ function showPanelContextMenu(x, y) {
 const SELECTION_BTN_ID = 'ai-selection-btn';
 const SELECTION_RESULT_ID = 'ai-selection-result';
 
+let selectionTranslateEnabled = false;
+
 function removeSelectionUI() {
   document.getElementById(SELECTION_BTN_ID)?.remove();
   document.getElementById(SELECTION_RESULT_ID)?.remove();
@@ -972,6 +974,7 @@ function showSelectionResult(anchorLeft, anchorTop, anchorBottom, text) {
 }
 
 function onTextSelectionEnd(e) {
+  if (!selectionTranslateEnabled) return;
   if (e.target.closest('#' + SELECTION_BTN_ID) || e.target.closest('#' + SELECTION_RESULT_ID)) return;
 
   const sel = window.getSelection();
@@ -1054,7 +1057,10 @@ log('[PageGrep] content script loaded', location.href);
 browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS]).then(async ({ showFloatBtn, blockedDomains }) => {
   await initI18n();
   const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
-  if (showFloatBtn !== false && !blocked.includes(location.hostname)) createFloatButton();
+  if (showFloatBtn !== false && !blocked.includes(location.hostname)) {
+    selectionTranslateEnabled = true;
+    createFloatButton();
+  }
 });
 
 // Handle system theme changes if no explicit preference is set
@@ -1070,11 +1076,14 @@ browser.storage.onChanged.addListener((changes) => {
       browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS).then(({ blockedDomains }) => {
         const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
         if (!blocked.includes(location.hostname)) {
+          selectionTranslateEnabled = true;
           browser.storage.local.remove(STORAGE_KEYS.PANEL_POSITION);
           createFloatButton();
         }
       });
     } else {
+      selectionTranslateEnabled = false;
+      removeSelectionUI();
       document.getElementById(FLOAT_BTN_ID)?.remove();
       clearAllHighlights();
       removePanelIfEmpty();
@@ -1084,12 +1093,17 @@ browser.storage.onChanged.addListener((changes) => {
     const blocked = Array.isArray(changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue)
       ? changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue : [];
     if (blocked.includes(location.hostname)) {
+      selectionTranslateEnabled = false;
+      removeSelectionUI();
       document.getElementById(FLOAT_BTN_ID)?.remove();
       clearAllHighlights();
       removePanelIfEmpty();
     } else {
       browser.storage.local.get(STORAGE_KEYS.SHOW_FLOAT_BTN).then(({ showFloatBtn }) => {
-        if (showFloatBtn !== false) createFloatButton();
+        if (showFloatBtn !== false) {
+          selectionTranslateEnabled = true;
+          createFloatButton();
+        }
       });
     }
   }
