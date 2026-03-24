@@ -16,8 +16,10 @@ async function applyI18nOverride() {
       let msg = entry.message;
       if (substitutions && entry.placeholders) {
         const subs = Array.isArray(substitutions) ? substitutions : [substitutions];
-        Object.keys(entry.placeholders).forEach((name, idx) => {
-          msg = msg.replace(new RegExp('\\$' + name + '\\$', 'gi'), subs[idx] ?? '');
+        Object.entries(entry.placeholders).forEach(([name, placeholder]) => {
+          const contentMatch = /^\$(\d+)$/.exec(placeholder.content || '');
+          const subIdx = contentMatch ? parseInt(contentMatch[1], 10) - 1 : 0;
+          msg = msg.replace(new RegExp('\\$' + name + '\\$', 'gi'), subs[subIdx] ?? '');
         });
       }
       return msg;

@@ -1,94 +1,276 @@
 {
-  "summaryTab": { "message": "Резюме" },
-  "interestsTab": { "message": "Интересы" },
-  "generateSummary": { "message": "Создать резюме" },
-  "summaryPlaceholder": { "message": "Нажмите кнопку выше, чтобы создать резюме страницы" },
-  "readingInterests": { "message": "Интересы для чтения" },
-  "interestsPlaceholder": { "message": "Опишите, что вас интересует, например: ИИ, макроэкономика..." },
-  "save": { "message": "Сохранить" },
-  "clear": { "message": "Очистить" },
-  "saved": { "message": "Сохранено ✓" },
-  "findMatches": { "message": "Найти совпадения" },
-  "matchesPlaceholder": { "message": "Нажмите кнопку выше, чтобы найти контент, соответствующий вашим интересам" },
-  "darkMode": { "message": "Тёмный режим" },
-  "toggleTheme": { "message": "Переключить тёмный/светлый режим" },
-  "floatBtn": { "message": "Плавающая кнопка" },
-  "floatBtnTooltip": { "message": "Показать плавающую кнопку в правом нижнем углу" },
-  "connectionError": { "message": "Невозможно подключиться к странице. Пожалуйста, обновите страницу и попробуйте снова." },
-  "operationFailed": { "message": "Операция не выполнена. Пожалуйста, попробуйте снова." },
-  "summaryFailed": { "message": "Не удалось создать резюме." },
-  "noMatchFound": { "message": "Соответствующий контент не найден." },
-  "matchFailed": { "message": "Не удалось сопоставить интересы." },
-  "settingsTitle": { "message": "PageGrep - Настройки" },
-  "settingsSubtitle": { "message": "Управляйте API-ключом и настройками" },
-  "apiKeyLabel": { "message": "OpenAI API Key" },
-  "showHide": { "message": "Показать/Скрыть" },
-  "apiKeyPrivacy": { "message": "Ваш API-ключ хранится локально только в вашем браузере и никогда не передаётся сторонним серверам." },
-  "modelLabel": { "message": "Модель ИИ" },
-  "model41Nano": { "message": "gpt-4.1-nano (сверхнизкая стоимость, $0,10/М токенов)" },
-  "modelMini": { "message": "gpt-4o-mini (рекомендуется, низкая стоимость, $0,15/М токенов)" },
-  "model41Mini": { "message": "gpt-4.1-mini (низкая стоимость, $0,40/М токенов)" },
-  "modelO3Mini": { "message": "o3-mini (рассуждения, $1,10/М токенов)" },
-  "model41": { "message": "gpt-4.1 (высокое качество, $2,00/М токенов)" },
-  "modelO3": { "message": "o3 (рассуждения, $2,00/М токенов)" },
-  "modelFull": { "message": "gpt-4o (более высокое качество, $2,50/М токенов)" },
-  "modelInfo": { "message": "Выберите модель в зависимости от ваших потребностей. gpt-4o-mini рекомендуется для повседневного использования, около $0,15/М токенов." },
-  "languageLabel": { "message": "Язык интерфейса" },
-  "languageAuto": { "message": "Следовать браузеру" },
-  "languageInfo": { "message": "Выберите язык интерфейса расширения. Автоматически перезагружается при сохранении." },
-  "translateLangLabel": { "message": "Язык перевода" },
-  "translateLangInfo": { "message": "При использовании плавающей кнопки абзацы страницы будут переведены на этот язык." },
-  "themeLabel": { "message": "Тема оформления" },
-  "themeSystem": { "message": "Следовать системе" },
-  "themeLight": { "message": "Светлая" },
-  "themeDark": { "message": "Тёмная" },
-  "themeInfo": { "message": "Выберите предпочитаемую тему интерфейса." },
-  "showFloatBtn": { "message": "Показать плавающую кнопку" },
-  "floatBtnInfo": { "message": "Показывать кнопки быстрого доступа для перевода и выделения в правом нижнем углу веб-страниц." },
-  "saveSettings": { "message": "Сохранить настройки" },
-  "clearApiKey": { "message": "Очистить API-ключ" },
-  "instructions": { "message": "Инструкция" },
-  "instructionStep1": { "message": "Получите API-ключ на <a href=\"https://platform.openai.com/api-keys\" target=\"_blank\">платформе OpenAI</a>" },
-  "instructionStep2": { "message": "Вставьте ваш API-ключ выше, выберите язык перевода и модель, затем сохраните" },
-  "instructionStep3": { "message": "Нажмите значок расширения на любой странице, чтобы открыть боковую панель — создавайте резюме контента или находите элементы по вашим интересам" },
-  "instructionStep4": { "message": "Используйте плавающую кнопку в правом нижнем углу для перевода видимых абзацев на выбранный язык" },
-  "enterApiKey": { "message": "Пожалуйста, введите API-ключ" },
-  "invalidApiKey": { "message": "Неверный формат API-ключа, должен начинаться с \"sk-\"" },
-  "settingsSaved": { "message": "✓ Настройки сохранены" },
-  "saveFailed": { "message": "Ошибка сохранения:" },
-  "confirmClear": { "message": "Вы уверены, что хотите очистить все настройки?" },
-  "settingsCleared": { "message": "✓ Настройки очищены" },
-  "hide": { "message": "Скрыть" },
-  "noTranslatableContent": { "message": "Нет переводимого контента" },
-  "translateScreenContent": { "message": "Перевести содержимое экрана" },
+  "summaryTab": {
+    "message": "Резюме"
+  },
+  "interestsTab": {
+    "message": "Интересы"
+  },
+  "generateSummary": {
+    "message": "Создать резюме"
+  },
+  "summaryPlaceholder": {
+    "message": "Нажмите кнопку выше, чтобы создать резюме страницы"
+  },
+  "readingInterests": {
+    "message": "Интересы для чтения"
+  },
+  "interestsPlaceholder": {
+    "message": "Опишите, что вас интересует, например: ИИ, макроэкономика..."
+  },
+  "save": {
+    "message": "Сохранить"
+  },
+  "clear": {
+    "message": "Очистить"
+  },
+  "saved": {
+    "message": "Сохранено ✓"
+  },
+  "findMatches": {
+    "message": "Найти совпадения"
+  },
+  "matchesPlaceholder": {
+    "message": "Нажмите кнопку выше, чтобы найти контент, соответствующий вашим интересам"
+  },
+  "darkMode": {
+    "message": "Тёмный режим"
+  },
+  "toggleTheme": {
+    "message": "Переключить тёмный/светлый режим"
+  },
+  "floatBtn": {
+    "message": "Плавающая кнопка"
+  },
+  "floatBtnTooltip": {
+    "message": "Показать плавающую кнопку в правом нижнем углу"
+  },
+  "connectionError": {
+    "message": "Невозможно подключиться к странице. Пожалуйста, обновите страницу и попробуйте снова."
+  },
+  "operationFailed": {
+    "message": "Операция не выполнена. Пожалуйста, попробуйте снова."
+  },
+  "summaryFailed": {
+    "message": "Не удалось создать резюме."
+  },
+  "noMatchFound": {
+    "message": "Соответствующий контент не найден."
+  },
+  "matchFailed": {
+    "message": "Не удалось сопоставить интересы."
+  },
+  "settingsTitle": {
+    "message": "PageGrep - Настройки"
+  },
+  "settingsSubtitle": {
+    "message": "Управляйте API-ключом и настройками"
+  },
+  "apiKeyLabel": {
+    "message": "OpenAI API Key"
+  },
+  "showHide": {
+    "message": "Показать/Скрыть"
+  },
+  "apiKeyPrivacy": {
+    "message": "Ваш API-ключ хранится локально только в вашем браузере и никогда не передаётся сторонним серверам."
+  },
+  "modelLabel": {
+    "message": "Модель ИИ"
+  },
+  "model41Nano": {
+    "message": "gpt-4.1-nano (сверхнизкая стоимость, $0,10/М токенов)"
+  },
+  "modelMini": {
+    "message": "gpt-4o-mini (рекомендуется, низкая стоимость, $0,15/М токенов)"
+  },
+  "model41Mini": {
+    "message": "gpt-4.1-mini (низкая стоимость, $0,40/М токенов)"
+  },
+  "modelO3Mini": {
+    "message": "o3-mini (рассуждения, $1,10/М токенов)"
+  },
+  "model41": {
+    "message": "gpt-4.1 (высокое качество, $2,00/М токенов)"
+  },
+  "modelO3": {
+    "message": "o3 (рассуждения, $2,00/М токенов)"
+  },
+  "modelFull": {
+    "message": "gpt-4o (более высокое качество, $2,50/М токенов)"
+  },
+  "modelInfo": {
+    "message": "Выберите модель в зависимости от ваших потребностей. gpt-4o-mini рекомендуется для повседневного использования, около $0,15/М токенов."
+  },
+  "languageLabel": {
+    "message": "Язык интерфейса"
+  },
+  "languageAuto": {
+    "message": "Следовать браузеру"
+  },
+  "languageInfo": {
+    "message": "Выберите язык интерфейса расширения. Автоматически перезагружается при сохранении."
+  },
+  "translateLangLabel": {
+    "message": "Язык перевода"
+  },
+  "translateLangInfo": {
+    "message": "При использовании плавающей кнопки абзацы страницы будут переведены на этот язык."
+  },
+  "themeLabel": {
+    "message": "Тема оформления"
+  },
+  "themeSystem": {
+    "message": "Следовать системе"
+  },
+  "themeLight": {
+    "message": "Светлая"
+  },
+  "themeDark": {
+    "message": "Тёмная"
+  },
+  "themeInfo": {
+    "message": "Выберите предпочитаемую тему интерфейса."
+  },
+  "showFloatBtn": {
+    "message": "Показать плавающую кнопку"
+  },
+  "floatBtnInfo": {
+    "message": "Показывать кнопки быстрого доступа для перевода и выделения в правом нижнем углу веб-страниц."
+  },
+  "saveSettings": {
+    "message": "Сохранить настройки"
+  },
+  "clearApiKey": {
+    "message": "Очистить API-ключ"
+  },
+  "instructions": {
+    "message": "Инструкция"
+  },
+  "instructionStep1": {
+    "message": "Получите API-ключ на <a href=\"https://platform.openai.com/api-keys\" target=\"_blank\">платформе OpenAI</a>"
+  },
+  "instructionStep2": {
+    "message": "Вставьте ваш API-ключ выше, выберите язык перевода и модель, затем сохраните"
+  },
+  "instructionStep3": {
+    "message": "Нажмите значок расширения на любой странице, чтобы открыть боковую панель — создавайте резюме контента или находите элементы по вашим интересам"
+  },
+  "instructionStep4": {
+    "message": "Используйте плавающую кнопку в правом нижнем углу для перевода видимых абзацев на выбранный язык"
+  },
+  "enterApiKey": {
+    "message": "Пожалуйста, введите API-ключ"
+  },
+  "invalidApiKey": {
+    "message": "Неверный формат API-ключа, должен начинаться с \"sk-\""
+  },
+  "settingsSaved": {
+    "message": "✓ Настройки сохранены"
+  },
+  "saveFailed": {
+    "message": "Ошибка сохранения:"
+  },
+  "confirmClear": {
+    "message": "Вы уверены, что хотите очистить все настройки?"
+  },
+  "settingsCleared": {
+    "message": "✓ Настройки очищены"
+  },
+  "hide": {
+    "message": "Скрыть"
+  },
+  "noTranslatableContent": {
+    "message": "Нет переводимого контента"
+  },
+  "translateScreenContent": {
+    "message": "Перевести содержимое экрана"
+  },
   "translatingProgress": {
     "message": "Перевод $n$/$total$",
-    "placeholders": { "n": { "content": "$1" }, "total": { "content": "$2" } }
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
   },
-  "original": { "message": "Ориг." },
-  "showOriginal": { "message": "Показать оригинал" },
-  "translated": { "message": "Пер." },
-  "showTranslated": { "message": "Показать перевод" },
-  "translating": { "message": "Перевод..." },
-  "noAnalyzableContent": { "message": "Нет анализируемого контента" },
-  "setInterestsFirst": { "message": "Пожалуйста, сначала задайте интересы в расширении" },
-  "dropToHide": { "message": "Перетащите сюда, чтобы скрыть" },
-  "extDescription": { "message": "Помощник для чтения: переводит страницы и выделяет контент, соответствующий вашим интересам" },
-  "translateSelection": { "message": "Перевести" },
+  "original": {
+    "message": "Ориг."
+  },
+  "showOriginal": {
+    "message": "Показать оригинал"
+  },
+  "translated": {
+    "message": "Пер."
+  },
+  "showTranslated": {
+    "message": "Показать перевод"
+  },
+  "translating": {
+    "message": "Перевод..."
+  },
+  "noAnalyzableContent": {
+    "message": "Нет анализируемого контента"
+  },
+  "setInterestsFirst": {
+    "message": "Пожалуйста, сначала задайте интересы в расширении"
+  },
+  "dropToHide": {
+    "message": "Перетащите сюда, чтобы скрыть"
+  },
+  "extDescription": {
+    "message": "Помощник для чтения: переводит страницы и выделяет контент, соответствующий вашим интересам"
+  },
+  "translateSelection": {
+    "message": "Перевести"
+  },
   "hideOnSite": {
     "message": "Скрыть на $domain$",
-    "placeholders": { "domain": { "content": "$1" } }
+    "placeholders": {
+      "domain": {
+        "content": "$1"
+      }
+    }
   },
-  "blockedDomainsLabel": { "message": "Заблокированные домены" },
-  "blockedDomainsInfo": { "message": "Плавающая кнопка скрыта на этих доменах. Щёлкните правой кнопкой мыши по кнопке на любой странице, чтобы добавить сайт." },
-  "noBlockedDomains": { "message": "Нет заблокированных доменов" },
-  "removeDomain": { "message": "Удалить" },
-  "hideOnThisSite": { "message": "Скрыть на этом сайте" },
-  "copyMarkdown": { "message": "Копировать" },
-  "copied": { "message": "Скопировано ✓" },
-  "saveArticle": { "message": "Копировать статью в буфер обмена" },
-  "resetAllSettings": { "message": "Сбросить все настройки" },
-  "advancedSettings": { "message": "Расширенные настройки" },
-  "copyWithOriginal": { "message": "Копировать + оригинал" },
-  "requestTimeout": { "message": "Время запроса истекло" }
+  "blockedDomainsLabel": {
+    "message": "Заблокированные домены"
+  },
+  "blockedDomainsInfo": {
+    "message": "Плавающая кнопка скрыта на этих доменах. Щёлкните правой кнопкой мыши по кнопке на любой странице, чтобы добавить сайт."
+  },
+  "noBlockedDomains": {
+    "message": "Нет заблокированных доменов"
+  },
+  "removeDomain": {
+    "message": "Удалить"
+  },
+  "hideOnThisSite": {
+    "message": "Скрыть на этом сайте"
+  },
+  "copyMarkdown": {
+    "message": "Копировать"
+  },
+  "copied": {
+    "message": "Скопировано ✓"
+  },
+  "saveArticle": {
+    "message": "Копировать статью в буфер обмена"
+  },
+  "resetAllSettings": {
+    "message": "Сбросить все настройки"
+  },
+  "advancedSettings": {
+    "message": "Расширенные настройки"
+  },
+  "copyWithOriginal": {
+    "message": "Копировать + оригинал"
+  },
+  "requestTimeout": {
+    "message": "Время запроса истекло"
+  },
+  "settingsLinkLabel": {
+    "message": "Настройки"
+  }
 }

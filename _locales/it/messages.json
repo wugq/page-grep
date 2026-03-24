@@ -1,94 +1,276 @@
 {
-  "summaryTab": { "message": "Riepilogo" },
-  "interestsTab": { "message": "Interessi" },
-  "generateSummary": { "message": "Genera riepilogo" },
-  "summaryPlaceholder": { "message": "Clicca il pulsante sopra per generare un riepilogo della pagina" },
-  "readingInterests": { "message": "Interessi di lettura" },
-  "interestsPlaceholder": { "message": "Descrivi cosa ti interessa, es.: IA, macroeconomia..." },
-  "save": { "message": "Salva" },
-  "clear": { "message": "Cancella" },
-  "saved": { "message": "Salvato ✓" },
-  "findMatches": { "message": "Trova corrispondenze" },
-  "matchesPlaceholder": { "message": "Clicca il pulsante sopra per trovare contenuti che corrispondono ai tuoi interessi" },
-  "darkMode": { "message": "Modalità scura" },
-  "toggleTheme": { "message": "Attiva/disattiva modalità scura/chiara" },
-  "floatBtn": { "message": "Pulsante flottante" },
-  "floatBtnTooltip": { "message": "Mostra il pulsante di azione flottante nell'angolo in basso a destra" },
-  "connectionError": { "message": "Impossibile connettersi alla pagina. Aggiorna e riprova." },
-  "operationFailed": { "message": "Operazione non riuscita. Riprova." },
-  "summaryFailed": { "message": "Generazione del riepilogo non riuscita." },
-  "noMatchFound": { "message": "Nessun contenuto corrispondente trovato." },
-  "matchFailed": { "message": "Corrispondenza degli interessi non riuscita." },
-  "settingsTitle": { "message": "PageGrep - Impostazioni" },
-  "settingsSubtitle": { "message": "Gestisci la tua chiave API e le preferenze" },
-  "apiKeyLabel": { "message": "OpenAI API Key" },
-  "showHide": { "message": "Mostra/Nascondi" },
-  "apiKeyPrivacy": { "message": "La tua chiave API è memorizzata localmente nel tuo browser e non viene mai inviata a server di terze parti." },
-  "modelLabel": { "message": "Modello IA" },
-  "model41Nano": { "message": "gpt-4.1-nano (costo ultra basso, $0,10/M token)" },
-  "modelMini": { "message": "gpt-4o-mini (consigliato, basso costo, $0,15/M token)" },
-  "model41Mini": { "message": "gpt-4.1-mini (basso costo, $0,40/M token)" },
-  "modelO3Mini": { "message": "o3-mini (ragionamento, $1,10/M token)" },
-  "model41": { "message": "gpt-4.1 (alta qualità, $2,00/M token)" },
-  "modelO3": { "message": "o3 (ragionamento, $2,00/M token)" },
-  "modelFull": { "message": "gpt-4o (qualità superiore, $2,50/M token)" },
-  "modelInfo": { "message": "Seleziona un modello in base alle tue esigenze. gpt-4o-mini è adatto all'uso quotidiano, a circa $0,15/M token." },
-  "languageLabel": { "message": "Lingua dell'interfaccia" },
-  "languageAuto": { "message": "Segui il browser" },
-  "languageInfo": { "message": "Scegli la lingua dell'interfaccia dell'estensione. Si ricarica automaticamente al salvataggio." },
-  "translateLangLabel": { "message": "Lingua di traduzione" },
-  "translateLangInfo": { "message": "I paragrafi della pagina verranno tradotti in questa lingua quando si usa il pulsante flottante." },
-  "themeLabel": { "message": "Tema dell'aspetto" },
-  "themeSystem": { "message": "Segui il sistema" },
-  "themeLight": { "message": "Chiaro" },
-  "themeDark": { "message": "Scuro" },
-  "themeInfo": { "message": "Scegli il tema dell'interfaccia preferito." },
-  "showFloatBtn": { "message": "Mostra pulsante flottante" },
-  "floatBtnInfo": { "message": "Mostra i pulsanti di scelta rapida per traduzione ed evidenziazione nell'angolo in basso a destra delle pagine web." },
-  "saveSettings": { "message": "Salva impostazioni" },
-  "clearApiKey": { "message": "Cancella chiave API" },
-  "instructions": { "message": "Istruzioni" },
-  "instructionStep1": { "message": "Ottieni una chiave API dalla <a href=\"https://platform.openai.com/api-keys\" target=\"_blank\">piattaforma OpenAI</a>" },
-  "instructionStep2": { "message": "Incolla la tua chiave API sopra, scegli una lingua di traduzione e un modello, poi salva" },
-  "instructionStep3": { "message": "Clicca l'icona dell'estensione su qualsiasi pagina per aprire la barra laterale — riepiloga i contenuti o trova elementi che corrispondono ai tuoi interessi" },
-  "instructionStep4": { "message": "Usa il pulsante flottante nell'angolo in basso a destra per tradurre i paragrafi visibili nella lingua scelta" },
-  "enterApiKey": { "message": "Inserisci una chiave API" },
-  "invalidApiKey": { "message": "Formato della chiave API non valido, deve iniziare con \"sk-\"" },
-  "settingsSaved": { "message": "✓ Impostazioni salvate" },
-  "saveFailed": { "message": "Salvataggio non riuscito:" },
-  "confirmClear": { "message": "Sei sicuro di voler cancellare tutte le impostazioni?" },
-  "settingsCleared": { "message": "✓ Impostazioni cancellate" },
-  "hide": { "message": "Nascondi" },
-  "noTranslatableContent": { "message": "Nessun contenuto traducibile" },
-  "translateScreenContent": { "message": "Traduci contenuto dello schermo" },
+  "summaryTab": {
+    "message": "Riepilogo"
+  },
+  "interestsTab": {
+    "message": "Interessi"
+  },
+  "generateSummary": {
+    "message": "Genera riepilogo"
+  },
+  "summaryPlaceholder": {
+    "message": "Clicca il pulsante sopra per generare un riepilogo della pagina"
+  },
+  "readingInterests": {
+    "message": "Interessi di lettura"
+  },
+  "interestsPlaceholder": {
+    "message": "Descrivi cosa ti interessa, es.: IA, macroeconomia..."
+  },
+  "save": {
+    "message": "Salva"
+  },
+  "clear": {
+    "message": "Cancella"
+  },
+  "saved": {
+    "message": "Salvato ✓"
+  },
+  "findMatches": {
+    "message": "Trova corrispondenze"
+  },
+  "matchesPlaceholder": {
+    "message": "Clicca il pulsante sopra per trovare contenuti che corrispondono ai tuoi interessi"
+  },
+  "darkMode": {
+    "message": "Modalità scura"
+  },
+  "toggleTheme": {
+    "message": "Attiva/disattiva modalità scura/chiara"
+  },
+  "floatBtn": {
+    "message": "Pulsante flottante"
+  },
+  "floatBtnTooltip": {
+    "message": "Mostra il pulsante di azione flottante nell'angolo in basso a destra"
+  },
+  "connectionError": {
+    "message": "Impossibile connettersi alla pagina. Aggiorna e riprova."
+  },
+  "operationFailed": {
+    "message": "Operazione non riuscita. Riprova."
+  },
+  "summaryFailed": {
+    "message": "Generazione del riepilogo non riuscita."
+  },
+  "noMatchFound": {
+    "message": "Nessun contenuto corrispondente trovato."
+  },
+  "matchFailed": {
+    "message": "Corrispondenza degli interessi non riuscita."
+  },
+  "settingsTitle": {
+    "message": "PageGrep - Impostazioni"
+  },
+  "settingsSubtitle": {
+    "message": "Gestisci la tua chiave API e le preferenze"
+  },
+  "apiKeyLabel": {
+    "message": "OpenAI API Key"
+  },
+  "showHide": {
+    "message": "Mostra/Nascondi"
+  },
+  "apiKeyPrivacy": {
+    "message": "La tua chiave API è memorizzata localmente nel tuo browser e non viene mai inviata a server di terze parti."
+  },
+  "modelLabel": {
+    "message": "Modello IA"
+  },
+  "model41Nano": {
+    "message": "gpt-4.1-nano (costo ultra basso, $0,10/M token)"
+  },
+  "modelMini": {
+    "message": "gpt-4o-mini (consigliato, basso costo, $0,15/M token)"
+  },
+  "model41Mini": {
+    "message": "gpt-4.1-mini (basso costo, $0,40/M token)"
+  },
+  "modelO3Mini": {
+    "message": "o3-mini (ragionamento, $1,10/M token)"
+  },
+  "model41": {
+    "message": "gpt-4.1 (alta qualità, $2,00/M token)"
+  },
+  "modelO3": {
+    "message": "o3 (ragionamento, $2,00/M token)"
+  },
+  "modelFull": {
+    "message": "gpt-4o (qualità superiore, $2,50/M token)"
+  },
+  "modelInfo": {
+    "message": "Seleziona un modello in base alle tue esigenze. gpt-4o-mini è adatto all'uso quotidiano, a circa $0,15/M token."
+  },
+  "languageLabel": {
+    "message": "Lingua dell'interfaccia"
+  },
+  "languageAuto": {
+    "message": "Segui il browser"
+  },
+  "languageInfo": {
+    "message": "Scegli la lingua dell'interfaccia dell'estensione. Si ricarica automaticamente al salvataggio."
+  },
+  "translateLangLabel": {
+    "message": "Lingua di traduzione"
+  },
+  "translateLangInfo": {
+    "message": "I paragrafi della pagina verranno tradotti in questa lingua quando si usa il pulsante flottante."
+  },
+  "themeLabel": {
+    "message": "Tema dell'aspetto"
+  },
+  "themeSystem": {
+    "message": "Segui il sistema"
+  },
+  "themeLight": {
+    "message": "Chiaro"
+  },
+  "themeDark": {
+    "message": "Scuro"
+  },
+  "themeInfo": {
+    "message": "Scegli il tema dell'interfaccia preferito."
+  },
+  "showFloatBtn": {
+    "message": "Mostra pulsante flottante"
+  },
+  "floatBtnInfo": {
+    "message": "Mostra i pulsanti di scelta rapida per traduzione ed evidenziazione nell'angolo in basso a destra delle pagine web."
+  },
+  "saveSettings": {
+    "message": "Salva impostazioni"
+  },
+  "clearApiKey": {
+    "message": "Cancella chiave API"
+  },
+  "instructions": {
+    "message": "Istruzioni"
+  },
+  "instructionStep1": {
+    "message": "Ottieni una chiave API dalla <a href=\"https://platform.openai.com/api-keys\" target=\"_blank\">piattaforma OpenAI</a>"
+  },
+  "instructionStep2": {
+    "message": "Incolla la tua chiave API sopra, scegli una lingua di traduzione e un modello, poi salva"
+  },
+  "instructionStep3": {
+    "message": "Clicca l'icona dell'estensione su qualsiasi pagina per aprire la barra laterale — riepiloga i contenuti o trova elementi che corrispondono ai tuoi interessi"
+  },
+  "instructionStep4": {
+    "message": "Usa il pulsante flottante nell'angolo in basso a destra per tradurre i paragrafi visibili nella lingua scelta"
+  },
+  "enterApiKey": {
+    "message": "Inserisci una chiave API"
+  },
+  "invalidApiKey": {
+    "message": "Formato della chiave API non valido, deve iniziare con \"sk-\""
+  },
+  "settingsSaved": {
+    "message": "✓ Impostazioni salvate"
+  },
+  "saveFailed": {
+    "message": "Salvataggio non riuscito:"
+  },
+  "confirmClear": {
+    "message": "Sei sicuro di voler cancellare tutte le impostazioni?"
+  },
+  "settingsCleared": {
+    "message": "✓ Impostazioni cancellate"
+  },
+  "hide": {
+    "message": "Nascondi"
+  },
+  "noTranslatableContent": {
+    "message": "Nessun contenuto traducibile"
+  },
+  "translateScreenContent": {
+    "message": "Traduci contenuto dello schermo"
+  },
   "translatingProgress": {
     "message": "Traduzione $n$/$total$",
-    "placeholders": { "n": { "content": "$1" }, "total": { "content": "$2" } }
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
   },
-  "original": { "message": "Orig." },
-  "showOriginal": { "message": "Mostra originale" },
-  "translated": { "message": "Trad." },
-  "showTranslated": { "message": "Mostra traduzione" },
-  "translating": { "message": "Traduzione in corso..." },
-  "noAnalyzableContent": { "message": "Nessun contenuto analizzabile" },
-  "setInterestsFirst": { "message": "Imposta prima i tuoi interessi nell'estensione" },
-  "dropToHide": { "message": "Rilascia per nascondere" },
-  "extDescription": { "message": "Assistente di lettura: traduce le pagine ed evidenzia i contenuti che corrispondono ai tuoi interessi" },
-  "translateSelection": { "message": "Traduci" },
+  "original": {
+    "message": "Orig."
+  },
+  "showOriginal": {
+    "message": "Mostra originale"
+  },
+  "translated": {
+    "message": "Trad."
+  },
+  "showTranslated": {
+    "message": "Mostra traduzione"
+  },
+  "translating": {
+    "message": "Traduzione in corso..."
+  },
+  "noAnalyzableContent": {
+    "message": "Nessun contenuto analizzabile"
+  },
+  "setInterestsFirst": {
+    "message": "Imposta prima i tuoi interessi nell'estensione"
+  },
+  "dropToHide": {
+    "message": "Rilascia per nascondere"
+  },
+  "extDescription": {
+    "message": "Assistente di lettura: traduce le pagine ed evidenzia i contenuti che corrispondono ai tuoi interessi"
+  },
+  "translateSelection": {
+    "message": "Traduci"
+  },
   "hideOnSite": {
     "message": "Nascondi su $domain$",
-    "placeholders": { "domain": { "content": "$1" } }
+    "placeholders": {
+      "domain": {
+        "content": "$1"
+      }
+    }
   },
-  "blockedDomainsLabel": { "message": "Domini bloccati" },
-  "blockedDomainsInfo": { "message": "Il pulsante flottante è nascosto su questi domini. Fai clic destro sul pulsante flottante su qualsiasi pagina per aggiungere il sito." },
-  "noBlockedDomains": { "message": "Nessun dominio bloccato" },
-  "removeDomain": { "message": "Rimuovi" },
-  "hideOnThisSite": { "message": "Nascondi su questo sito" },
-  "copyMarkdown": { "message": "Copia" },
-  "copied": { "message": "Copiato ✓" },
-  "saveArticle": { "message": "Copia articolo negli appunti" },
-  "resetAllSettings": { "message": "Ripristina tutte le impostazioni" },
-  "advancedSettings": { "message": "Impostazioni avanzate" },
-  "copyWithOriginal": { "message": "Copia + Originale" },
-  "requestTimeout": { "message": "Timeout della richiesta" }
+  "blockedDomainsLabel": {
+    "message": "Domini bloccati"
+  },
+  "blockedDomainsInfo": {
+    "message": "Il pulsante flottante è nascosto su questi domini. Fai clic destro sul pulsante flottante su qualsiasi pagina per aggiungere il sito."
+  },
+  "noBlockedDomains": {
+    "message": "Nessun dominio bloccato"
+  },
+  "removeDomain": {
+    "message": "Rimuovi"
+  },
+  "hideOnThisSite": {
+    "message": "Nascondi su questo sito"
+  },
+  "copyMarkdown": {
+    "message": "Copia"
+  },
+  "copied": {
+    "message": "Copiato ✓"
+  },
+  "saveArticle": {
+    "message": "Copia articolo negli appunti"
+  },
+  "resetAllSettings": {
+    "message": "Ripristina tutte le impostazioni"
+  },
+  "advancedSettings": {
+    "message": "Impostazioni avanzate"
+  },
+  "copyWithOriginal": {
+    "message": "Copia + Originale"
+  },
+  "requestTimeout": {
+    "message": "Timeout della richiesta"
+  },
+  "settingsLinkLabel": {
+    "message": "Impostazioni"
+  }
 }

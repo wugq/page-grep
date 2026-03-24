@@ -27,21 +27,25 @@ function renderBlockedDomains(domains) {
   });
 }
 
+let _loadedUiLang = '';
+
 async function loadSettings() {
-  const { openaiApiKey, preferredModel, theme, showFloatBtn, uiLang, translateLang, blockedDomains } = await browser.storage.local.get([
-    STORAGE_KEYS.API_KEY, STORAGE_KEYS.MODEL, STORAGE_KEYS.THEME, STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.UI_LANG, STORAGE_KEYS.TRANSLATE_LANG, STORAGE_KEYS.BLOCKED_DOMAINS
+  const s = await browser.storage.local.get([
+    STORAGE_KEYS.API_KEY, STORAGE_KEYS.MODEL, STORAGE_KEYS.THEME, STORAGE_KEYS.SHOW_FLOAT_BTN,
+    STORAGE_KEYS.UI_LANG, STORAGE_KEYS.TRANSLATE_LANG, STORAGE_KEYS.BLOCKED_DOMAINS
   ]);
 
-  if (openaiApiKey) document.getElementById('api-key').value = openaiApiKey;
-  if (preferredModel) document.getElementById('model-select').value = preferredModel;
-  if (theme !== undefined) document.getElementById('theme-select').value = theme || '';
-  document.getElementById('language-select').value = uiLang || '';
-  document.getElementById('translate-lang-select').value = translateLang || 'zh-CN';
+  if (s[STORAGE_KEYS.API_KEY]) document.getElementById('api-key').value = s[STORAGE_KEYS.API_KEY];
+  if (s[STORAGE_KEYS.MODEL]) document.getElementById('model-select').value = s[STORAGE_KEYS.MODEL];
+  if (s[STORAGE_KEYS.THEME] !== undefined) document.getElementById('theme-select').value = s[STORAGE_KEYS.THEME] || '';
+  _loadedUiLang = s[STORAGE_KEYS.UI_LANG] || '';
+  document.getElementById('language-select').value = _loadedUiLang;
+  document.getElementById('translate-lang-select').value = s[STORAGE_KEYS.TRANSLATE_LANG] || 'zh-CN';
 
   const floatCheckbox = document.getElementById('show-float-btn');
-  if (floatCheckbox) floatCheckbox.checked = showFloatBtn !== false;
+  if (floatCheckbox) floatCheckbox.checked = s[STORAGE_KEYS.SHOW_FLOAT_BTN] !== false;
 
-  renderBlockedDomains(Array.isArray(blockedDomains) ? blockedDomains : []);
+  renderBlockedDomains(Array.isArray(s[STORAGE_KEYS.BLOCKED_DOMAINS]) ? s[STORAGE_KEYS.BLOCKED_DOMAINS] : []);
 }
 
 function showStatus(message, type) {
@@ -73,7 +77,7 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
   }
 
   try {
-    const prevLang = (await browser.storage.local.get(STORAGE_KEYS.UI_LANG))[STORAGE_KEYS.UI_LANG] || '';
+    const prevLang = _loadedUiLang;
     await browser.storage.local.set({
       [STORAGE_KEYS.API_KEY]: apiKey,
       [STORAGE_KEYS.MODEL]: model,

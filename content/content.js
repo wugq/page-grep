@@ -206,7 +206,7 @@ function showApiKeyToast() {
   const link = document.createElement('a');
   link.href = '#';
   link.style.cssText = 'color:#818cf8;text-decoration:underline;cursor:pointer;';
-  link.textContent = browser.i18n.getMessage('settingsTitle').replace('PageGrep - ', '') || 'Settings';
+  link.textContent = browser.i18n.getMessage('settingsLinkLabel') || 'Settings';
   link.addEventListener('click', (e) => { e.preventDefault(); browser.runtime.sendMessage({ action: 'openOptionsPage' }); });
   toast.appendChild(msgNode);
   toast.appendChild(link);
@@ -931,9 +931,7 @@ function showPanelContextMenu(x, y) {
   const hostname = location.hostname;
   const menu = document.createElement('div');
   menu.id = 'ai-panel-menu';
-  browser.storage.local.get(STORAGE_KEYS.THEME).then(({ theme }) => {
-    if (isThemeDark(theme)) menu.classList.add('dark');
-  });
+  if (isThemeDark(_cachedTheme)) menu.classList.add('dark');
   const item = document.createElement('button');
   item.textContent = browser.i18n.getMessage('hideOnSite', [hostname]) || `Hide on ${hostname}`;
   item.addEventListener('click', async () => {
@@ -965,6 +963,7 @@ const SELECTION_BTN_ID = 'ai-selection-btn';
 const SELECTION_RESULT_ID = 'ai-selection-result';
 
 let selectionTranslateEnabled = false;
+let _cachedTheme; // set on init and on storage change; used to avoid async reads in hot paths
 
 function showToast(msg) {
   let toast = document.getElementById('ai-toast');
@@ -1183,7 +1182,8 @@ document.addEventListener('mousedown', (e) => {
 // --- Initialization ---
 
 log('[PageGrep] content script loaded', location.href);
-browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS]).then(async ({ showFloatBtn, blockedDomains }) => {
+browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS, STORAGE_KEYS.THEME]).then(async ({ showFloatBtn, blockedDomains, theme }) => {
+  _cachedTheme = theme;
   await applyI18nOverride();
   const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
   if (!blocked.includes(location.hostname)) {
@@ -1207,7 +1207,6 @@ browser.storage.onChanged.addListener((changes) => {
       browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS).then(({ blockedDomains }) => {
         const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
         if (!blocked.includes(location.hostname)) {
-          browser.storage.local.remove(STORAGE_KEYS.PANEL_POSITION);
           createFloatButton();
         }
       });
@@ -1237,6 +1236,7 @@ browser.storage.onChanged.addListener((changes) => {
     }
   }
   if (STORAGE_KEYS.THEME in changes) {
+    _cachedTheme = changes[STORAGE_KEYS.THEME].newValue;
     applyThemeToPanel();
   }
   if (STORAGE_KEYS.UI_LANG in changes) {

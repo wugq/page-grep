@@ -1,94 +1,276 @@
 {
-  "summaryTab": { "message": "Özet" },
-  "interestsTab": { "message": "İlgi Alanları" },
-  "generateSummary": { "message": "Özet Oluştur" },
-  "summaryPlaceholder": { "message": "Sayfa özeti oluşturmak için yukarıdaki düğmeye tıklayın" },
-  "readingInterests": { "message": "Okuma İlgi Alanları" },
-  "interestsPlaceholder": { "message": "İlginizi çeken konuları açıklayın, örn.: Yapay Zeka, makroekonomi..." },
-  "save": { "message": "Kaydet" },
-  "clear": { "message": "Temizle" },
-  "saved": { "message": "Kaydedildi ✓" },
-  "findMatches": { "message": "Eşleşme Bul" },
-  "matchesPlaceholder": { "message": "İlgi alanlarınızla eşleşen içerik bulmak için yukarıdaki düğmeye tıklayın" },
-  "darkMode": { "message": "Karanlık Mod" },
-  "toggleTheme": { "message": "Karanlık/aydınlık modu değiştir" },
-  "floatBtn": { "message": "Kayan Düğme" },
-  "floatBtnTooltip": { "message": "Sağ alt köşede kayan işlem düğmesini göster" },
-  "connectionError": { "message": "Sayfaya bağlanılamıyor. Lütfen sayfayı yenileyin ve tekrar deneyin." },
-  "operationFailed": { "message": "İşlem başarısız. Lütfen tekrar deneyin." },
-  "summaryFailed": { "message": "Özet oluşturma başarısız oldu." },
-  "noMatchFound": { "message": "Eşleşen içerik bulunamadı." },
-  "matchFailed": { "message": "İlgi alanı eşleştirme başarısız oldu." },
-  "settingsTitle": { "message": "PageGrep - Ayarlar" },
-  "settingsSubtitle": { "message": "API anahtarınızı ve tercihlerinizi yönetin" },
-  "apiKeyLabel": { "message": "OpenAI API Key" },
-  "showHide": { "message": "Göster/Gizle" },
-  "apiKeyPrivacy": { "message": "API anahtarınız yalnızca tarayıcınızda yerel olarak saklanır ve hiçbir üçüncü taraf sunucusuna gönderilmez." },
-  "modelLabel": { "message": "Yapay Zeka Modeli" },
-  "model41Nano": { "message": "gpt-4.1-nano (çok düşük maliyet, $0,10/M token)" },
-  "modelMini": { "message": "gpt-4o-mini (önerilen, düşük maliyet, $0,15/M token)" },
-  "model41Mini": { "message": "gpt-4.1-mini (düşük maliyet, $0,40/M token)" },
-  "modelO3Mini": { "message": "o3-mini (akıl yürütme, $1,10/M token)" },
-  "model41": { "message": "gpt-4.1 (yüksek kalite, $2,00/M token)" },
-  "modelO3": { "message": "o3 (akıl yürütme, $2,00/M token)" },
-  "modelFull": { "message": "gpt-4o (daha yüksek kalite, $2,50/M token)" },
-  "modelInfo": { "message": "İhtiyacınıza göre bir model seçin. gpt-4o-mini günlük kullanım için uygundur, yaklaşık $0,15/M token." },
-  "languageLabel": { "message": "Arayüz Dili" },
-  "languageAuto": { "message": "Tarayıcıyı Takip Et" },
-  "languageInfo": { "message": "Eklentinin arayüz dilini seçin. Kaydedildiğinde otomatik olarak yeniden yüklenir." },
-  "translateLangLabel": { "message": "Çeviri Dili" },
-  "translateLangInfo": { "message": "Kayan düğme kullanılırken sayfa paragrafları bu dile çevrilecektir." },
-  "themeLabel": { "message": "Görünüm Teması" },
-  "themeSystem": { "message": "Sistemi Takip Et" },
-  "themeLight": { "message": "Açık" },
-  "themeDark": { "message": "Koyu" },
-  "themeInfo": { "message": "Tercih ettiğiniz arayüz temasını seçin." },
-  "showFloatBtn": { "message": "Kayan Düğmeyi Göster" },
-  "floatBtnInfo": { "message": "Web sayfalarının sağ alt köşesinde çeviri ve vurgulama kısayol düğmelerini göster." },
-  "saveSettings": { "message": "Ayarları Kaydet" },
-  "clearApiKey": { "message": "API Anahtarını Temizle" },
-  "instructions": { "message": "Talimatlar" },
-  "instructionStep1": { "message": "<a href=\"https://platform.openai.com/api-keys\" target=\"_blank\">OpenAI platformundan</a> bir API Anahtarı alın" },
-  "instructionStep2": { "message": "API Anahtarınızı yukarıya yapıştırın, bir çeviri dili ve model seçin, ardından kaydedin" },
-  "instructionStep3": { "message": "Kenar çubuğunu açmak için herhangi bir sayfada eklenti simgesine tıklayın — içerikleri özetleyin veya ilgi alanlarınızla eşleşen öğeleri bulun" },
-  "instructionStep4": { "message": "Görünür paragrafları seçtiğiniz dile çevirmek için sağ alt köşedeki kayan düğmeyi kullanın" },
-  "enterApiKey": { "message": "Lütfen bir API Anahtarı girin" },
-  "invalidApiKey": { "message": "Geçersiz API Anahtarı formatı, \"sk-\" ile başlamalıdır" },
-  "settingsSaved": { "message": "✓ Ayarlar kaydedildi" },
-  "saveFailed": { "message": "Kaydetme başarısız:" },
-  "confirmClear": { "message": "Tüm ayarları temizlemek istediğinizden emin misiniz?" },
-  "settingsCleared": { "message": "✓ Ayarlar temizlendi" },
-  "hide": { "message": "Gizle" },
-  "noTranslatableContent": { "message": "Çevrilebilir içerik yok" },
-  "translateScreenContent": { "message": "Ekran içeriğini çevir" },
+  "summaryTab": {
+    "message": "Özet"
+  },
+  "interestsTab": {
+    "message": "İlgi Alanları"
+  },
+  "generateSummary": {
+    "message": "Özet Oluştur"
+  },
+  "summaryPlaceholder": {
+    "message": "Sayfa özeti oluşturmak için yukarıdaki düğmeye tıklayın"
+  },
+  "readingInterests": {
+    "message": "Okuma İlgi Alanları"
+  },
+  "interestsPlaceholder": {
+    "message": "İlginizi çeken konuları açıklayın, örn.: Yapay Zeka, makroekonomi..."
+  },
+  "save": {
+    "message": "Kaydet"
+  },
+  "clear": {
+    "message": "Temizle"
+  },
+  "saved": {
+    "message": "Kaydedildi ✓"
+  },
+  "findMatches": {
+    "message": "Eşleşme Bul"
+  },
+  "matchesPlaceholder": {
+    "message": "İlgi alanlarınızla eşleşen içerik bulmak için yukarıdaki düğmeye tıklayın"
+  },
+  "darkMode": {
+    "message": "Karanlık Mod"
+  },
+  "toggleTheme": {
+    "message": "Karanlık/aydınlık modu değiştir"
+  },
+  "floatBtn": {
+    "message": "Kayan Düğme"
+  },
+  "floatBtnTooltip": {
+    "message": "Sağ alt köşede kayan işlem düğmesini göster"
+  },
+  "connectionError": {
+    "message": "Sayfaya bağlanılamıyor. Lütfen sayfayı yenileyin ve tekrar deneyin."
+  },
+  "operationFailed": {
+    "message": "İşlem başarısız. Lütfen tekrar deneyin."
+  },
+  "summaryFailed": {
+    "message": "Özet oluşturma başarısız oldu."
+  },
+  "noMatchFound": {
+    "message": "Eşleşen içerik bulunamadı."
+  },
+  "matchFailed": {
+    "message": "İlgi alanı eşleştirme başarısız oldu."
+  },
+  "settingsTitle": {
+    "message": "PageGrep - Ayarlar"
+  },
+  "settingsSubtitle": {
+    "message": "API anahtarınızı ve tercihlerinizi yönetin"
+  },
+  "apiKeyLabel": {
+    "message": "OpenAI API Key"
+  },
+  "showHide": {
+    "message": "Göster/Gizle"
+  },
+  "apiKeyPrivacy": {
+    "message": "API anahtarınız yalnızca tarayıcınızda yerel olarak saklanır ve hiçbir üçüncü taraf sunucusuna gönderilmez."
+  },
+  "modelLabel": {
+    "message": "Yapay Zeka Modeli"
+  },
+  "model41Nano": {
+    "message": "gpt-4.1-nano (çok düşük maliyet, $0,10/M token)"
+  },
+  "modelMini": {
+    "message": "gpt-4o-mini (önerilen, düşük maliyet, $0,15/M token)"
+  },
+  "model41Mini": {
+    "message": "gpt-4.1-mini (düşük maliyet, $0,40/M token)"
+  },
+  "modelO3Mini": {
+    "message": "o3-mini (akıl yürütme, $1,10/M token)"
+  },
+  "model41": {
+    "message": "gpt-4.1 (yüksek kalite, $2,00/M token)"
+  },
+  "modelO3": {
+    "message": "o3 (akıl yürütme, $2,00/M token)"
+  },
+  "modelFull": {
+    "message": "gpt-4o (daha yüksek kalite, $2,50/M token)"
+  },
+  "modelInfo": {
+    "message": "İhtiyacınıza göre bir model seçin. gpt-4o-mini günlük kullanım için uygundur, yaklaşık $0,15/M token."
+  },
+  "languageLabel": {
+    "message": "Arayüz Dili"
+  },
+  "languageAuto": {
+    "message": "Tarayıcıyı Takip Et"
+  },
+  "languageInfo": {
+    "message": "Eklentinin arayüz dilini seçin. Kaydedildiğinde otomatik olarak yeniden yüklenir."
+  },
+  "translateLangLabel": {
+    "message": "Çeviri Dili"
+  },
+  "translateLangInfo": {
+    "message": "Kayan düğme kullanılırken sayfa paragrafları bu dile çevrilecektir."
+  },
+  "themeLabel": {
+    "message": "Görünüm Teması"
+  },
+  "themeSystem": {
+    "message": "Sistemi Takip Et"
+  },
+  "themeLight": {
+    "message": "Açık"
+  },
+  "themeDark": {
+    "message": "Koyu"
+  },
+  "themeInfo": {
+    "message": "Tercih ettiğiniz arayüz temasını seçin."
+  },
+  "showFloatBtn": {
+    "message": "Kayan Düğmeyi Göster"
+  },
+  "floatBtnInfo": {
+    "message": "Web sayfalarının sağ alt köşesinde çeviri ve vurgulama kısayol düğmelerini göster."
+  },
+  "saveSettings": {
+    "message": "Ayarları Kaydet"
+  },
+  "clearApiKey": {
+    "message": "API Anahtarını Temizle"
+  },
+  "instructions": {
+    "message": "Talimatlar"
+  },
+  "instructionStep1": {
+    "message": "<a href=\"https://platform.openai.com/api-keys\" target=\"_blank\">OpenAI platformundan</a> bir API Anahtarı alın"
+  },
+  "instructionStep2": {
+    "message": "API Anahtarınızı yukarıya yapıştırın, bir çeviri dili ve model seçin, ardından kaydedin"
+  },
+  "instructionStep3": {
+    "message": "Kenar çubuğunu açmak için herhangi bir sayfada eklenti simgesine tıklayın — içerikleri özetleyin veya ilgi alanlarınızla eşleşen öğeleri bulun"
+  },
+  "instructionStep4": {
+    "message": "Görünür paragrafları seçtiğiniz dile çevirmek için sağ alt köşedeki kayan düğmeyi kullanın"
+  },
+  "enterApiKey": {
+    "message": "Lütfen bir API Anahtarı girin"
+  },
+  "invalidApiKey": {
+    "message": "Geçersiz API Anahtarı formatı, \"sk-\" ile başlamalıdır"
+  },
+  "settingsSaved": {
+    "message": "✓ Ayarlar kaydedildi"
+  },
+  "saveFailed": {
+    "message": "Kaydetme başarısız:"
+  },
+  "confirmClear": {
+    "message": "Tüm ayarları temizlemek istediğinizden emin misiniz?"
+  },
+  "settingsCleared": {
+    "message": "✓ Ayarlar temizlendi"
+  },
+  "hide": {
+    "message": "Gizle"
+  },
+  "noTranslatableContent": {
+    "message": "Çevrilebilir içerik yok"
+  },
+  "translateScreenContent": {
+    "message": "Ekran içeriğini çevir"
+  },
   "translatingProgress": {
     "message": "Çevriliyor $n$/$total$",
-    "placeholders": { "n": { "content": "$1" }, "total": { "content": "$2" } }
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
   },
-  "original": { "message": "Asıl" },
-  "showOriginal": { "message": "Orijinali göster" },
-  "translated": { "message": "Çeviri" },
-  "showTranslated": { "message": "Çeviriyi göster" },
-  "translating": { "message": "Çevriliyor..." },
-  "noAnalyzableContent": { "message": "Analiz edilebilir içerik yok" },
-  "setInterestsFirst": { "message": "Lütfen önce eklentide ilgi alanlarınızı belirleyin" },
-  "dropToHide": { "message": "Gizlemek için bırakın" },
-  "extDescription": { "message": "Okuma asistanı: sayfaları çevirir ve ilgi alanlarınızla eşleşen içerikleri vurgular" },
-  "translateSelection": { "message": "Çevir" },
+  "original": {
+    "message": "Asıl"
+  },
+  "showOriginal": {
+    "message": "Orijinali göster"
+  },
+  "translated": {
+    "message": "Çeviri"
+  },
+  "showTranslated": {
+    "message": "Çeviriyi göster"
+  },
+  "translating": {
+    "message": "Çevriliyor..."
+  },
+  "noAnalyzableContent": {
+    "message": "Analiz edilebilir içerik yok"
+  },
+  "setInterestsFirst": {
+    "message": "Lütfen önce eklentide ilgi alanlarınızı belirleyin"
+  },
+  "dropToHide": {
+    "message": "Gizlemek için bırakın"
+  },
+  "extDescription": {
+    "message": "Okuma asistanı: sayfaları çevirir ve ilgi alanlarınızla eşleşen içerikleri vurgular"
+  },
+  "translateSelection": {
+    "message": "Çevir"
+  },
   "hideOnSite": {
     "message": "$domain$ üzerinde gizle",
-    "placeholders": { "domain": { "content": "$1" } }
+    "placeholders": {
+      "domain": {
+        "content": "$1"
+      }
+    }
   },
-  "blockedDomainsLabel": { "message": "Engellenen Alanlar" },
-  "blockedDomainsInfo": { "message": "Yüzen düğme bu alanlarda gizlenir. Herhangi bir sayfada yüzen düğmeye sağ tıklayarak ekleyebilirsiniz." },
-  "noBlockedDomains": { "message": "Engellenen alan yok" },
-  "removeDomain": { "message": "Kaldır" },
-  "hideOnThisSite": { "message": "Bu sitede gizle" },
-  "copyMarkdown": { "message": "Kopyala" },
-  "copied": { "message": "Kopyalandı ✓" },
-  "saveArticle": { "message": "Makaleyi panoya kopyala" },
-  "resetAllSettings": { "message": "Tüm ayarları sıfırla" },
-  "advancedSettings": { "message": "Gelişmiş ayarlar" },
-  "copyWithOriginal": { "message": "Kopyala + Orijinal" },
-  "requestTimeout": { "message": "İstek zaman aşımına uğradı" }
+  "blockedDomainsLabel": {
+    "message": "Engellenen Alanlar"
+  },
+  "blockedDomainsInfo": {
+    "message": "Yüzen düğme bu alanlarda gizlenir. Herhangi bir sayfada yüzen düğmeye sağ tıklayarak ekleyebilirsiniz."
+  },
+  "noBlockedDomains": {
+    "message": "Engellenen alan yok"
+  },
+  "removeDomain": {
+    "message": "Kaldır"
+  },
+  "hideOnThisSite": {
+    "message": "Bu sitede gizle"
+  },
+  "copyMarkdown": {
+    "message": "Kopyala"
+  },
+  "copied": {
+    "message": "Kopyalandı ✓"
+  },
+  "saveArticle": {
+    "message": "Makaleyi panoya kopyala"
+  },
+  "resetAllSettings": {
+    "message": "Tüm ayarları sıfırla"
+  },
+  "advancedSettings": {
+    "message": "Gelişmiş ayarlar"
+  },
+  "copyWithOriginal": {
+    "message": "Kopyala + Orijinal"
+  },
+  "requestTimeout": {
+    "message": "İstek zaman aşımına uğradı"
+  },
+  "settingsLinkLabel": {
+    "message": "Ayarlar"
+  }
 }

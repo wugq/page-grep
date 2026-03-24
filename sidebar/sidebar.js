@@ -196,7 +196,7 @@ async function loadFromActiveTab() {
 
 // --- UI Helpers ---
 
-const LOADING_TIMEOUT_MS = 45000;
+const LOADING_TIMEOUT_MS = 25000; // slightly less than API_TIMEOUT_MS (30s) in background.js
 const _loadingTimers = {};
 
 function setButtonLoading(id, isLoading) {
@@ -216,14 +216,13 @@ function setButtonLoading(id, isLoading) {
 
 function showError(message, code) {
   const errorEl = document.getElementById('global-error');
-  const noKeyMsg = browser.i18n.getMessage('enterApiKey');
-  if (code === 'NO_API_KEY' || message === noKeyMsg) {
+  if (code === 'NO_API_KEY') {
     errorEl.innerHTML = '';
     errorEl.appendChild(document.createTextNode(message + ' — '));
     const link = document.createElement('a');
     link.href = '#';
     link.style.cssText = 'color:inherit;font-weight:700;text-decoration:underline;cursor:pointer;';
-    link.textContent = browser.i18n.getMessage('settingsTitle').replace('PageGrep - ', '') || 'Settings';
+    link.textContent = browser.i18n.getMessage('settingsLinkLabel') || 'Settings';
     link.addEventListener('click', (e) => { e.preventDefault(); browser.runtime.openOptionsPage(); });
     errorEl.appendChild(link);
   } else {
