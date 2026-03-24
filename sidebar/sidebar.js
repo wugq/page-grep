@@ -290,7 +290,8 @@ function renderHighlights(items) {
 
     const detail = document.createElement('div');
     detail.className = 'summary-item-detail';
-    detail.textContent = item.text;
+    const preview = item.text.length > 120 ? item.text.slice(0, 120).trimEnd() + '…' : item.text;
+    detail.textContent = preview;
     row.appendChild(detail);
 
     if (item.reason) {
