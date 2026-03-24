@@ -772,9 +772,11 @@ async function wrapAndTranslate(el) {
       const pattern = /\[LINK(\d+)_START\]([\s\S]*?)\[LINK\d+_END\]/g;
       let lastIndex = 0;
       let match;
+      const stripMarkers = s => s.replace(/\[LINK\d+_(?:START|END)\]/g, '');
       while ((match = pattern.exec(response.result)) !== null) {
         if (match.index > lastIndex) {
-          translatedSpan.appendChild(document.createTextNode(response.result.slice(lastIndex, match.index)));
+          const t = stripMarkers(response.result.slice(lastIndex, match.index));
+          if (t) translatedSpan.appendChild(document.createTextNode(t));
         }
         const link = links[parseInt(match[1])];
         if (link) {
@@ -790,7 +792,8 @@ async function wrapAndTranslate(el) {
         lastIndex = pattern.lastIndex;
       }
       if (lastIndex < response.result.length) {
-        translatedSpan.appendChild(document.createTextNode(response.result.slice(lastIndex)));
+        const t = stripMarkers(response.result.slice(lastIndex));
+        if (t) translatedSpan.appendChild(document.createTextNode(t));
       }
     } else {
       translatedSpan.textContent = response.result;
