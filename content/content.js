@@ -768,7 +768,7 @@ async function wrapAndTranslate(el) {
   }
 
   try {
-    const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text });
+    const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text, hasLinks: links.length > 0 });
     if (!response.success) throwFromResponse(response);
     log('[PageGrep] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
     if (links.length > 0) {

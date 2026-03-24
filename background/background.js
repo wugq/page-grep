@@ -99,7 +99,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .then(([{ apiKey, model }, { translateLang }]) => {
         const targetLang = TRANSLATE_LANG_NAMES[translateLang] || 'Simplified Chinese';
         return callOpenAI(
-          `You are a professional translator. Translate the following text to ${targetLang}. Output only the translation, no explanation. If the text contains markers like [LINK0_START]...[LINK0_END], preserve the markers exactly as-is but translate the text between them.`,
+          `You are a professional translator. Translate the following text to ${targetLang}. Output only the translation, no explanation.${message.hasLinks ? ' The text contains markers like [LINK0_START]...[LINK0_END]; preserve the markers exactly as-is but translate the text between them.' : ''}`,
           message.text,
           apiKey,
           model
