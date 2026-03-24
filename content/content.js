@@ -580,6 +580,7 @@ function makeDraggable(panel) {
   }
 
   function onDragStart(e) {
+    if (isDragging) return;
     const point = e.touches ? e.touches[0] : e;
     startX = point.clientX;
     startY = point.clientY;
@@ -1126,7 +1127,7 @@ browser.runtime.onMessage.addListener((message) => {
 
   if (message.action === 'summaryHover') {
     const target = SUMMARY_STATE.elements?.[message.index]?.el;
-    if (target) {
+    if (target?.isConnected) {
       clearAllHighlights();
       hoverElement(target, 'summary');
     }
@@ -1140,7 +1141,7 @@ browser.runtime.onMessage.addListener((message) => {
 
   if (message.action === 'summaryClick') {
     const target = SUMMARY_STATE.elements?.[message.index]?.el;
-    if (target) {
+    if (target?.isConnected) {
       log(`[PageGrep] summary item clicked (sidebar): index ${message.index}`);
       clearAllHighlights();
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1161,19 +1162,19 @@ browser.runtime.onMessage.addListener((message) => {
 
   if (message.action === 'highlightHover') {
     const target = HIGHLIGHT_STATE.elements?.[message.index]?.el;
-    if (target) hoverElement(target, 'highlight');
+    if (target?.isConnected) hoverElement(target, 'highlight');
     return;
   }
 
   if (message.action === 'highlightUnhover') {
     const target = HIGHLIGHT_STATE.elements?.[message.index]?.el;
-    if (target) unhoverElement(target);
+    if (target?.isConnected) unhoverElement(target);
     return;
   }
 
   if (message.action === 'highlightClick') {
     const target = HIGHLIGHT_STATE.elements?.[message.index]?.el;
-    if (target) {
+    if (target?.isConnected) {
       log(`[PageGrep] interesting item clicked (sidebar): index ${message.index}`);
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       flashElement(target, 'highlight');

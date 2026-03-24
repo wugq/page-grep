@@ -40,21 +40,23 @@ async function init() {
   // Theme Toggle
   const themeToggle = document.getElementById('theme-toggle');
   const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  themeToggle.checked = isDark;
-  themeToggle.addEventListener('change', () => {
-    browser.storage.local.set({ [STORAGE_KEYS.THEME]: themeToggle.checked ? 'dark' : 'light' });
-  });
+  if (themeToggle) {
+    themeToggle.checked = isDark;
+    themeToggle.addEventListener('change', () => {
+      browser.storage.local.set({ [STORAGE_KEYS.THEME]: themeToggle.checked ? 'dark' : 'light' });
+    });
+  }
 
   // Handle system theme changes if no explicit preference is set
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async (e) => {
     const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
-    if (!theme) themeToggle.checked = e.matches;
+    if (!theme && themeToggle) themeToggle.checked = e.matches;
   });
 
   // Global Toggles
   const floatCheckbox = document.getElementById('show-float-btn');
-  floatCheckbox.checked = showFloatBtn !== false;
-  floatCheckbox.addEventListener('change', () => {
+  if (floatCheckbox) floatCheckbox.checked = showFloatBtn !== false;
+  floatCheckbox?.addEventListener('change', () => {
     browser.storage.local.set({ [STORAGE_KEYS.SHOW_FLOAT_BTN]: floatCheckbox.checked });
     updateHideOnSiteToggle();
   });

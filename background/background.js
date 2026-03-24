@@ -124,7 +124,8 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         );
       })
       .then(result => {
-        const data = JSON.parse(result);
+        let data;
+        try { data = JSON.parse(result); } catch (_) { data = {}; }
         const points = Array.isArray(data.sections) ? data.sections : [];
         sendResponse({ success: true, points });
       })
@@ -145,7 +146,8 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         );
       })
       .then(result => {
-        const data = JSON.parse(result);
+        let data;
+        try { data = JSON.parse(result); } catch (_) { data = {}; }
         const items = (Array.isArray(data.matches) ? data.matches : [])
           .filter(x => typeof x?.index === 'number');
         sendResponse({ success: true, items });
