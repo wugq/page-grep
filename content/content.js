@@ -753,9 +753,11 @@ async function wrapAndTranslate(el) {
   function extractTextWithPlaceholders(node) {
     if (node.nodeType === Node.TEXT_NODE) return node.textContent;
     if (node.nodeName === 'A') {
+      const linkText = node.innerText.trim();
+      if (!linkText) return '';
       const idx = links.length;
       links.push({ href: node.href });
-      return `[LINK${idx}_START]${node.innerText}[LINK${idx}_END]`;
+      return `[LINK${idx}_START]${linkText}[LINK${idx}_END]`;
     }
     return Array.from(node.childNodes).map(extractTextWithPlaceholders).join('');
   }
