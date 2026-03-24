@@ -503,10 +503,10 @@ async function wrapAndTranslate(el) {
     if (!response.success) throwFromResponse(response);
     log('[PageGrep] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
     if (links.length > 0) {
-      const pattern = /\[LINK(\d+)_START\]([\s\S]*?)\[LINK\d+_END\]/g;
+      const pattern = /[\[【]LINK(\d+)_START[\]】]([\s\S]*?)[\[【]LINK\d+_END[\]】]/g;
       let lastIndex = 0;
       let match;
-      const stripMarkers = s => s.replace(/\[LINK\d+_(?:START|END)\]/g, '');
+      const stripMarkers = s => s.replace(/[\[【]LINK\d+_(?:START|END)[\]】]/g, '');
       while ((match = pattern.exec(response.result)) !== null) {
         if (match.index > lastIndex) {
           const t = stripMarkers(response.result.slice(lastIndex, match.index));
@@ -530,7 +530,7 @@ async function wrapAndTranslate(el) {
         if (t) translatedSpan.appendChild(document.createTextNode(t));
       }
     } else {
-      translatedSpan.textContent = response.result.replace(/\[LINK\d+_(?:START|END)\]/g, '');
+      translatedSpan.textContent = response.result.replace(/[\[【]LINK\d+_(?:START|END)[\]】]/g, '');
     }
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
