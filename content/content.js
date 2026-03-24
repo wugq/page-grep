@@ -748,7 +748,17 @@ async function wrapAndTranslate(el) {
   btn.title = browser.i18n.getMessage('translating');
   el.appendChild(btn);
 
-  const text = originalSpan.innerText?.trim();
+  const links = [];
+  function extractTextWithPlaceholders(node) {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+    if (node.nodeName === 'A') {
+      const idx = links.length;
+      links.push({ href: node.href });
+      return `[LINK${idx}_START]${node.innerText}[LINK${idx}_END]`;
+    }
+    return Array.from(node.childNodes).map(extractTextWithPlaceholders).join('');
+  }
+  const text = extractTextWithPlaceholders(originalSpan).trim();
   if (!text) {
     restore();
     return;
@@ -758,7 +768,33 @@ async function wrapAndTranslate(el) {
     const response = await browser.runtime.sendMessage({ action: 'translateParagraph', text });
     if (!response.success) throwFromResponse(response);
     log('[PageGrep] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
-    translatedSpan.textContent = response.result;
+    if (links.length > 0) {
+      const pattern = /\[LINK(\d+)_START\]([\s\S]*?)\[LINK\d+_END\]/g;
+      let lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(response.result)) !== null) {
+        if (match.index > lastIndex) {
+          translatedSpan.appendChild(document.createTextNode(response.result.slice(lastIndex, match.index)));
+        }
+        const link = links[parseInt(match[1])];
+        if (link) {
+          const a = document.createElement('a');
+          a.href = link.href;
+          a.textContent = match[2];
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          translatedSpan.appendChild(a);
+        } else {
+          translatedSpan.appendChild(document.createTextNode(match[2]));
+        }
+        lastIndex = pattern.lastIndex;
+      }
+      if (lastIndex < response.result.length) {
+        translatedSpan.appendChild(document.createTextNode(response.result.slice(lastIndex)));
+      }
+    } else {
+      translatedSpan.textContent = response.result;
+    }
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
     setToggleIcon(btn, true);
