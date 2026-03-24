@@ -799,7 +799,7 @@ async function wrapAndTranslate(el) {
         if (t) translatedSpan.appendChild(document.createTextNode(t));
       }
     } else {
-      translatedSpan.textContent = response.result;
+      translatedSpan.textContent = response.result.replace(/\[LINK\d+_(?:START|END)\]/g, '');
     }
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
