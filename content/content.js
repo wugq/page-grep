@@ -18,7 +18,6 @@ const warn  = (...a) => devlog('warn',  ...a);
 const error = (...a) => devlog('error', ...a);
 
 
-const STYLE_ID = 'ai-reader-styles';
 const PANEL_ID = 'ai-reader-panel';
 const TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
 const NOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" style="pointer-events:none"><rect x="3.5" y="1.5" width="13" height="17" rx="1.5" stroke="currentColor" stroke-width="1.5"/><line x1="6.5" y1="7" x2="13.5" y2="7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="10" x2="13.5" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="13" x2="10.5" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`;
@@ -45,279 +44,22 @@ const HIGHLIGHT_STATE = {
   items: null
 };
 
-function injectStyles() {
-  if (document.getElementById(STYLE_ID)) return;
-  const style = document.createElement('style');
-  style.id = STYLE_ID;
-  style.textContent = `
-    .ai-para-wrap { position: relative; }
-    .ai-para-original { display: block; }
-    .ai-para-translated { display: none; color: inherit; }
-    .ai-para-wrap.show-translation .ai-para-original { display: none; }
-    .ai-para-wrap.show-translation .ai-para-translated { display: block; }
-    .ai-toggle-btn {
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      width: 22px;
-      height: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: bold;
-      opacity: 0;
-      transition: opacity 0.15s, transform 0.15s;
-      z-index: 9999;
-      padding: 0;
-      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
-      pointer-events: none;
-    }
-    .ai-para-wrap:hover .ai-toggle-btn {
-      opacity: 0.85;
-      pointer-events: auto;
-    }
-    .ai-toggle-btn:hover { opacity: 1 !important; transform: scale(1.1); }
-    .ai-loading-btn {
-      background: #94a3b8;
-      cursor: wait;
-      animation: ai-pulse 1.2s ease-in-out infinite;
-    }
-    .ai-error-btn { background: #ef4444; opacity: 1; }
-    @keyframes ai-pulse {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
-    }
-    #ai-reader-panel {
-      position: fixed !important;
-      bottom: 24px;
-      right: 20px;
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 6px !important;
-      z-index: 2147483647 !important;
-      width: 46px !important;
-      padding: 8px 0 !important;
-      margin: 0 !important;
-      user-select: none;
-      background: rgba(248, 250, 252, 0.92);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 28px;
-      border: 1px solid rgba(0, 0, 0, 0.12);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-      overflow: hidden;
-      resize: none !important;
-      box-sizing: content-box !important;
-    }
-    #ai-reader-panel.dark {
-      background: rgba(15, 23, 42, 0.78);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-    }
-    .ai-panel-btn {
-      width: 34px !important;
-      height: 34px !important;
-      min-width: 34px !important;
-      min-height: 34px !important;
-      max-width: 34px !important;
-      max-height: 34px !important;
-      border-radius: 50% !important;
-      border: none !important;
-      cursor: grab;
-      font-size: 14px;
-      font-weight: 700;
-      color: white;
-      padding: 0 !important;
-      margin: 0 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      flex-shrink: 0 !important;
-      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s, opacity 0.18s;
-    }
-    .ai-panel-btn:hover { transform: scale(1.12); box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16); }
-    .ai-panel-btn:active { transform: scale(0.92); cursor: grabbing; }
-    .ai-panel-btn:disabled { opacity: 0.45; cursor: wait; }
-    #ai-translate-btn { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); box-shadow: 0 2px 10px rgba(99, 102, 241, 0.45); }
-    #ai-scratchpad-btn { background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); box-shadow: 0 2px 10px rgba(14, 165, 233, 0.4); }
-    #ai-translate-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16), 0 4px 16px rgba(99,102,241,0.55); }
-    #ai-scratchpad-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16), 0 4px 16px rgba(14,165,233,0.5); }
-    #ai-trash-zone {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border-radius: 999px;
-      background: rgba(30, 41, 59, 0.85);
-      backdrop-filter: blur(8px);
-      color: rgba(255,255,255,0.7);
-      font-size: 13px;
-      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-      white-space: nowrap;
-      z-index: 2147483646;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s, transform 0.2s, background 0.15s;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    #ai-trash-zone.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-    #ai-trash-zone.active {
-      background: rgba(239, 68, 68, 0.9);
-      color: white;
-    }
-    #ai-selection-btn {
-      position: fixed;
-      z-index: 2147483647;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      pointer-events: all;
-    }
-    .ai-sel-action-btn {
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 5px 11px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
-      white-space: nowrap;
-      user-select: none;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .ai-sel-action-btn:hover { transform: scale(1.05); }
-    .ai-sel-translate-btn {
-      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
-    }
-    .ai-sel-translate-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.14), 0 4px 14px rgba(99,102,241,0.5); }
-    .ai-sel-save-btn {
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.22) !important;
-      color: rgba(255, 255, 255, 0.88);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-    }
-    .ai-sel-save-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3); }
-    .ai-sel-save-link {
-      display: block;
-      background: none;
-      border: none;
-      border-top: 1px solid rgba(255,255,255,0.15);
-      color: rgba(241,245,249,0.6);
-      font-size: 11px;
-      cursor: pointer;
-      padding: 6px 0 0;
-      margin-top: 6px;
-      width: 100%;
-      text-align: left;
-      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-      transition: color 0.15s;
-    }
-    .ai-sel-save-link:hover { color: #f1f5f9; }
-    #ai-toast {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15,23,42,0.9);
-      color: #f1f5f9;
-      padding: 7px 14px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-      z-index: 2147483646;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-    #ai-toast.ai-toast-show { opacity: 1; }
-    #ai-selection-result {
-      position: fixed;
-      z-index: 2147483647;
-      background: rgba(15, 23, 42, 0.95);
-      color: #f1f5f9;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 13px;
-      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-      max-width: min(360px, 90vw);
-      line-height: 1.6;
-      user-select: text;
-      white-space: pre-wrap;
-      word-break: break-word;
-      pointer-events: all;
-    }
-    #ai-selection-result.ai-sel-loading { color: #94a3b8; font-style: italic; }
-    #ai-selection-result.ai-sel-error { color: #fca5a5; }
-    #ai-panel-menu {
-      position: fixed;
-      z-index: 2147483647;
-      background: white;
-      border: 1px solid rgba(0,0,0,0.1);
-      border-radius: 10px;
-      padding: 4px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      min-width: 180px;
-    }
-    #ai-panel-menu.dark {
-      background: #1e293b;
-      border-color: rgba(255,255,255,0.1);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    }
-    #ai-panel-menu button {
-      display: block;
-      width: 100%;
-      padding: 8px 12px;
-      background: none;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-      color: #0f172a;
-      text-align: left;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-    #ai-panel-menu.dark button { color: #f8fafc; }
-    #ai-panel-menu button:hover { background: rgba(99,102,241,0.08); color: #6366f1; }
-    #ai-panel-menu.dark button:hover { background: rgba(129,140,248,0.15); color: #818cf8; }
-  `;
-  document.head.appendChild(style);
-}
-
 // --- Theme helper ---
 
 async function applyThemeToPanel() {
   const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
-  const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const panel = document.getElementById(PANEL_ID);
-  if (panel) {
-    panel.classList.toggle('dark', isDark);
+  document.getElementById(PANEL_ID)?.classList.toggle('dark', isThemeDark(theme));
+}
+
+// --- Domain blocklist helper ---
+
+async function blockCurrentDomain() {
+  const hostname = location.hostname;
+  if (!hostname) return;
+  const { blockedDomains } = await browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS);
+  const list = Array.isArray(blockedDomains) ? blockedDomains : [];
+  if (!list.includes(hostname)) {
+    await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: [...list, hostname] });
   }
 }
 
@@ -326,12 +68,9 @@ async function applyThemeToPanel() {
 function getOrCreatePanel() {
   let panel = document.getElementById(PANEL_ID);
   if (!panel) {
-    injectStyles();
     panel = document.createElement('div');
     panel.id = PANEL_ID;
-
     applyThemeToPanel();
-
     document.body.appendChild(panel);
   }
   return panel;
@@ -456,7 +195,6 @@ function throwFromResponse(response) {
 }
 
 function showApiKeyToast() {
-  injectStyles();
   let toast = document.getElementById('ai-toast');
   if (!toast) {
     toast = document.createElement('div');
@@ -482,7 +220,6 @@ function showApiKeyToast() {
 
 async function runTranslateOnPage(btn) {
   log('[PageGrep] 译 triggered');
-  injectStyles();
   const visible = findVisibleParagraphs();
   log(`[PageGrep] 译: found ${visible.length} visible paragraphs`);
   if (visible.length === 0) {
@@ -648,15 +385,7 @@ function makeDraggable(panel) {
     if (isOverTrashZone(point.clientX, point.clientY)) {
       panel.remove();
       if (zone) zone.remove();
-      const hostname = location.hostname;
-      if (hostname) {
-        browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS).then(({ blockedDomains }) => {
-          const list = Array.isArray(blockedDomains) ? blockedDomains : [];
-          if (!list.includes(hostname)) {
-            browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: [...list, hostname] });
-          }
-        });
-      }
+      blockCurrentDomain();
       return;
     }
 
@@ -711,7 +440,7 @@ function findVisibleParagraphs() {
   const scope = findMainContentScope();
   const excludeChrome = scope === document.body;
   const candidates = scope.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, td, figcaption, dd');
-  return Array.from(candidates).filter(el => {
+  const filtered = Array.from(candidates).filter(el => {
     if (el.dataset.aiWrapped) return false;
     if (el.closest('[data-ai-wrapped]')) return false;
     if (excludeChrome && el.closest(CHROME_SELECTOR)) return false;
@@ -720,6 +449,8 @@ function findVisibleParagraphs() {
     const rect = el.getBoundingClientRect();
     return rect.bottom > 0 && rect.top < window.innerHeight;
   });
+  // Drop ancestors: if el contains another candidate, only translate the inner one.
+  return filtered.filter(el => !filtered.some(other => other !== el && el.contains(other)));
 }
 
 async function wrapAndTranslate(el) {
@@ -899,10 +630,18 @@ async function runSummaryFromPage() {
 
 // --- Interest Highlighting ---
 
+// Registry of site-specific element collectors. Add new entries here to support
+// additional sites without modifying the general-purpose collection logic below.
+const SITE_COLLECTORS = {
+  'news.ycombinator.com': collectHackerNewsElements,
+};
+
 function collectPageElements() {
-  if (location.hostname.endsWith('news.ycombinator.com')) {
-    const hn = collectHackerNewsElements();
-    if (hn.length > 0) return hn;
+  for (const [domain, collector] of Object.entries(SITE_COLLECTORS)) {
+    if (location.hostname.endsWith(domain)) {
+      const result = collector();
+      if (result.length > 0) return result;
+    }
   }
 
   const scope = findMainContentScope();
@@ -1193,19 +932,14 @@ function showPanelContextMenu(x, y) {
   const menu = document.createElement('div');
   menu.id = 'ai-panel-menu';
   browser.storage.local.get(STORAGE_KEYS.THEME).then(({ theme }) => {
-    const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    if (isDark) menu.classList.add('dark');
+    if (isThemeDark(theme)) menu.classList.add('dark');
   });
   const item = document.createElement('button');
   item.textContent = browser.i18n.getMessage('hideOnSite', [hostname]) || `Hide on ${hostname}`;
   item.addEventListener('click', async () => {
     document.removeEventListener('mousedown', onOutsideMousedown);
     menu.remove();
-    const { blockedDomains } = await browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS);
-    const list = Array.isArray(blockedDomains) ? blockedDomains : [];
-    if (!list.includes(hostname)) {
-      await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: [...list, hostname] });
-    }
+    await blockCurrentDomain();
     document.getElementById(PANEL_ID)?.remove();
     document.getElementById('ai-trash-zone')?.remove();
   });
@@ -1235,7 +969,6 @@ let selectionTranslateEnabled = false;
 function showToast(msg) {
   let toast = document.getElementById('ai-toast');
   if (!toast) {
-    injectStyles();
     toast = document.createElement('div');
     toast.id = 'ai-toast';
     document.body.appendChild(toast);
@@ -1353,7 +1086,6 @@ function onTextSelectionEnd(e) {
   const capturedText = sel.toString().trim();
 
   document.getElementById(SELECTION_BTN_ID)?.remove();
-  injectStyles();
 
   // Detect if selection is inside an already-translated paragraph
   let translatedWrap = null;
@@ -1446,37 +1178,13 @@ document.addEventListener('mousedown', (e) => {
   removeSelectionUI();
 });
 
-// --- i18n initialization ---
-
-async function initI18n() {
-  try {
-    const { uiLang } = await browser.storage.local.get(STORAGE_KEYS.UI_LANG);
-    if (!uiLang) return;
-    const url = browser.runtime.getURL(`_locales/${uiLang}/messages.json`);
-    const resp = await fetch(url);
-    if (!resp.ok) return;
-    const messages = await resp.json();
-    const orig = browser.i18n.getMessage.bind(browser.i18n);
-    browser.i18n.getMessage = function(key, substitutions) {
-      const entry = messages[key];
-      if (!entry) return orig(key, substitutions);
-      let msg = entry.message;
-      if (substitutions && entry.placeholders) {
-        const subs = Array.isArray(substitutions) ? substitutions : [substitutions];
-        Object.keys(entry.placeholders).forEach((name, idx) => {
-          msg = msg.replace(new RegExp('\\$' + name + '\\$', 'gi'), subs[idx] ?? '');
-        });
-      }
-      return msg;
-    };
-  } catch (_) {}
-}
+// i18n initialization delegates to the shared applyI18nOverride() from shared/i18n-override.js
 
 // --- Initialization ---
 
 log('[PageGrep] content script loaded', location.href);
 browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS]).then(async ({ showFloatBtn, blockedDomains }) => {
-  await initI18n();
+  await applyI18nOverride();
   const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
   if (!blocked.includes(location.hostname)) {
     selectionTranslateEnabled = true;
@@ -1532,6 +1240,6 @@ browser.storage.onChanged.addListener((changes) => {
     applyThemeToPanel();
   }
   if (STORAGE_KEYS.UI_LANG in changes) {
-    initI18n();
+    applyI18nOverride();
   }
 });

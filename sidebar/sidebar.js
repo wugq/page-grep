@@ -39,9 +39,8 @@ async function init() {
 
   // Theme Toggle
   const themeToggle = document.getElementById('theme-toggle');
-  const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
   if (themeToggle) {
-    themeToggle.checked = isDark;
+    themeToggle.checked = isThemeDark(theme);
     themeToggle.addEventListener('change', () => {
       browser.storage.local.set({ [STORAGE_KEYS.THEME]: themeToggle.checked ? 'dark' : 'light' });
     });
@@ -344,7 +343,8 @@ browser.runtime.onMessage.addListener((message, sender) => {
 
 });
 
-browser.tabs.onActivated.addListener(() => {
+browser.tabs.onActivated.addListener((activeInfo) => {
+  lastTabId = activeInfo.tabId;
   loadFromActiveTab();
 });
 
@@ -369,11 +369,7 @@ browser.storage.onChanged.addListener((changes) => {
   }
   if (STORAGE_KEYS.THEME in changes) {
     const themeToggle = document.getElementById('theme-toggle');
-    if (themeToggle) {
-      const theme = changes[STORAGE_KEYS.THEME].newValue;
-      const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      themeToggle.checked = isDark;
-    }
+    if (themeToggle) themeToggle.checked = isThemeDark(changes[STORAGE_KEYS.THEME].newValue);
   }
 });
 
