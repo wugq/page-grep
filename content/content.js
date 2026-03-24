@@ -1471,8 +1471,10 @@ async function initI18n() {
 log('[PageGrep] content script loaded', location.href);
 browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS]).then(async ({ showFloatBtn, blockedDomains }) => {
   await initI18n();
-  selectionTranslateEnabled = true;
   const blocked = Array.isArray(blockedDomains) ? blockedDomains : [];
+  if (!blocked.includes(location.hostname)) {
+    selectionTranslateEnabled = true;
+  }
   if (showFloatBtn !== false && !blocked.includes(location.hostname)) {
     createFloatButton();
   }
@@ -1506,11 +1508,13 @@ browser.storage.onChanged.addListener((changes) => {
     const blocked = Array.isArray(changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue)
       ? changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue : [];
     if (blocked.includes(location.hostname)) {
+      selectionTranslateEnabled = false;
       document.getElementById(FLOAT_BTN_ID)?.remove();
       document.getElementById('ai-scratchpad-btn')?.remove();
       clearAllHighlights();
       removePanelIfEmpty();
     } else {
+      selectionTranslateEnabled = true;
       browser.storage.local.get(STORAGE_KEYS.SHOW_FLOAT_BTN).then(({ showFloatBtn }) => {
         if (showFloatBtn !== false) {
           createFloatButton();
