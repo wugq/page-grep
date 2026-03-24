@@ -843,9 +843,16 @@ async function runInterestingFromPage() {
     if (!response.success) throwFromResponse(response);
     log(`[PageGrep] ★: matched items:`, response.items);
 
+    const textSeen = new Set();
     const items = response.items
       .filter(item => elements[item.index])
-      .map(item => ({ index: item.index, text: elements[item.index].label || elements[item.index].text, reason: item.reason }));
+      .map(item => ({ index: item.index, text: elements[item.index].label || elements[item.index].text, reason: item.reason }))
+      .filter(item => {
+        const key = item.text.toLowerCase().slice(0, 60);
+        if (textSeen.has(key)) return false;
+        textSeen.add(key);
+        return true;
+      });
     HIGHLIGHT_STATE.items = items;
     browser.runtime.sendMessage({ action: 'highlightDone', items });
     log(`[PageGrep] ★: found ${items.length} interesting elements`);

@@ -15,7 +15,7 @@
     "message": "Reading Interests"
   },
   "interestsPlaceholder": {
-    "message": "Describe what interests you, e.g.: AI, macro economics..."
+    "message": "Type an interest and press Enter…"
   },
   "save": {
     "message": "Save"

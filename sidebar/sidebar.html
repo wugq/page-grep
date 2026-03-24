@@ -32,19 +32,13 @@
       </section>
 
       <section id="interests-tab" class="tab-content">
-        <div class="config-section">
-          <div class="config-header">
-            <span class="config-title" data-i18n="readingInterests">阅读兴趣</span>
-            <button id="toggle-config-btn" class="toggle-config-arrow">›</button>
+        <div id="interests-config" class="interests-config">
+          <div id="pills-container" class="pills-container"></div>
+          <div class="pill-input-wrap">
+            <input type="text" id="interests-input" class="pill-input" data-i18n-placeholder="interestsPlaceholder" placeholder="描述你感兴趣的内容，如：AI科技..." maxlength="60" />
+            <button id="add-interest-btn" class="pill-add-btn">+</button>
           </div>
-          <div id="interests-config" class="config-body hidden">
-            <textarea id="interests-input" rows="3" data-i18n-placeholder="interestsPlaceholder" placeholder="描述你感兴趣的内容，如：AI科技、宏观经济..."></textarea>
-            <div class="config-footer">
-              <button id="save-interests-btn" class="small-btn primary-btn" data-i18n="save">保存</button>
-              <button id="clear-interests-btn" class="small-btn ghost-btn hidden" data-i18n="clear">清除</button>
-              <span id="interests-status" class="status-msg hidden" data-i18n="saved">已保存 ✓</span>
-            </div>
-          </div>
+          <span id="interests-status" class="status-msg hidden" data-i18n="saved">已保存 ✓</span>
         </div>
         <div class="tab-actions">
           <button id="highlight-btn" class="primary-btn" data-i18n="findMatches">查找匹配</button>

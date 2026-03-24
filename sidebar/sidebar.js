@@ -18,18 +18,6 @@ tabBtns.forEach(btn => {
   });
 });
 
-// --- Collapsible Config ---
-
-const toggleConfigBtn = document.getElementById('toggle-config-btn');
-const interestsConfig = document.getElementById('interests-config');
-const configHeader = document.querySelector('.config-header');
-
-configHeader.addEventListener('click', () => {
-  const isHidden = interestsConfig.classList.contains('hidden');
-  interestsConfig.classList.toggle('hidden', !isHidden);
-  toggleConfigBtn.classList.toggle('is-open', isHidden);
-});
-
 // --- Initialization ---
 
 async function init() {
@@ -73,29 +61,54 @@ async function init() {
     await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: updated });
   });
 
-  // Interests Config
+  // Interests Config (pill-based)
+  const pillsContainer = document.getElementById('pills-container');
   const interestsInput = document.getElementById('interests-input');
-  const clearBtn = document.getElementById('clear-interests-btn');
   const statusEl = document.getElementById('interests-status');
+  let interestPills = userInterests
+    ? userInterests.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
 
-  if (userInterests) {
-    interestsInput.value = userInterests;
-    clearBtn.classList.remove('hidden');
+  function renderPills() {
+    pillsContainer.innerHTML = '';
+    interestPills.forEach((label, i) => {
+      const tag = document.createElement('span');
+      tag.className = 'interest-pill-tag';
+      tag.textContent = label;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'pill-remove';
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', () => {
+        interestPills.splice(i, 1);
+        saveAndRender();
+      });
+      tag.appendChild(removeBtn);
+      pillsContainer.appendChild(tag);
+    });
   }
 
-  document.getElementById('save-interests-btn').addEventListener('click', async () => {
-    const val = interestsInput.value.trim();
+  async function saveAndRender() {
+    const val = interestPills.join(', ');
     await browser.storage.local.set({ [STORAGE_KEYS.USER_INTERESTS]: val || null });
-    clearBtn.classList.toggle('hidden', !val);
+    renderPills();
     statusEl.classList.remove('hidden');
-    setTimeout(() => statusEl.classList.add('hidden'), 3000);
+    setTimeout(() => statusEl.classList.add('hidden'), 2000);
+  }
+
+  function addInterest() {
+    const val = interestsInput.value.trim();
+    if (!val || interestPills.includes(val)) return;
+    interestPills.push(val);
+    interestsInput.value = '';
+    saveAndRender();
+  }
+
+  document.getElementById('add-interest-btn').addEventListener('click', addInterest);
+  interestsInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addInterest(); }
   });
 
-  clearBtn.addEventListener('click', async () => {
-    interestsInput.value = '';
-    clearBtn.classList.add('hidden');
-    await browser.storage.local.set({ [STORAGE_KEYS.USER_INTERESTS]: null });
-  });
+  renderPills();
 
   // Options Button
   document.getElementById('options-btn').addEventListener('click', () => {

@@ -142,20 +142,33 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'findInteresting') {
     getApiSettings()
       .then(({ apiKey, model }) => {
+        const interests = message.interests.split(',').map(s => s.trim()).filter(Boolean);
         const elementList = message.elements.map((t, i) => `${i}: ${t}`).join('\n');
-        return callAI(
-          'You are a strict content relevance filter. Given page elements and user interests, return ONLY elements that directly and specifically match a named interest — not broad industry overlap, not tangential context, not coincidental themes. Rules: (1) The match must be to a specific named item in the user\'s interests — vague connections like "tech context" or "relevant industry" are NOT matches. (2) If you cannot name the specific interest that matches, exclude it. (3) When in doubt, exclude it. (4) Never fabricate a connection. Bad example: user likes "cooking" → an article about restaurant funding matched as "food industry context" — WRONG, no direct connection to cooking. If no elements genuinely match, return {"matches": []}. Return ONLY valid JSON: an object with a "matches" array of objects with keys "index" (integer) and "reason" (one sentence naming the specific interest matched and how, max 15 words).',
-          `User interests: ${message.interests}\n\nPage elements:\n${elementList}`,
-          apiKey,
-          model,
-          true
+        const systemPrompt = 'You are a content relevance filter. Given numbered page elements and a single interest topic, return all elements whose subject matter is directly about that topic — not just in the same field, but actually about it.\n\nTreat the interest as an umbrella term: match the topic itself and any well-known variants or subtypes.\n\nReturn ONLY valid JSON: {"matches": [{"index": <integer>, "reason": "<topic>: <why in ≤8 words>"}]}\nIf nothing matches, return {"matches": []}.';
+        const calls = interests.map(interest =>
+          callAI(
+            systemPrompt,
+            `Interest: ${interest}\n\nPage elements:\n${elementList}`,
+            apiKey,
+            model,
+            true
+          ).then(result => {
+            try { return JSON.parse(result).matches || []; } catch (_) { return []; }
+          }).catch(() => [])
         );
+        return Promise.all(calls);
       })
-      .then(result => {
-        let data;
-        try { data = JSON.parse(result); } catch (_) { data = {}; }
-        const items = (Array.isArray(data.matches) ? data.matches : [])
-          .filter(x => typeof x?.index === 'number');
+      .then(resultsPerInterest => {
+        const seen = new Set();
+        const items = [];
+        for (const matches of resultsPerInterest) {
+          for (const m of matches) {
+            if (typeof m?.index === 'number' && !seen.has(m.index)) {
+              seen.add(m.index);
+              items.push(m);
+            }
+          }
+        }
         sendResponse({ success: true, items });
       })
       .catch(err => sendResponse({ success: false, error: err.message, code: err.code }));
