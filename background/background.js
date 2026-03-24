@@ -29,14 +29,15 @@ browser.browserAction.onClicked.addListener(() => {
 
 const API_TIMEOUT_MS = 30000;
 
-async function callAI(systemPrompt, userContent, apiKey, model, jsonMode = false) {
+async function callAI(systemPrompt, userContent, apiKey, model, jsonMode = false, temperature = 0) {
   const body = {
     model,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userContent }
     ],
-    max_tokens: 4000
+    max_tokens: 4000,
+    temperature,
   };
   if (jsonMode) body.response_format = { type: 'json_object' };
 
@@ -105,7 +106,9 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           `You are a professional translator. Translate the following text to ${targetLang}. Output only the translation, no explanation.${message.hasLinks ? ' The text contains markers like [LINK0_START]...[LINK0_END] using ASCII square brackets. Preserve these markers character-for-character — do not translate, reformat, or convert the brackets to full-width 【】 or any other style. Only translate the text between them.' : ''}`,
           message.text,
           apiKey,
-          model
+          model,
+          false,
+          0.3
         );
       })
       .then(result => sendResponse({ success: true, result }))
