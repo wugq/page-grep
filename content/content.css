@@ -300,7 +300,7 @@
 #ai-reader-close-btn {
   position: fixed;
   top: 16px;
-  right: 20px;
+  right: 16px;
   z-index: 2147483641;
   width: 32px;
   height: 32px;
@@ -312,7 +312,7 @@
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  opacity: 0.35;
+  opacity: 0.65;
   transition: opacity 0.15s, transform 0.15s;
 }
 #ai-reader-close-btn:hover {
