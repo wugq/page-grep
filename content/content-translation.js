@@ -7,22 +7,27 @@ const LINK_STRIP_RE = /[\[【]LINK\d+_(?:START|END)[\]】]/g;
 
 // --- Translation ---
 
-async function runTranslateOnPage(btn) {
-  log('[PageGrep] 译 triggered');
-  const visible = findVisibleParagraphs();
-  log(`[PageGrep] 译: found ${visible.length} visible paragraphs`);
-  if (visible.length === 0) {
+// Shared core: translates an array of elements, updating btn state throughout.
+// Used by both normal page mode and reader mode.
+async function runTranslateElements(elements, btn) {
+  log(`[PageGrep] 译: translating ${elements.length} elements`);
+  if (elements.length === 0) {
     if (btn) { btn.title = browser.i18n.getMessage('noTranslatableContent'); setTimeout(() => { btn.title = browser.i18n.getMessage('translateScreenContent'); }, 1500); }
     return;
   }
   if (btn) { btn.disabled = true; btn.textContent = '…'; }
   let done = 0;
-  await Promise.all(visible.map(async el => {
+  await Promise.all(elements.map(async el => {
     await wrapAndTranslate(el);
-    if (btn) btn.title = browser.i18n.getMessage('translatingProgress', [String(++done), String(visible.length)]);
+    if (btn) btn.title = browser.i18n.getMessage('translatingProgress', [String(++done), String(elements.length)]);
   }));
-  log(`[PageGrep] 译: done, translated ${visible.length} paragraphs`);
+  log(`[PageGrep] 译: done, translated ${elements.length} elements`);
   if (btn) { btn.disabled = false; setTranslateIcon(btn); btn.title = browser.i18n.getMessage('translateScreenContent'); }
+}
+
+async function runTranslateOnPage(btn) {
+  log('[PageGrep] 译 triggered');
+  await runTranslateElements(findVisibleParagraphs(), btn);
 }
 
 async function wrapAndTranslate(el) {

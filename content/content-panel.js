@@ -13,6 +13,17 @@ function createFloatButton() {
   panel.appendChild(btn);
   btn.addEventListener('click', () => runTranslateOnPage(btn));
 
+  const readerBtn = document.createElement('button');
+  readerBtn.id = 'ai-reader-mode-btn';
+  readerBtn.className = 'ai-panel-btn';
+  const readerSvg = _svgParser.parseFromString(READER_ICON, 'image/svg+xml').documentElement;
+  readerSvg.setAttribute('width', '18');
+  readerSvg.setAttribute('height', '18');
+  readerBtn.appendChild(readerSvg);
+  readerBtn.title = browser.i18n.getMessage('readerMode') || 'Reader view';
+  panel.appendChild(readerBtn);
+  readerBtn.addEventListener('click', () => toggleReaderMode(readerBtn));
+
   const saveBtn = document.createElement('button');
   saveBtn.id = 'ai-scratchpad-btn';
   saveBtn.className = 'ai-panel-btn';

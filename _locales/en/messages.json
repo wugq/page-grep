@@ -272,5 +272,11 @@
   },
   "settingsLinkLabel": {
     "message": "Settings"
+  },
+  "readerMode": {
+    "message": "Reader view"
+  },
+  "exitReader": {
+    "message": "Exit reader"
   }
 }

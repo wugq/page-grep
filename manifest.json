@@ -61,6 +61,7 @@
         "content/content-dom.js",
         "content/content-translation.js",
         "content/content-collectors.js",
+        "content/content-reader.js",
         "content/content-panel.js",
         "content/content-selection.js",
         "content/content-init.js"

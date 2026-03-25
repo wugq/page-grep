@@ -254,3 +254,146 @@
 #ai-panel-menu.dark button { color: #f8fafc; }
 #ai-panel-menu button:hover { background: rgba(99,102,241,0.08); color: #6366f1; }
 #ai-panel-menu.dark button:hover { background: rgba(129,140,248,0.15); color: #818cf8; }
+
+/* --- Reader mode button --- */
+#ai-reader-mode-btn { background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%); box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4); }
+#ai-reader-mode-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16), 0 4px 16px rgba(16, 185, 129, 0.5); }
+
+/* --- Reader mode overlay --- */
+#ai-reader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483640;
+  overflow-y: auto;
+  background: #f9f7f4;
+  color: #1a1a1a;
+  font-family: Georgia, "Times New Roman", serif;
+  animation: ai-reader-fade-in 0.18s ease forwards;
+}
+#ai-reader-overlay.dark {
+  background: #1c1c1e;
+  color: #e8e8e8;
+}
+@keyframes ai-reader-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Toolbar */
+#ai-reader-toolbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: inherit;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  z-index: 1;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+#ai-reader-overlay.dark #ai-reader-toolbar {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+#ai-reader-site {
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+  font-size: 13px;
+  color: #888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 50%;
+}
+#ai-reader-overlay.dark #ai-reader-site { color: #9a9a9a; }
+#ai-reader-toolbar-actions { display: flex; gap: 8px; }
+
+#ai-reader-translate-btn,
+#ai-reader-close-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s;
+  flex-shrink: 0;
+}
+#ai-reader-translate-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+  font-size: 11px;
+  font-weight: bold;
+}
+#ai-reader-translate-btn:hover { transform: scale(1.1); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.55); }
+#ai-reader-translate-btn:disabled { opacity: 0.4; cursor: wait; transform: none; }
+#ai-reader-close-btn {
+  background: rgba(0, 0, 0, 0.07);
+  color: #444;
+}
+#ai-reader-overlay.dark #ai-reader-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+#ai-reader-close-btn:hover { transform: scale(1.1); }
+
+/* Content area */
+#ai-reader-content {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+  box-sizing: border-box;
+}
+
+/* Metadata */
+#ai-reader-meta {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+#ai-reader-overlay.dark #ai-reader-meta { border-bottom-color: rgba(255, 255, 255, 0.1); }
+#ai-reader-title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 10px;
+  font-family: Georgia, "Times New Roman", serif;
+}
+#ai-reader-byline {
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+  font-size: 13px;
+  color: #888;
+  line-height: 1.5;
+}
+#ai-reader-overlay.dark #ai-reader-byline { color: #9a9a9a; }
+
+/* Article body */
+#ai-reader-body {
+  font-size: 18px;
+  line-height: 1.8;
+}
+#ai-reader-body p  { margin: 0 0 1.2em; }
+#ai-reader-body h1 { font-size: 24px; font-weight: 700; line-height: 1.3; margin: 1.6em 0 0.6em; }
+#ai-reader-body h2 { font-size: 21px; font-weight: 700; line-height: 1.3; margin: 1.6em 0 0.5em; }
+#ai-reader-body h3,
+#ai-reader-body h4,
+#ai-reader-body h5,
+#ai-reader-body h6 { font-size: 18px; font-weight: 700; line-height: 1.3; margin: 1.4em 0 0.4em; }
+#ai-reader-body blockquote {
+  border-left: 3px solid #6366f1;
+  margin: 1.2em 0;
+  padding: 2px 20px;
+  color: #666;
+  font-style: italic;
+}
+#ai-reader-overlay.dark #ai-reader-body blockquote { color: #aaa; }
+#ai-reader-body a { color: #6366f1; }
+#ai-reader-overlay.dark #ai-reader-body a { color: #818cf8; }
+#ai-reader-body img { max-width: 100%; border-radius: 8px; margin: 1em 0; display: block; }
+#ai-reader-body ul,
+#ai-reader-body ol  { padding-left: 24px; margin: 0 0 1.2em; }
+#ai-reader-body li  { margin: 0.3em 0; }
