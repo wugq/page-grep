@@ -351,13 +351,13 @@
   width: 220px;
   background: var(--rd-bg);
   border: 1px solid var(--rd-border);
-  border-radius: 14px;
+  border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
   transform: translateY(6px) scale(0.96);
-  transform-origin: bottom right;
+  transform-origin: bottom left;
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 #ai-reader-settings.open {

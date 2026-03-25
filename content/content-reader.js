@@ -268,9 +268,10 @@ async function openReaderMode(triggerBtn) {
       const open = settingsPanel.classList.toggle('open');
       panelReaderBtn.classList.toggle('active', open);
       if (open) {
-        const rect = panelReaderBtn.getBoundingClientRect();
-        settingsPanel.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
-        settingsPanel.style.right  = (window.innerWidth - rect.right) + 'px';
+        const panelRect = document.getElementById(PANEL_ID).getBoundingClientRect();
+        settingsPanel.style.bottom = (window.innerHeight - panelRect.top + 8) + 'px';
+        settingsPanel.style.left   = panelRect.left + 'px';
+        settingsPanel.style.right  = 'auto';
         settingsPanel.style.top    = 'auto';
       }
     }
