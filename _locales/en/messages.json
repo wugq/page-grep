@@ -278,5 +278,8 @@
   },
   "exitReader": {
     "message": "Exit reader"
+  },
+  "readerSettings": {
+    "message": "Reading settings"
   }
 }

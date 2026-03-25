@@ -1,13 +1,42 @@
 // content-reader.js — distraction-free reader mode overlay using Mozilla Readability
 // Depends on: content-core.js, content-translation.js (runTranslateElements)
 
-const READER_OVERLAY_ID = 'ai-reader-overlay';
+const READER_OVERLAY_ID  = 'ai-reader-overlay';
+const READER_SETTINGS_ID = 'ai-reader-settings';
 
 // READER_ICON is defined in content-core.js
-const CLOSE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+const CLOSE_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>`;
 
-// Collect all translatable elements inside the reader body.
-// No viewport check needed — everything in the clean DOM is article content.
+// Font size levels (px), index 0–8, default index 4 (18px)
+const FONT_SIZES    = [14, 15, 16, 17, 18, 20, 22, 24, 28];
+const WIDTHS        = { narrow: 480, normal: 680, wide: 860 };
+const DEFAULT_PREFS = { theme: 'auto', fontSize: 4, width: 'normal' };
+
+// --- Prefs helpers ---
+
+async function loadReaderPrefs() {
+  const { readerPrefs } = await browser.storage.local.get(STORAGE_KEYS.READER_PREFS);
+  return { ...DEFAULT_PREFS, ...(readerPrefs || {}) };
+}
+
+function saveReaderPrefs(prefs) {
+  browser.storage.local.set({ [STORAGE_KEYS.READER_PREFS]: prefs });
+}
+
+function resolveTheme(prefs) {
+  if (prefs.theme !== 'auto') return prefs.theme;
+  return isThemeDark(_cachedTheme) ? 'dark' : 'light';
+}
+
+function applyPrefs(overlay, prefs) {
+  overlay.dataset.readerTheme = resolveTheme(prefs);
+  overlay.style.setProperty('--reader-font-size', FONT_SIZES[prefs.fontSize] + 'px');
+  overlay.style.setProperty('--reader-width', WIDTHS[prefs.width] + 'px');
+}
+
+// --- Element collection ---
+
 function collectReaderElements(scope) {
   const candidates = Array.from(
     scope.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, li')
@@ -17,9 +46,112 @@ function collectReaderElements(scope) {
     const text = el.innerText?.trim();
     return text && text.length >= 20;
   });
-  // Drop ancestors: only translate innermost candidates
   return filtered.filter(el => !filtered.some(other => other !== el && el.contains(other)));
 }
+
+// --- Settings panel ---
+
+function buildSettingsPanel(overlay, prefs) {
+  const panel = document.createElement('div');
+  panel.id = READER_SETTINGS_ID;
+
+  // Theme row
+  const themeRow = makeRow();
+  const THEMES = [
+    { key: 'auto',  bg: '',        color: '',        label: 'Auto'  },
+    { key: 'light', bg: '#f9f7f4', color: '#1a1a1a', label: 'Light' },
+    { key: 'sepia', bg: '#f4ecd8', color: '#5b4636', label: 'Sepia' },
+    { key: 'dark',  bg: '#1c1c1e', color: '#e8e8e8', label: 'Dark'  },
+  ];
+  const themeBtns = THEMES.map(({ key, bg, color, label }) => {
+    const btn = document.createElement('button');
+    btn.className = 'ai-rs-theme-btn';
+    btn.dataset.theme = key;
+    btn.title = label;
+    if (bg) { btn.style.background = bg; btn.style.color = color; }
+    btn.textContent = key === 'auto' ? 'Auto' : 'Aa';
+    if (prefs.theme === key) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      prefs.theme = key;
+      applyPrefs(overlay, prefs);
+      themeBtns.forEach(b => b.classList.toggle('active', b.dataset.theme === key));
+      saveReaderPrefs(prefs);
+    });
+    return btn;
+  });
+  themeBtns.forEach(b => themeRow.appendChild(b));
+
+  // Font size row
+  const fontRow = makeRow();
+  const smallA = document.createElement('button');
+  smallA.className = 'ai-rs-font-btn';
+  smallA.textContent = 'A';
+  smallA.style.fontSize = '12px';
+  smallA.title = 'Decrease font size';
+
+  const dotsWrap = document.createElement('div');
+  dotsWrap.className = 'ai-rs-dots';
+  const dots = FONT_SIZES.map((_, i) => {
+    const d = document.createElement('span');
+    d.className = 'ai-rs-dot';
+    dotsWrap.appendChild(d);
+    return d;
+  });
+
+  const largeA = document.createElement('button');
+  largeA.className = 'ai-rs-font-btn';
+  largeA.textContent = 'A';
+  largeA.style.fontSize = '18px';
+  largeA.title = 'Increase font size';
+
+  function syncDots() {
+    dots.forEach((d, i) => d.classList.toggle('filled', i <= prefs.fontSize));
+    smallA.disabled = prefs.fontSize === 0;
+    largeA.disabled = prefs.fontSize === FONT_SIZES.length - 1;
+  }
+  smallA.addEventListener('click', () => {
+    if (prefs.fontSize > 0) { prefs.fontSize--; applyPrefs(overlay, prefs); syncDots(); saveReaderPrefs(prefs); }
+  });
+  largeA.addEventListener('click', () => {
+    if (prefs.fontSize < FONT_SIZES.length - 1) { prefs.fontSize++; applyPrefs(overlay, prefs); syncDots(); saveReaderPrefs(prefs); }
+  });
+  syncDots();
+  fontRow.append(smallA, dotsWrap, largeA);
+
+  // Width row
+  const widthRow = makeRow();
+  const WIDTHS_DEF = [
+    { key: 'narrow', label: 'Narrow' },
+    { key: 'normal', label: 'Normal' },
+    { key: 'wide',   label: 'Wide'   },
+  ];
+  const widthBtns = WIDTHS_DEF.map(({ key, label }) => {
+    const btn = document.createElement('button');
+    btn.className = 'ai-rs-width-btn';
+    btn.dataset.width = key;
+    btn.textContent = label;
+    if (prefs.width === key) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      prefs.width = key;
+      applyPrefs(overlay, prefs);
+      widthBtns.forEach(b => b.classList.toggle('active', b.dataset.width === key));
+      saveReaderPrefs(prefs);
+    });
+    return btn;
+  });
+  widthBtns.forEach(b => widthRow.appendChild(b));
+
+  panel.append(themeRow, fontRow, widthRow);
+  return panel;
+}
+
+function makeRow() {
+  const row = document.createElement('div');
+  row.className = 'ai-rs-row';
+  return row;
+}
+
+// --- Open / close ---
 
 function toggleReaderMode(triggerBtn) {
   if (document.getElementById(READER_OVERLAY_ID)) {
@@ -29,12 +161,13 @@ function toggleReaderMode(triggerBtn) {
   openReaderMode(triggerBtn);
 }
 
-function openReaderMode(triggerBtn) {
+async function openReaderMode(triggerBtn) {
   if (triggerBtn) { triggerBtn.disabled = true; }
 
   const docClone = document.cloneNode(true);
   const reader = new Readability(docClone);
   const article = reader.parse();
+  const prefs = await loadReaderPrefs();
 
   if (triggerBtn) { triggerBtn.disabled = false; }
 
@@ -43,12 +176,10 @@ function openReaderMode(triggerBtn) {
     return;
   }
 
-  const isDark = isThemeDark(_cachedTheme);
-
-  // --- Overlay root ---
+  // --- Overlay ---
   const overlay = document.createElement('div');
   overlay.id = READER_OVERLAY_ID;
-  if (isDark) overlay.classList.add('dark');
+  applyPrefs(overlay, prefs);
 
   // --- Toolbar ---
   const toolbar = document.createElement('div');
@@ -66,19 +197,26 @@ function openReaderMode(triggerBtn) {
   translateBtn.title = browser.i18n.getMessage('translateScreenContent') || 'Translate';
   setTranslateIcon(translateBtn);
 
+  const settingsBtn = document.createElement('button');
+  settingsBtn.id = 'ai-reader-settings-btn';
+  settingsBtn.title = browser.i18n.getMessage('readerSettings') || 'Reading settings';
+  settingsBtn.innerHTML = SETTINGS_ICON;
+
   const closeBtn = document.createElement('button');
   closeBtn.id = 'ai-reader-close-btn';
   closeBtn.title = browser.i18n.getMessage('exitReader') || 'Exit reader';
   closeBtn.innerHTML = CLOSE_ICON;
 
-  actions.append(translateBtn, closeBtn);
+  actions.append(translateBtn, settingsBtn, closeBtn);
   toolbar.append(siteLabel, actions);
+
+  // --- Settings panel ---
+  const settingsPanel = buildSettingsPanel(overlay, prefs);
 
   // --- Content ---
   const content = document.createElement('div');
   content.id = 'ai-reader-content';
 
-  // Metadata block
   const meta = document.createElement('div');
   meta.id = 'ai-reader-meta';
 
@@ -95,18 +233,22 @@ function openReaderMode(triggerBtn) {
     meta.appendChild(bylineEl);
   }
 
-  // Article body from Readability
   const body = document.createElement('div');
   body.id = 'ai-reader-body';
   body.innerHTML = article.content;
-  // Strip any injected scripts/styles for safety
   body.querySelectorAll('script, style').forEach(el => el.remove());
 
   content.append(meta, body);
-  overlay.append(toolbar, content);
+  overlay.append(toolbar, settingsPanel, content);
   document.body.appendChild(overlay);
 
-  // Escape key closes
+  // Settings toggle
+  settingsBtn.addEventListener('click', () => {
+    const open = settingsPanel.classList.toggle('open');
+    settingsBtn.classList.toggle('active', open);
+  });
+
+  // Escape closes
   function onKeydown(e) {
     if (e.key === 'Escape') closeReaderMode();
   }
@@ -114,10 +256,7 @@ function openReaderMode(triggerBtn) {
   overlay._cleanup = () => document.removeEventListener('keydown', onKeydown);
 
   closeBtn.addEventListener('click', closeReaderMode);
-  translateBtn.addEventListener('click', () => {
-    const elements = collectReaderElements(body);
-    runTranslateElements(elements, translateBtn);
-  });
+  translateBtn.addEventListener('click', () => runTranslateElements(collectReaderElements(body), translateBtn));
 
   document.getElementById(PANEL_ID)?.style.setProperty('display', 'none', 'important');
 }
