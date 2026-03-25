@@ -130,9 +130,11 @@ function makeDraggable(panel) {
       panel.style.left = startLeft + 'px';
       panel.style.top = startTop + 'px';
       panel.style.cursor = 'grabbing';
-      _trashZoneEl = getOrCreateTrashZone();
-      _trashZoneEl.classList.add('visible');
-      _trashZoneRect = _trashZoneEl.getBoundingClientRect(); // cache once; zone is fixed-position
+      if (!document.getElementById(READER_OVERLAY_ID)) {
+        _trashZoneEl = getOrCreateTrashZone();
+        _trashZoneEl.classList.add('visible');
+        _trashZoneRect = _trashZoneEl.getBoundingClientRect(); // cache once; zone is fixed-position
+      }
     }
 
     if (!hasMoved) return;
