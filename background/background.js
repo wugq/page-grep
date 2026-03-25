@@ -96,6 +96,10 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'translateParagraph') {
+    if (typeof message.text !== 'string' || !message.text.trim()) {
+      sendResponse({ success: false, error: 'Missing text' });
+      return;
+    }
     Promise.all([
       getApiSettings(),
       browser.storage.local.get(STORAGE_KEYS.TRANSLATE_LANG)
@@ -117,6 +121,10 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'summarize') {
+    if (!Array.isArray(message.elements) || message.elements.length === 0) {
+      sendResponse({ success: false, error: 'Missing elements' });
+      return;
+    }
     getApiSettings()
       .then(({ apiKey, model }) => {
         const elementList = message.elements.map((t, i) => `${i}: ${t}`).join('\n');
@@ -140,6 +148,14 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'findInteresting') {
+    if (typeof message.interests !== 'string' || !message.interests.trim()) {
+      sendResponse({ success: false, error: 'Missing interests' });
+      return;
+    }
+    if (!Array.isArray(message.elements) || message.elements.length === 0) {
+      sendResponse({ success: false, error: 'Missing elements' });
+      return;
+    }
     getApiSettings()
       .then(({ apiKey, model }) => {
         const interests = message.interests.split(',').map(s => s.trim()).filter(Boolean);
