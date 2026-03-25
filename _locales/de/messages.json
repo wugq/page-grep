@@ -272,5 +272,41 @@
   },
   "settingsLinkLabel": {
     "message": "Einstellungen"
+  },
+  "readerMode": {
+    "message": "Leseansicht"
+  },
+  "exitReader": {
+    "message": "Leser beenden"
+  },
+  "readerSettings": {
+    "message": "Leseeinstellungen"
+  },
+  "readerThemeAuto": {
+    "message": "Auto"
+  },
+  "readerThemeLight": {
+    "message": "Hell"
+  },
+  "readerThemeSepia": {
+    "message": "Sepia"
+  },
+  "readerThemeDark": {
+    "message": "Dunkel"
+  },
+  "readerFontLabel": {
+    "message": "Schrift"
+  },
+  "readerSpacingLabel": {
+    "message": "Zeilenabstand"
+  },
+  "readerWidthNarrow": {
+    "message": "Schmal"
+  },
+  "readerWidthNormal": {
+    "message": "Normal"
+  },
+  "readerWidthWide": {
+    "message": "Breit"
   }
 }

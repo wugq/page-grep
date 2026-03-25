@@ -272,5 +272,41 @@
   },
   "settingsLinkLabel": {
     "message": "Настройки"
+  },
+  "readerMode": {
+    "message": "Режим чтения"
+  },
+  "exitReader": {
+    "message": "Выйти из режима чтения"
+  },
+  "readerSettings": {
+    "message": "Настройки чтения"
+  },
+  "readerThemeAuto": {
+    "message": "Авто"
+  },
+  "readerThemeLight": {
+    "message": "Светлый"
+  },
+  "readerThemeSepia": {
+    "message": "Сепия"
+  },
+  "readerThemeDark": {
+    "message": "Тёмный"
+  },
+  "readerFontLabel": {
+    "message": "Шрифт"
+  },
+  "readerSpacingLabel": {
+    "message": "Интервал"
+  },
+  "readerWidthNarrow": {
+    "message": "Узкий"
+  },
+  "readerWidthNormal": {
+    "message": "Обычный"
+  },
+  "readerWidthWide": {
+    "message": "Широкий"
   }
 }

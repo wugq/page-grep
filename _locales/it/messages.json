@@ -272,5 +272,41 @@
   },
   "settingsLinkLabel": {
     "message": "Impostazioni"
+  },
+  "readerMode": {
+    "message": "Modalità lettura"
+  },
+  "exitReader": {
+    "message": "Esci dal lettore"
+  },
+  "readerSettings": {
+    "message": "Impostazioni lettura"
+  },
+  "readerThemeAuto": {
+    "message": "Auto"
+  },
+  "readerThemeLight": {
+    "message": "Chiaro"
+  },
+  "readerThemeSepia": {
+    "message": "Seppia"
+  },
+  "readerThemeDark": {
+    "message": "Scuro"
+  },
+  "readerFontLabel": {
+    "message": "Carattere"
+  },
+  "readerSpacingLabel": {
+    "message": "Interlinea"
+  },
+  "readerWidthNarrow": {
+    "message": "Stretto"
+  },
+  "readerWidthNormal": {
+    "message": "Normale"
+  },
+  "readerWidthWide": {
+    "message": "Largo"
   }
 }

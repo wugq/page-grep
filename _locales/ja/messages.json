@@ -272,5 +272,41 @@
   },
   "settingsLinkLabel": {
     "message": "設定"
+  },
+  "readerMode": {
+    "message": "リーダービュー"
+  },
+  "exitReader": {
+    "message": "リーダーを閉じる"
+  },
+  "readerSettings": {
+    "message": "読書設定"
+  },
+  "readerThemeAuto": {
+    "message": "自動"
+  },
+  "readerThemeLight": {
+    "message": "ライト"
+  },
+  "readerThemeSepia": {
+    "message": "セピア"
+  },
+  "readerThemeDark": {
+    "message": "ダーク"
+  },
+  "readerFontLabel": {
+    "message": "文字サイズ"
+  },
+  "readerSpacingLabel": {
+    "message": "行間"
+  },
+  "readerWidthNarrow": {
+    "message": "狭い"
+  },
+  "readerWidthNormal": {
+    "message": "普通"
+  },
+  "readerWidthWide": {
+    "message": "広い"
   }
 }

@@ -281,5 +281,32 @@
   },
   "readerSettings": {
     "message": "Reading settings"
+  },
+  "readerThemeAuto": {
+    "message": "Auto"
+  },
+  "readerThemeLight": {
+    "message": "Light"
+  },
+  "readerThemeSepia": {
+    "message": "Sepia"
+  },
+  "readerThemeDark": {
+    "message": "Dark"
+  },
+  "readerFontLabel": {
+    "message": "Font"
+  },
+  "readerSpacingLabel": {
+    "message": "Spacing"
+  },
+  "readerWidthNarrow": {
+    "message": "Narrow"
+  },
+  "readerWidthNormal": {
+    "message": "Normal"
+  },
+  "readerWidthWide": {
+    "message": "Wide"
   }
 }

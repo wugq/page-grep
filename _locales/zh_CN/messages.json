@@ -272,5 +272,41 @@
   },
   "settingsLinkLabel": {
     "message": "设置"
+  },
+  "readerMode": {
+    "message": "阅读视图"
+  },
+  "exitReader": {
+    "message": "退出阅读模式"
+  },
+  "readerSettings": {
+    "message": "阅读设置"
+  },
+  "readerThemeAuto": {
+    "message": "自动"
+  },
+  "readerThemeLight": {
+    "message": "浅色"
+  },
+  "readerThemeSepia": {
+    "message": "复古"
+  },
+  "readerThemeDark": {
+    "message": "深色"
+  },
+  "readerFontLabel": {
+    "message": "字号"
+  },
+  "readerSpacingLabel": {
+    "message": "行距"
+  },
+  "readerWidthNarrow": {
+    "message": "窄"
+  },
+  "readerWidthNormal": {
+    "message": "适中"
+  },
+  "readerWidthWide": {
+    "message": "宽"
   }
 }

@@ -272,5 +272,41 @@
   },
   "settingsLinkLabel": {
     "message": "Ayarlar"
+  },
+  "readerMode": {
+    "message": "Okuyucu görünümü"
+  },
+  "exitReader": {
+    "message": "Okuyucudan çık"
+  },
+  "readerSettings": {
+    "message": "Okuma ayarları"
+  },
+  "readerThemeAuto": {
+    "message": "Otomatik"
+  },
+  "readerThemeLight": {
+    "message": "Açık"
+  },
+  "readerThemeSepia": {
+    "message": "Sepya"
+  },
+  "readerThemeDark": {
+    "message": "Koyu"
+  },
+  "readerFontLabel": {
+    "message": "Yazı tipi"
+  },
+  "readerSpacingLabel": {
+    "message": "Satır aralığı"
+  },
+  "readerWidthNarrow": {
+    "message": "Dar"
+  },
+  "readerWidthNormal": {
+    "message": "Normal"
+  },
+  "readerWidthWide": {
+    "message": "Geniş"
   }
 }

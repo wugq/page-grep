@@ -59,18 +59,19 @@ function buildSettingsPanel(overlay, prefs) {
   // Theme row
   const themeRow = makeRow();
   const THEMES = [
-    { key: 'auto',  bg: '',        color: '',        label: 'Auto'  },
-    { key: 'light', bg: '#f9f7f4', color: '#1a1a1a', label: 'Light' },
-    { key: 'sepia', bg: '#f4ecd8', color: '#5b4636', label: 'Sepia' },
-    { key: 'dark',  bg: '#1c1c1e', color: '#e8e8e8', label: 'Dark'  },
+    { key: 'auto',  bg: '',        color: '',        msgKey: 'readerThemeAuto'  },
+    { key: 'light', bg: '#f9f7f4', color: '#1a1a1a', msgKey: 'readerThemeLight' },
+    { key: 'sepia', bg: '#f4ecd8', color: '#5b4636', msgKey: 'readerThemeSepia' },
+    { key: 'dark',  bg: '#1c1c1e', color: '#e8e8e8', msgKey: 'readerThemeDark'  },
   ];
-  const themeBtns = THEMES.map(({ key, bg, color, label }) => {
+  const themeBtns = THEMES.map(({ key, bg, color, msgKey }) => {
+    const label = browser.i18n.getMessage(msgKey) || msgKey;
     const btn = document.createElement('button');
     btn.className = 'ai-rs-theme-btn';
     btn.dataset.theme = key;
     btn.title = label;
     if (bg) { btn.style.background = bg; btn.style.color = color; }
-    btn.textContent = key === 'auto' ? 'Auto' : 'Aa';
+    btn.textContent = key === 'auto' ? label : 'Aa';
     if (prefs.theme === key) btn.classList.add('active');
     btn.addEventListener('click', () => {
       prefs.theme = key;
@@ -84,7 +85,7 @@ function buildSettingsPanel(overlay, prefs) {
 
   // Font size stepper
   const { row: fontRow, minus: fontMinus, val: fontVal, plus: fontPlus } =
-    makeStepper('Font', FONT_SIZES[prefs.fontSize] + 'px');
+    makeStepper(browser.i18n.getMessage('readerFontLabel') || 'Font', FONT_SIZES[prefs.fontSize] + 'px');
   fontMinus.disabled = prefs.fontSize === 0;
   fontPlus.disabled  = prefs.fontSize === FONT_SIZES.length - 1;
   holdRepeat(fontMinus, () => {
@@ -106,7 +107,7 @@ function buildSettingsPanel(overlay, prefs) {
 
   // Line spacing stepper
   const { row: spacingRow, minus: spacingMinus, val: spacingVal, plus: spacingPlus } =
-    makeStepper('Spacing', LINE_SPACINGS[prefs.lineSpacing] + '×');
+    makeStepper(browser.i18n.getMessage('readerSpacingLabel') || 'Spacing', LINE_SPACINGS[prefs.lineSpacing] + '×');
   spacingMinus.disabled = prefs.lineSpacing === 0;
   spacingPlus.disabled  = prefs.lineSpacing === LINE_SPACINGS.length - 1;
   holdRepeat(spacingMinus, () => {
@@ -129,9 +130,9 @@ function buildSettingsPanel(overlay, prefs) {
   // Width row
   const widthRow = makeRow();
   const WIDTHS_DEF = [
-    { key: 'narrow', label: 'Narrow' },
-    { key: 'normal', label: 'Normal' },
-    { key: 'wide',   label: 'Wide'   },
+    { key: 'narrow', label: browser.i18n.getMessage('readerWidthNarrow') || 'Narrow' },
+    { key: 'normal', label: browser.i18n.getMessage('readerWidthNormal') || 'Normal' },
+    { key: 'wide',   label: browser.i18n.getMessage('readerWidthWide')   || 'Wide'   },
   ];
   const widthBtns = WIDTHS_DEF.map(({ key, label }) => {
     const btn = document.createElement('button');
@@ -247,6 +248,19 @@ async function openReaderMode(triggerBtn) {
   if (triggerBtn) { triggerBtn.disabled = true; }
 
   const docClone = document.cloneNode(true);
+  // Strip any translation wrappers so Readability sees the original text only.
+  // When the floating panel translate button is used while in reader mode it can
+  // wrap actual page paragraphs; those wrapped elements would otherwise bleed
+  // both-language content into the reader on the next open.
+  docClone.querySelectorAll('[data-ai-wrapped]').forEach(el => {
+    const original = el.querySelector('.ai-para-original');
+    if (original) {
+      el.innerHTML = original.innerHTML;
+      el.classList.remove('ai-para-wrap', 'show-translation');
+      delete el.dataset.aiWrapped;
+      if (el.style.position === 'relative') el.style.position = '';
+    }
+  });
   const reader = new Readability(docClone);
   const article = reader.parse();
   const prefs = await loadReaderPrefs();

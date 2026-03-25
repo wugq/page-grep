@@ -272,5 +272,41 @@
   },
   "settingsLinkLabel": {
     "message": "설정"
+  },
+  "readerMode": {
+    "message": "리더 뷰"
+  },
+  "exitReader": {
+    "message": "리더 닫기"
+  },
+  "readerSettings": {
+    "message": "읽기 설정"
+  },
+  "readerThemeAuto": {
+    "message": "자동"
+  },
+  "readerThemeLight": {
+    "message": "밝게"
+  },
+  "readerThemeSepia": {
+    "message": "세피아"
+  },
+  "readerThemeDark": {
+    "message": "어둡게"
+  },
+  "readerFontLabel": {
+    "message": "글꼴 크기"
+  },
+  "readerSpacingLabel": {
+    "message": "줄 간격"
+  },
+  "readerWidthNarrow": {
+    "message": "좁게"
+  },
+  "readerWidthNormal": {
+    "message": "보통"
+  },
+  "readerWidthWide": {
+    "message": "넓게"
   }
 }
