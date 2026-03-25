@@ -1008,7 +1008,8 @@ async function saveArticleToClipboard(btn) {
     if (lines.length === 0) { showToast(browser.i18n.getMessage('noAnalyzableContent') || 'No content found'); return; }
     const markdown = `# ${document.title || location.hostname}\n\n${location.href}\n\n${lines.join('\n\n')}\n`;
     await copyToClipboard(markdown);
-  } catch (_) {
+  } catch (err) {
+    error('[PageGrep] saveArticleToClipboard failed:', err.message);
     showToast(browser.i18n.getMessage('operationFailed') || 'Copy failed');
   } finally {
     if (btn) { btn.disabled = false; btn.classList.remove('ai-loading-btn'); }
