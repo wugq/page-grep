@@ -8,10 +8,10 @@ const READER_SETTINGS_ID = 'ai-reader-settings';
 const CLOSE_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>`;
 
-// Font size levels (px), index 0–8, default index 4 (18px)
-const FONT_SIZES    = [14, 15, 16, 17, 18, 20, 22, 24, 28];
+const FONT_SIZES    = [14, 15, 16, 17, 18, 20, 22, 24, 28]; // index 0–8, default 4 (18px)
+const LINE_SPACINGS = [1.4, 1.6, 1.8, 2.0, 2.2];           // index 0–4, default 2 (1.8)
 const WIDTHS        = { narrow: 480, normal: 680, wide: 860 };
-const DEFAULT_PREFS = { theme: 'auto', fontSize: 4, width: 'normal' };
+const DEFAULT_PREFS = { theme: 'auto', fontSize: 4, lineSpacing: 2, width: 'normal' };
 
 // --- Prefs helpers ---
 
@@ -31,8 +31,9 @@ function resolveTheme(prefs) {
 
 function applyPrefs(overlay, prefs) {
   overlay.dataset.readerTheme = resolveTheme(prefs);
-  overlay.style.setProperty('--reader-font-size', FONT_SIZES[prefs.fontSize] + 'px');
-  overlay.style.setProperty('--reader-width', WIDTHS[prefs.width] + 'px');
+  overlay.style.setProperty('--reader-font-size',   FONT_SIZES[prefs.fontSize] + 'px');
+  overlay.style.setProperty('--reader-line-height', LINE_SPACINGS[prefs.lineSpacing]);
+  overlay.style.setProperty('--reader-width',       WIDTHS[prefs.width] + 'px');
 }
 
 // --- Element collection ---
@@ -81,42 +82,49 @@ function buildSettingsPanel(overlay, prefs) {
   });
   themeBtns.forEach(b => themeRow.appendChild(b));
 
-  // Font size row
-  const fontRow = makeRow();
-  const smallA = document.createElement('button');
-  smallA.className = 'ai-rs-font-btn';
-  smallA.textContent = 'A';
-  smallA.style.fontSize = '12px';
-  smallA.title = 'Decrease font size';
-
-  const dotsWrap = document.createElement('div');
-  dotsWrap.className = 'ai-rs-dots';
-  const dots = FONT_SIZES.map((_, i) => {
-    const d = document.createElement('span');
-    d.className = 'ai-rs-dot';
-    dotsWrap.appendChild(d);
-    return d;
+  // Font size stepper
+  const { row: fontRow, minus: fontMinus, val: fontVal, plus: fontPlus } =
+    makeStepper('Font', FONT_SIZES[prefs.fontSize] + 'px');
+  fontMinus.disabled = prefs.fontSize === 0;
+  fontPlus.disabled  = prefs.fontSize === FONT_SIZES.length - 1;
+  fontMinus.addEventListener('click', () => {
+    if (prefs.fontSize === 0) return;
+    prefs.fontSize--;
+    fontVal.textContent   = FONT_SIZES[prefs.fontSize] + 'px';
+    fontMinus.disabled    = prefs.fontSize === 0;
+    fontPlus.disabled     = false;
+    applyPrefs(overlay, prefs); saveReaderPrefs(prefs);
+  });
+  fontPlus.addEventListener('click', () => {
+    if (prefs.fontSize === FONT_SIZES.length - 1) return;
+    prefs.fontSize++;
+    fontVal.textContent   = FONT_SIZES[prefs.fontSize] + 'px';
+    fontPlus.disabled     = prefs.fontSize === FONT_SIZES.length - 1;
+    fontMinus.disabled    = false;
+    applyPrefs(overlay, prefs); saveReaderPrefs(prefs);
   });
 
-  const largeA = document.createElement('button');
-  largeA.className = 'ai-rs-font-btn';
-  largeA.textContent = 'A';
-  largeA.style.fontSize = '18px';
-  largeA.title = 'Increase font size';
-
-  function syncDots() {
-    dots.forEach((d, i) => d.classList.toggle('filled', i <= prefs.fontSize));
-    smallA.disabled = prefs.fontSize === 0;
-    largeA.disabled = prefs.fontSize === FONT_SIZES.length - 1;
-  }
-  smallA.addEventListener('click', () => {
-    if (prefs.fontSize > 0) { prefs.fontSize--; applyPrefs(overlay, prefs); syncDots(); saveReaderPrefs(prefs); }
+  // Line spacing stepper
+  const { row: spacingRow, minus: spacingMinus, val: spacingVal, plus: spacingPlus } =
+    makeStepper('Spacing', LINE_SPACINGS[prefs.lineSpacing] + '×');
+  spacingMinus.disabled = prefs.lineSpacing === 0;
+  spacingPlus.disabled  = prefs.lineSpacing === LINE_SPACINGS.length - 1;
+  spacingMinus.addEventListener('click', () => {
+    if (prefs.lineSpacing === 0) return;
+    prefs.lineSpacing--;
+    spacingVal.textContent  = LINE_SPACINGS[prefs.lineSpacing] + '×';
+    spacingMinus.disabled   = prefs.lineSpacing === 0;
+    spacingPlus.disabled    = false;
+    applyPrefs(overlay, prefs); saveReaderPrefs(prefs);
   });
-  largeA.addEventListener('click', () => {
-    if (prefs.fontSize < FONT_SIZES.length - 1) { prefs.fontSize++; applyPrefs(overlay, prefs); syncDots(); saveReaderPrefs(prefs); }
+  spacingPlus.addEventListener('click', () => {
+    if (prefs.lineSpacing === LINE_SPACINGS.length - 1) return;
+    prefs.lineSpacing++;
+    spacingVal.textContent  = LINE_SPACINGS[prefs.lineSpacing] + '×';
+    spacingPlus.disabled    = prefs.lineSpacing === LINE_SPACINGS.length - 1;
+    spacingMinus.disabled   = false;
+    applyPrefs(overlay, prefs); saveReaderPrefs(prefs);
   });
-  syncDots();
-  fontRow.append(smallA, dotsWrap, largeA);
 
   // Width row
   const widthRow = makeRow();
@@ -141,7 +149,7 @@ function buildSettingsPanel(overlay, prefs) {
   });
   widthBtns.forEach(b => widthRow.appendChild(b));
 
-  panel.append(themeRow, fontRow, widthRow);
+  panel.append(themeRow, fontRow, spacingRow, widthRow);
   return panel;
 }
 
@@ -149,6 +157,24 @@ function makeRow() {
   const row = document.createElement('div');
   row.className = 'ai-rs-row';
   return row;
+}
+
+function makeStepper(label, initialVal) {
+  const row = makeRow();
+  const lbl = document.createElement('span');
+  lbl.className = 'ai-rs-stepper-label';
+  lbl.textContent = label;
+  const minus = document.createElement('button');
+  minus.className = 'ai-rs-step-btn';
+  minus.textContent = '−';
+  const val = document.createElement('span');
+  val.className = 'ai-rs-stepper-val';
+  val.textContent = initialVal;
+  const plus = document.createElement('button');
+  plus.className = 'ai-rs-step-btn';
+  plus.textContent = '+';
+  row.append(lbl, minus, val, plus);
+  return { row, minus, val, plus };
 }
 
 // --- Open / close ---
