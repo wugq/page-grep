@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="settingsTitle">PageGrep - 设置</title>
-  <script src="../shared/storage-keys.js"></script>
-  <script src="../shared/theme-utils.js"></script>
-  <script src="../shared/i18n-override.js"></script>
-  <script src="../shared/theme.js"></script>
+  <!-- Load order matters: storage-keys → theme-utils → i18n-override → theme → i18n → page script -->
+  <script src="../shared/storage-keys.js"></script>  <!-- defines STORAGE_KEYS -->
+  <script src="../shared/theme-utils.js"></script>   <!-- defines isThemeDark(); no dependencies -->
+  <script src="../shared/i18n-override.js"></script> <!-- uses STORAGE_KEYS -->
+  <script src="../shared/theme.js"></script>         <!-- uses STORAGE_KEYS, isThemeDark() -->
   <link rel="stylesheet" href="options.css">
 </head>
 <body style="visibility:hidden">

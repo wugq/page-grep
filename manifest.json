@@ -17,7 +17,10 @@
     "<all_urls>"
   ],
   "background": {
-    "scripts": ["shared/storage-keys.js", "background/background.js"],
+    "scripts": [
+      "shared/storage-keys.js",  // defines STORAGE_KEYS; must be first
+      "background/background.js" // uses STORAGE_KEYS
+    ],
     "persistent": false
   },
   "browser_action": {
@@ -52,7 +55,12 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["shared/storage-keys.js", "shared/theme-utils.js", "shared/i18n-override.js", "content/content.js"],
+      "js": [
+        "shared/storage-keys.js",  // defines STORAGE_KEYS; must be first
+        "shared/theme-utils.js",   // defines isThemeDark(); no dependencies
+        "shared/i18n-override.js", // uses STORAGE_KEYS; requires storage-keys.js
+        "content/content.js"       // uses STORAGE_KEYS, isThemeDark, applyI18nOverride
+      ],
       "css": ["content/content.css"],
       "run_at": "document_idle"
     }

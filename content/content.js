@@ -44,6 +44,20 @@ const HIGHLIGHT_STATE = {
   items: null
 };
 
+// --- Content collection thresholds ---
+const MAX_DESCENT_DEPTH    = 8;    // findWidestTextBlock recursion limit
+const MIN_PARA_TEXT_LENGTH = 40;   // min paragraph length to count as content
+const MIN_BLOCK_TEXT_LENGTH = 300; // min block text length to be a descent candidate
+const WIDTH_DOMINANCE_RATIO = 1.4; // width ratio to treat one block as dominant
+const MAX_ARTICLE_LINES    = 200;  // max lines for copy-to-clipboard
+const MAX_ARTICLE_ELEMENTS = 180;  // max elements in article-mode collection
+const MAX_LIST_ELEMENTS    = 140;  // max elements in list-mode collection
+const MAX_HN_ELEMENTS      = 160;  // max elements on HackerNews
+
+// Pre-compiled regexes for translated text link-marker processing
+const LINK_MATCH_RE = /[\[【]LINK(\d+)_START[\]】]([\s\S]*?)[\[【]LINK\d+_END[\]】]/g;
+const LINK_STRIP_RE = /[\[【]LINK\d+_(?:START|END)[\]】]/g;
+
 // --- Theme helper ---
 
 async function applyThemeToPanel() {
@@ -86,24 +100,24 @@ function removePanelIfEmpty() {
 // Recursively descend the DOM following the widest / most text-rich block
 // at each level to locate the true article column.
 function findWidestTextBlock(container, depth) {
-  if (depth > 8) return container;
+  if (depth > MAX_DESCENT_DEPTH) return container;
   // If we already have ≥3 direct paragraphs, this is the content node.
   const directParas = Array.from(container.children).filter(
-    c => c.tagName === 'P' && (c.innerText?.trim() || '').length > 40
+    c => c.tagName === 'P' && (c.innerText?.trim() || '').length > MIN_PARA_TEXT_LENGTH
   );
   if (directParas.length >= 3) return container;
   const blockChildren = Array.from(container.children).filter(el => {
     if (!['DIV', 'SECTION', 'ARTICLE', 'MAIN'].includes(el.tagName)) return false;
     if (el.tagName === 'ASIDE') return false;
     if (el.closest(CHROME_SELECTOR)) return false;
-    return (el.innerText?.trim() || '').length > 300;
+    return (el.innerText?.trim() || '').length > MIN_BLOCK_TEXT_LENGTH;
   });
   if (blockChildren.length === 0) return container;
   if (blockChildren.length === 1) return findWidestTextBlock(blockChildren[0], depth + 1);
   // Multiple candidates: if widths differ significantly, pick the widest.
   const maxW = Math.max(...blockChildren.map(c => c.offsetWidth));
   const minW = Math.min(...blockChildren.map(c => c.offsetWidth));
-  if (maxW / (minW || 1) > 1.4) {
+  if (maxW / (minW || 1) > WIDTH_DOMINANCE_RATIO) {
     const widest = blockChildren.reduce((a, b) => a.offsetWidth > b.offsetWidth ? a : b);
     return findWidestTextBlock(widest, depth + 1);
   }
@@ -114,6 +128,11 @@ function findWidestTextBlock(container, depth) {
   );
 }
 
+// Note: findMainContentScope() below serves a similar purpose but targets a broader
+// "content area" scope. findArticleBodyEl targets the specific article body element.
+// Step 2 here is intentionally kept separate from findMainContentScope: returning the
+// <article> directly avoids the width-based descent into sub-blocks, which is correct
+// for copy-to-clipboard (we want the full article container, not a narrower child).
 function findArticleBodyEl() {
   // 1. Explicit semantic/class markers
   const explicit = document.querySelector(
@@ -123,7 +142,7 @@ function findArticleBodyEl() {
   );
   if (explicit) return explicit;
 
-  // 2. Single <article> element
+  // 2. Single <article> element — return directly without width-based descent
   const articleEls = document.querySelectorAll('article');
   if (articleEls.length === 1) return articleEls[0];
 
@@ -175,7 +194,7 @@ function collectArticleText() {
       formatted = raw;
     }
     lines.push(formatted);
-    if (lines.length >= 200) break;
+    if (lines.length >= MAX_ARTICLE_LINES) break;
   }
   return lines;
 }
@@ -290,6 +309,8 @@ function makeDraggable(panel) {
   let isDragging = false;
   let hasMoved = false;
   let startX, startY, startLeft, startTop;
+  let _trashZoneEl = null;   // cached element reference during drag
+  let _trashZoneRect = null; // cached rect during drag to avoid getBoundingClientRect on every mousemove
   const DRAG_THRESHOLD = 5;
 
   panel.addEventListener('mousedown', onDragStart);
@@ -310,10 +331,9 @@ function makeDraggable(panel) {
   }
 
   function isOverTrashZone(clientX, clientY) {
-    const zone = document.getElementById('ai-trash-zone');
-    if (!zone) return false;
-    const rect = zone.getBoundingClientRect();
-    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+    if (!_trashZoneRect) return false;
+    return clientX >= _trashZoneRect.left && clientX <= _trashZoneRect.right &&
+           clientY >= _trashZoneRect.top  && clientY <= _trashZoneRect.bottom;
   }
 
   function onDragStart(e) {
@@ -347,7 +367,9 @@ function makeDraggable(panel) {
       panel.style.left = startLeft + 'px';
       panel.style.top = startTop + 'px';
       panel.style.cursor = 'grabbing';
-      getOrCreateTrashZone().classList.add('visible');
+      _trashZoneEl = getOrCreateTrashZone();
+      _trashZoneEl.classList.add('visible');
+      _trashZoneRect = _trashZoneEl.getBoundingClientRect(); // cache once; zone is fixed-position
     }
 
     if (!hasMoved) return;
@@ -360,8 +382,7 @@ function makeDraggable(panel) {
     panel.style.left = newLeft + 'px';
     panel.style.top = newTop + 'px';
 
-    const zone = document.getElementById('ai-trash-zone');
-    if (zone) zone.classList.toggle('active', isOverTrashZone(point.clientX, point.clientY));
+    if (_trashZoneEl) _trashZoneEl.classList.toggle('active', isOverTrashZone(point.clientX, point.clientY));
   }
 
   function onDragEnd(e) {
@@ -374,15 +395,21 @@ function makeDraggable(panel) {
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('touchend', onDragEnd);
 
-    const zone = document.getElementById('ai-trash-zone');
-    if (zone) {
-      zone.classList.remove('visible', 'active');
+    const zone = _trashZoneEl; // capture before clearing
+    if (zone) zone.classList.remove('visible', 'active');
+
+    if (!hasMoved) {
+      _trashZoneEl = null;
+      _trashZoneRect = null;
+      return;
     }
 
-    if (!hasMoved) return;
-
     const point = e.changedTouches ? e.changedTouches[0] : e;
-    if (isOverTrashZone(point.clientX, point.clientY)) {
+    const overTrash = isOverTrashZone(point.clientX, point.clientY);
+    _trashZoneEl = null;
+    _trashZoneRect = null;
+
+    if (overTrash) {
       panel.remove();
       if (zone) zone.remove();
       blockCurrentDomain();
@@ -503,13 +530,12 @@ async function wrapAndTranslate(el) {
     if (!response.success) throwFromResponse(response);
     log('[PageGrep] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
     if (links.length > 0) {
-      const pattern = /[\[【]LINK(\d+)_START[\]】]([\s\S]*?)[\[【]LINK\d+_END[\]】]/g;
+      LINK_MATCH_RE.lastIndex = 0; // reset before reuse of module-level regex
       let lastIndex = 0;
       let match;
-      const stripMarkers = s => s.replace(/[\[【]LINK\d+_(?:START|END)[\]】]/g, '');
-      while ((match = pattern.exec(response.result)) !== null) {
+      while ((match = LINK_MATCH_RE.exec(response.result)) !== null) {
         if (match.index > lastIndex) {
-          const t = stripMarkers(response.result.slice(lastIndex, match.index));
+          const t = response.result.slice(lastIndex, match.index).replace(LINK_STRIP_RE, '');
           if (t) translatedSpan.appendChild(document.createTextNode(t));
         }
         const link = links[parseInt(match[1])];
@@ -523,14 +549,14 @@ async function wrapAndTranslate(el) {
         } else {
           translatedSpan.appendChild(document.createTextNode(match[2]));
         }
-        lastIndex = pattern.lastIndex;
+        lastIndex = LINK_MATCH_RE.lastIndex;
       }
       if (lastIndex < response.result.length) {
-        const t = stripMarkers(response.result.slice(lastIndex));
+        const t = response.result.slice(lastIndex).replace(LINK_STRIP_RE, '');
         if (t) translatedSpan.appendChild(document.createTextNode(t));
       }
     } else {
-      translatedSpan.textContent = response.result.replace(/[\[【]LINK\d+_(?:START|END)[\]】]/g, '');
+      translatedSpan.textContent = response.result.replace(LINK_STRIP_RE, '');
     }
     el.classList.add('show-translation');
     btn.classList.remove('ai-loading-btn');
@@ -664,7 +690,7 @@ function collectPageElements() {
   const listItems = collectGenericListElements(scope);
   if (listItems && listItems.length >= 4) {
     log(`[PageGrep] list-style collection: found ${listItems.length} items`);
-    return listItems.slice(0, 140);
+    return listItems.slice(0, MAX_LIST_ELEMENTS);
   }
 
   // 3. Fallback to article-style collection if list items are few or detection failed
@@ -684,7 +710,7 @@ function collectArticleElements(scope) {
     if (seen.has(text)) continue;
     seen.add(text);
     results.push({ el, text });
-    if (results.length >= 180) break;
+    if (results.length >= MAX_ARTICLE_ELEMENTS) break;
   }
   return results;
 }
@@ -793,7 +819,7 @@ function collectHackerNewsElements() {
     results.push({ el, text: `[comment] ${text}`, label: text });
   });
 
-  return results.slice(0, 160);
+  return results.slice(0, MAX_HN_ELEMENTS);
 }
 
 function inferHackerNewsTags(title, site) {
