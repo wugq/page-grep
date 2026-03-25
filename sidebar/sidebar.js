@@ -49,16 +49,21 @@ async function init() {
   });
 
   // Hide on this site toggle
+  // Mutex: serialize concurrent updates to prevent read-modify-write races
+  let _blockedDomainsMutex = Promise.resolve();
   const hideOnSiteToggle = document.getElementById('hide-on-site-toggle');
-  hideOnSiteToggle.addEventListener('change', async () => {
+  hideOnSiteToggle.addEventListener('change', () => {
     const hostname = hideOnSiteToggle.dataset.hostname;
+    const checked = hideOnSiteToggle.checked; // capture before any await
     if (!hostname) return;
-    const { blockedDomains } = await browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS);
-    const list = Array.isArray(blockedDomains) ? blockedDomains : [];
-    const updated = hideOnSiteToggle.checked
-      ? [...new Set([...list, hostname])]
-      : list.filter(d => d !== hostname);
-    await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: updated });
+    _blockedDomainsMutex = _blockedDomainsMutex.then(async () => {
+      const { blockedDomains } = await browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS);
+      const list = Array.isArray(blockedDomains) ? blockedDomains : [];
+      const updated = checked
+        ? [...new Set([...list, hostname])]
+        : list.filter(d => d !== hostname);
+      await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: updated });
+    });
   });
 
   // Interests Config (pill-based)
