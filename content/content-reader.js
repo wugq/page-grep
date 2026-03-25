@@ -87,20 +87,20 @@ function buildSettingsPanel(overlay, prefs) {
     makeStepper('Font', FONT_SIZES[prefs.fontSize] + 'px');
   fontMinus.disabled = prefs.fontSize === 0;
   fontPlus.disabled  = prefs.fontSize === FONT_SIZES.length - 1;
-  fontMinus.addEventListener('click', () => {
+  holdRepeat(fontMinus, () => {
     if (prefs.fontSize === 0) return;
     prefs.fontSize--;
-    fontVal.textContent   = FONT_SIZES[prefs.fontSize] + 'px';
-    fontMinus.disabled    = prefs.fontSize === 0;
-    fontPlus.disabled     = false;
+    fontVal.textContent = FONT_SIZES[prefs.fontSize] + 'px';
+    fontMinus.disabled  = prefs.fontSize === 0;
+    fontPlus.disabled   = false;
     applyPrefs(overlay, prefs); saveReaderPrefs(prefs);
   });
-  fontPlus.addEventListener('click', () => {
+  holdRepeat(fontPlus, () => {
     if (prefs.fontSize === FONT_SIZES.length - 1) return;
     prefs.fontSize++;
-    fontVal.textContent   = FONT_SIZES[prefs.fontSize] + 'px';
-    fontPlus.disabled     = prefs.fontSize === FONT_SIZES.length - 1;
-    fontMinus.disabled    = false;
+    fontVal.textContent = FONT_SIZES[prefs.fontSize] + 'px';
+    fontPlus.disabled   = prefs.fontSize === FONT_SIZES.length - 1;
+    fontMinus.disabled  = false;
     applyPrefs(overlay, prefs); saveReaderPrefs(prefs);
   });
 
@@ -109,20 +109,20 @@ function buildSettingsPanel(overlay, prefs) {
     makeStepper('Spacing', LINE_SPACINGS[prefs.lineSpacing] + '×');
   spacingMinus.disabled = prefs.lineSpacing === 0;
   spacingPlus.disabled  = prefs.lineSpacing === LINE_SPACINGS.length - 1;
-  spacingMinus.addEventListener('click', () => {
+  holdRepeat(spacingMinus, () => {
     if (prefs.lineSpacing === 0) return;
     prefs.lineSpacing--;
-    spacingVal.textContent  = LINE_SPACINGS[prefs.lineSpacing] + '×';
-    spacingMinus.disabled   = prefs.lineSpacing === 0;
-    spacingPlus.disabled    = false;
+    spacingVal.textContent = LINE_SPACINGS[prefs.lineSpacing] + '×';
+    spacingMinus.disabled  = prefs.lineSpacing === 0;
+    spacingPlus.disabled   = false;
     applyPrefs(overlay, prefs); saveReaderPrefs(prefs);
   });
-  spacingPlus.addEventListener('click', () => {
+  holdRepeat(spacingPlus, () => {
     if (prefs.lineSpacing === LINE_SPACINGS.length - 1) return;
     prefs.lineSpacing++;
-    spacingVal.textContent  = LINE_SPACINGS[prefs.lineSpacing] + '×';
-    spacingPlus.disabled    = prefs.lineSpacing === LINE_SPACINGS.length - 1;
-    spacingMinus.disabled   = false;
+    spacingVal.textContent = LINE_SPACINGS[prefs.lineSpacing] + '×';
+    spacingPlus.disabled   = prefs.lineSpacing === LINE_SPACINGS.length - 1;
+    spacingMinus.disabled  = false;
     applyPrefs(overlay, prefs); saveReaderPrefs(prefs);
   });
 
@@ -175,6 +175,33 @@ function makeStepper(label, initialVal) {
   plus.textContent = '+';
   row.append(lbl, minus, val, plus);
   return { row, minus, val, plus };
+}
+
+// Attach hold-to-repeat behaviour to a stepper button.
+// Fires action() once on press, then repeatedly after 400ms delay at 80ms intervals.
+function holdRepeat(btn, action) {
+  let repeatTimer = null;
+  let intervalTimer = null;
+
+  function start() {
+    action();
+    repeatTimer = setTimeout(() => {
+      intervalTimer = setInterval(action, 80);
+    }, 400);
+  }
+
+  function stop() {
+    clearTimeout(repeatTimer);
+    clearInterval(intervalTimer);
+    repeatTimer = null;
+    intervalTimer = null;
+  }
+
+  btn.addEventListener('mousedown', start);
+  btn.addEventListener('touchstart', start, { passive: true });
+  btn.addEventListener('mouseup', stop);
+  btn.addEventListener('mouseleave', stop);
+  btn.addEventListener('touchend', stop);
 }
 
 // --- Open / close ---
