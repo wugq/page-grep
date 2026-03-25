@@ -276,7 +276,7 @@
   --rd-settings-bg: rgba(91,70,54,0.04);
 }
 #ai-reader-overlay[data-reader-theme="dark"] {
-  --rd-bg: #1c1c1e; --rd-text: #e8e8e8; --rd-muted: #9a9a9a;
+  --rd-bg: #1c1c1e; --rd-text: #d0d0d0; --rd-muted: #888;
   --rd-border: rgba(255,255,255,0.08); --rd-meta-border: rgba(255,255,255,0.1);
   --rd-link: #818cf8; --rd-quote: #aaa; --rd-ctrl-bg: rgba(255,255,255,0.1);
   --rd-ctrl-color: #ccc; --rd-ctrl-active-bg: rgba(255,255,255,0.18);
