@@ -244,6 +244,7 @@ async function openReaderMode(triggerBtn) {
   // settingsPanel is position:fixed but inside overlay so it inherits CSS theme vars
   overlay.append(closeBtn, settingsPanel, content);
   document.body.appendChild(overlay);
+  document.documentElement.style.overflow = 'hidden';
 
   // Repurpose the floating panel reader button as the settings trigger
   const panelReaderBtn = document.getElementById('ai-reader-mode-btn');
@@ -301,4 +302,5 @@ function closeReaderMode() {
   overlay._cleanup?.();
   overlay._restorePanelBtn?.();
   overlay.remove();
+  document.documentElement.style.overflow = '';
 }
