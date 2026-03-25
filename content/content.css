@@ -386,9 +386,10 @@
 
 /* Theme buttons: show "Aa" with actual theme colors */
 .ai-rs-theme-btn {
+  flex: 1;
   height: 32px;
-  padding: 0 14px;
-  border-radius: 20px;
+  padding: 0;
+  border-radius: 8px;
   border: 2px solid transparent;
   cursor: pointer;
   font-family: Georgia, serif;
@@ -396,13 +397,14 @@
   font-weight: 600;
   transition: border-color 0.15s, transform 0.15s;
   white-space: nowrap;
+  min-width: 0;
 }
 /* Auto button inherits overlay colors */
 .ai-rs-theme-btn[data-theme="auto"] {
   background: var(--rd-ctrl-bg);
   color: var(--rd-text);
   font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
 }
 .ai-rs-theme-btn:hover  { transform: scale(1.05); }
 .ai-rs-theme-btn.active { border-color: #6366f1; }
