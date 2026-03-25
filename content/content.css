@@ -332,8 +332,8 @@
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  transform: translateX(6px) scale(0.96);
-  transform-origin: top right;
+  transform: scale(0.96);
+  transform-origin: top right; /* overridden dynamically by JS */
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 #ai-reader-settings.open {

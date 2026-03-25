@@ -153,6 +153,35 @@ function buildSettingsPanel(overlay, prefs) {
   return panel;
 }
 
+function positionSettingsPopup(popup) {
+  const POPUP_W = 220;
+  const GAP     = 8;
+  const MARGIN  = 8;
+  const panel   = document.getElementById(PANEL_ID);
+  if (!panel) return;
+  const r = panel.getBoundingClientRect();
+
+  // Prefer left of panel; fall back to right if it would clip
+  const fitsLeft = r.left - GAP - POPUP_W >= MARGIN;
+  let left = fitsLeft
+    ? r.left - GAP - POPUP_W
+    : Math.min(r.right + GAP, window.innerWidth - POPUP_W - MARGIN);
+
+  popup.style.left   = left + 'px';
+  popup.style.top    = r.top + 'px';
+  popup.style.right  = 'auto';
+  popup.style.bottom = 'auto';
+  popup.style.transformOrigin = fitsLeft ? 'top right' : 'top left';
+
+  // Clamp vertically after paint so we know the rendered height
+  requestAnimationFrame(() => {
+    const pr = popup.getBoundingClientRect();
+    if (pr.bottom > window.innerHeight - MARGIN) {
+      popup.style.top = Math.max(MARGIN, window.innerHeight - pr.height - MARGIN) + 'px';
+    }
+  });
+}
+
 function makeRow() {
   const row = document.createElement('div');
   row.className = 'ai-rs-row';
@@ -287,11 +316,7 @@ async function openReaderMode(triggerBtn) {
       const open = settingsPanel.classList.toggle('open');
       panelReaderBtn.classList.toggle('active', open);
       if (open) {
-        const panelRect = document.getElementById(PANEL_ID).getBoundingClientRect();
-        settingsPanel.style.top    = panelRect.top + 'px';
-        settingsPanel.style.right  = (window.innerWidth - panelRect.left + 8) + 'px';
-        settingsPanel.style.bottom = 'auto';
-        settingsPanel.style.left   = 'auto';
+        positionSettingsPopup(settingsPanel);
       }
     }
     panelReaderBtn.addEventListener('click', onSettingsClick);
