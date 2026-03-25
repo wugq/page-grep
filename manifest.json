@@ -52,7 +52,18 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["shared/storage-keys.js", "shared/theme-utils.js", "shared/i18n-override.js", "content/content.js"],
+      "js": [
+        "shared/storage-keys.js",
+        "shared/theme-utils.js",
+        "shared/i18n-override.js",
+        "content/content-core.js",
+        "content/content-dom.js",
+        "content/content-translation.js",
+        "content/content-collectors.js",
+        "content/content-panel.js",
+        "content/content-selection.js",
+        "content/content-init.js"
+      ],
       "css": ["content/content.css"],
       "run_at": "document_idle"
     }

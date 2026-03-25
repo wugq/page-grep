@@ -1,0 +1,164 @@
+// content-core.js — shared infrastructure: logging, constants, state, utilities
+// Loaded first among content scripts; all other content modules depend on this.
+
+function devlog(level, ...args) {
+  try {
+    const fn = level === 'warn' ? console.warn : level === 'error' ? console.error : console.log;
+    fn('[PageGrep]', ...args);
+  } catch (_) {}
+  try {
+    browser.runtime.sendMessage({
+      action: 'log',
+      level,
+      args: args.map(a => (a !== null && typeof a === 'object') ? JSON.stringify(a) : String(a))
+    }).catch(() => {});
+  } catch (_) {}
+}
+const log   = (...a) => devlog('log',   ...a);
+const warn  = (...a) => devlog('warn',  ...a);
+const error = (...a) => devlog('error', ...a);
+
+// --- DOM ID constants ---
+
+const PANEL_ID       = 'ai-reader-panel';
+const FLOAT_BTN_ID   = 'ai-translate-btn';
+
+// --- SVG icon strings ---
+
+const TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
+const NOTE_ICON      = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" style="pointer-events:none"><rect x="3.5" y="1.5" width="13" height="17" rx="1.5" stroke="currentColor" stroke-width="1.5"/><line x1="6.5" y1="7" x2="13.5" y2="7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="10" x2="13.5" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="13" x2="10.5" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`;
+// Toggle btn icons: translate icon (show translated) vs undo/back arrow (show original)
+const TOGGLE_TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
+const TOGGLE_ORIGINAL_ICON  = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>`;
+
+const _svgParser = new DOMParser();
+function setTranslateIcon(el) {
+  const doc = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml');
+  el.replaceChildren(doc.documentElement);
+}
+function setToggleIcon(btn, showingTranslation) {
+  const src = showingTranslation ? TOGGLE_ORIGINAL_ICON : TOGGLE_TRANSLATE_ICON;
+  const doc = _svgParser.parseFromString(src, 'image/svg+xml');
+  btn.replaceChildren(doc.documentElement);
+}
+
+// --- Shared mutable state ---
+
+const SUMMARY_STATE = {
+  points: null,
+  elements: null
+};
+const HIGHLIGHT_STATE = {
+  elements: null,
+  items: null
+};
+
+// Cached theme value; set during init and on storage change.
+// Declared here so content-panel.js can read it before content-init.js runs.
+let _cachedTheme;
+
+// --- DOM exclusion selector (used by dom + collectors modules) ---
+
+const CHROME_SELECTOR = 'nav, header, footer, aside, [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"], .sidebar, #sidebar, .nav, #nav, .menu, #menu, .footer, #footer';
+
+// --- Theme helper ---
+
+async function applyThemeToPanel() {
+  const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
+  document.getElementById(PANEL_ID)?.classList.toggle('dark', isThemeDark(theme));
+}
+
+// --- Domain blocklist helper ---
+
+async function blockCurrentDomain() {
+  const hostname = location.hostname;
+  if (!hostname) return;
+  const { blockedDomains } = await browser.storage.local.get(STORAGE_KEYS.BLOCKED_DOMAINS);
+  const list = Array.isArray(blockedDomains) ? blockedDomains : [];
+  if (!list.includes(hostname)) {
+    await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: [...list, hostname] });
+  }
+}
+
+// --- Shared panel lifecycle ---
+
+function getOrCreatePanel() {
+  let panel = document.getElementById(PANEL_ID);
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = PANEL_ID;
+    applyThemeToPanel();
+    document.body.appendChild(panel);
+  }
+  return panel;
+}
+
+function removePanelIfEmpty() {
+  const panel = document.getElementById(PANEL_ID);
+  if (panel && panel.children.length === 0) panel.remove();
+}
+
+// --- API key error helpers ---
+
+function isApiKeyError(msg, code) {
+  if (code === 'NO_API_KEY') return true;
+  const noKeyMsg = browser.i18n.getMessage('enterApiKey');
+  return msg === noKeyMsg;
+}
+
+function throwFromResponse(response) {
+  const err = new Error(response.error);
+  if (response.code) err.code = response.code;
+  throw err;
+}
+
+function showApiKeyToast() {
+  let toast = document.getElementById('ai-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'ai-toast';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = '';
+  const msgNode = document.createTextNode((browser.i18n.getMessage('enterApiKey') || 'No API key set') + ' — ');
+  const link = document.createElement('a');
+  link.href = '#';
+  link.style.cssText = 'color:#818cf8;text-decoration:underline;cursor:pointer;';
+  link.textContent = browser.i18n.getMessage('settingsLinkLabel') || 'Settings';
+  link.addEventListener('click', (e) => { e.preventDefault(); browser.runtime.sendMessage({ action: 'openOptionsPage' }); });
+  toast.appendChild(msgNode);
+  toast.appendChild(link);
+  toast.style.pointerEvents = 'auto';
+  clearTimeout(toast._hideTimer);
+  toast.classList.add('ai-toast-show');
+  toast._hideTimer = setTimeout(() => { toast.classList.remove('ai-toast-show'); toast.style.pointerEvents = ''; }, 4000);
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('ai-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'ai-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.pointerEvents = '';
+  clearTimeout(toast._hideTimer);
+  toast.classList.add('ai-toast-show');
+  toast._hideTimer = setTimeout(() => toast.classList.remove('ai-toast-show'), 2000);
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (_) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  }
+  showToast(browser.i18n.getMessage('copied') || 'Copied ✓');
+}
