@@ -56,6 +56,7 @@
         "shared/storage-keys.js",
         "shared/theme-utils.js",
         "shared/i18n-override.js",
+        "vendor/Readability.js",
         "content/content-core.js",
         "content/content-dom.js",
         "content/content-translation.js",

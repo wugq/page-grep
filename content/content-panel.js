@@ -1,5 +1,5 @@
 // content-panel.js — floating panel, drag-and-drop, context menu, article copy
-// Depends on: content-core.js, content-dom.js (collectArticleText),
+// Depends on: content-core.js, content-dom.js (collectArticle),
 //             content-translation.js (runTranslateOnPage)
 
 function createFloatButton() {
@@ -213,9 +213,9 @@ function showPanelContextMenu(x, y) {
 async function saveArticleToClipboard(btn) {
   if (btn) { btn.disabled = true; btn.classList.add('ai-loading-btn'); }
   try {
-    const lines = collectArticleText();
+    const { title, lines } = collectArticle();
     if (lines.length === 0) { showToast(browser.i18n.getMessage('noAnalyzableContent') || 'No content found'); return; }
-    const markdown = `# ${document.title || location.hostname}\n\n${location.href}\n\n${lines.join('\n\n')}\n`;
+    const markdown = `# ${title || location.hostname}\n\n${location.href}\n\n${lines.join('\n\n')}\n`;
     await copyToClipboard(markdown);
   } catch (err) {
     error('[PageGrep] saveArticleToClipboard failed:', err.message);
