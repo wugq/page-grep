@@ -32,7 +32,7 @@ function resolveTheme(prefs) {
 function applyPrefs(overlay, prefs) {
   overlay.dataset.readerTheme = resolveTheme(prefs);
   overlay.style.setProperty('--reader-font-size',   FONT_SIZES[prefs.fontSize] + 'px');
-  overlay.style.setProperty('--reader-line-height', LINE_SPACINGS[prefs.lineSpacing]);
+  overlay.style.setProperty('--reader-line-height', String(LINE_SPACINGS[prefs.lineSpacing]));
   overlay.style.setProperty('--reader-width',       WIDTHS[prefs.width] + 'px');
 }
 
