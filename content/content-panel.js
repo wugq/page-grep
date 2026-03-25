@@ -213,9 +213,16 @@ function showPanelContextMenu(x, y) {
 async function saveArticleToClipboard(btn) {
   if (btn) { btn.disabled = true; btn.classList.add('ai-loading-btn'); }
   try {
-    const { title, lines } = collectArticle();
+    const { title, lines, byline, siteName, publishedTime } = collectArticle();
     if (lines.length === 0) { showToast(browser.i18n.getMessage('noAnalyzableContent') || 'No content found'); return; }
-    const markdown = `# ${title || location.hostname}\n\n${location.href}\n\n${lines.join('\n\n')}\n`;
+    const metaLines = [
+      `title: ${title || location.hostname}`,
+      byline        ? `author: ${byline}`       : null,
+      siteName      ? `site: ${siteName}`        : null,
+      publishedTime ? `date: ${publishedTime}`   : null,
+      `url: ${location.href}`,
+    ].filter(Boolean);
+    const markdown = `---\n${metaLines.join('\n')}\n---\n\n${lines.join('\n\n')}\n`;
     await copyToClipboard(markdown);
   } catch (err) {
     error('[PageGrep] saveArticleToClipboard failed:', err.message);

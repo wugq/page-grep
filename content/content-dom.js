@@ -82,7 +82,13 @@ function collectArticle() {
     }
     if (lines.length >= MAX_ARTICLE_LINES) break;
   }
-  return { title, lines };
+  return {
+    title,
+    lines,
+    byline: article.byline || null,
+    siteName: article.siteName || null,
+    publishedTime: article.publishedTime || null,
+  };
 }
 
 function findVisibleParagraphs() {
