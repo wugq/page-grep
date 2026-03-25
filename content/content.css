@@ -353,34 +353,36 @@
 #ai-reader-settings-btn:hover,
 #ai-reader-close-btn:hover { transform: scale(1.1); }
 
-/* Settings panel */
+/* Settings popup */
 #ai-reader-settings {
-  position: sticky;
-  top: 53px;
-  z-index: 1;
-  background: var(--rd-settings-bg);
-  border-bottom: 1px solid var(--rd-border);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  position: fixed;
+  z-index: 2147483642;
+  width: 220px;
+  background: var(--rd-bg);
+  border: 1px solid var(--rd-border);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
   overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.22s ease, padding 0.22s ease;
-  padding: 0 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px) scale(0.96);
+  transform-origin: top right;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 #ai-reader-settings.open {
-  max-height: 200px;
-  padding: 14px 20px;
-  gap: 12px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 .ai-rs-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--rd-border);
 }
+.ai-rs-row:last-child { border-bottom: none; }
 
 /* Theme buttons: show "Aa" with actual theme colors */
 .ai-rs-theme-btn {
@@ -424,8 +426,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  flex: 1;
-  justify-content: center;
 }
 .ai-rs-dot {
   width: 7px; height: 7px;

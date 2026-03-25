@@ -243,13 +243,27 @@ async function openReaderMode(triggerBtn) {
   body.querySelectorAll('script, style').forEach(el => el.remove());
 
   content.append(meta, body);
+  // settingsPanel is position:fixed but lives inside overlay to inherit CSS theme vars
   overlay.append(toolbar, settingsPanel, content);
   document.body.appendChild(overlay);
 
-  // Settings toggle
-  settingsBtn.addEventListener('click', () => {
+  // Settings popup: position below the button, dismiss on outside click
+  settingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     const open = settingsPanel.classList.toggle('open');
     settingsBtn.classList.toggle('active', open);
+    if (open) {
+      const rect = settingsBtn.getBoundingClientRect();
+      settingsPanel.style.top   = (rect.bottom + 8) + 'px';
+      settingsPanel.style.right = (window.innerWidth - rect.right) + 'px';
+    }
+  });
+  overlay.addEventListener('click', (e) => {
+    if (settingsPanel.classList.contains('open') &&
+        !settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+      settingsPanel.classList.remove('open');
+      settingsBtn.classList.remove('active');
+    }
   });
 
   // Escape closes
