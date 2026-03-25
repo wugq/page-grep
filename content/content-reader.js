@@ -207,19 +207,10 @@ async function openReaderMode(triggerBtn) {
   overlay.id = READER_OVERLAY_ID;
   applyPrefs(overlay, prefs);
 
-  // --- Toolbar ---
-  const toolbar = document.createElement('div');
-  toolbar.id = 'ai-reader-toolbar';
-
-  const siteLabel = document.createElement('span');
-  siteLabel.id = 'ai-reader-site';
-  siteLabel.textContent = article.siteName || location.hostname;
-
   const closeBtn = document.createElement('button');
   closeBtn.id = 'ai-reader-close-btn';
-  closeBtn.innerHTML = CLOSE_ICON + ' Exit Reader';
-
-  toolbar.append(siteLabel, closeBtn);
+  closeBtn.innerHTML = CLOSE_ICON;
+  closeBtn.title = browser.i18n.getMessage('exitReader') || 'Exit reader';
 
   // --- Settings panel ---
   const settingsPanel = buildSettingsPanel(overlay, prefs);
@@ -251,7 +242,7 @@ async function openReaderMode(triggerBtn) {
 
   content.append(meta, body);
   // settingsPanel is position:fixed but inside overlay so it inherits CSS theme vars
-  overlay.append(toolbar, settingsPanel, content);
+  overlay.append(closeBtn, settingsPanel, content);
   document.body.appendChild(overlay);
 
   // Repurpose the floating panel reader button as the settings trigger

@@ -296,52 +296,28 @@
 }
 @keyframes ai-reader-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-/* Toolbar */
-#ai-reader-toolbar {
-  position: sticky;
-  top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
-  background: var(--rd-bg);
-  border-bottom: 1px solid var(--rd-border);
-  z-index: 2;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-#ai-reader-site {
-  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-  font-size: 13px;
-  color: var(--rd-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Exit Reader — subtle text button, intentional to click */
+/* Close button — fixed top-right, subtle until hovered */
 #ai-reader-close-btn {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 2147483641;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: none;
+  justify-content: center;
+  background: var(--rd-ctrl-bg);
+  color: var(--rd-ctrl-color);
   border: none;
-  border-radius: 8px;
-  padding: 5px 10px;
-  color: var(--rd-muted);
-  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-  font-size: 12px;
-  font-weight: 500;
+  border-radius: 50%;
   cursor: pointer;
-  opacity: 0.5;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  opacity: 0.35;
+  transition: opacity 0.15s, transform 0.15s;
 }
 #ai-reader-close-btn:hover {
   opacity: 1;
-  background: var(--rd-ctrl-bg);
-  color: var(--rd-text);
+  transform: scale(1.1);
 }
 
 /* Settings popup */
