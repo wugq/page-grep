@@ -269,10 +269,10 @@ async function openReaderMode(triggerBtn) {
       panelReaderBtn.classList.toggle('active', open);
       if (open) {
         const panelRect = document.getElementById(PANEL_ID).getBoundingClientRect();
-        settingsPanel.style.bottom = (window.innerHeight - panelRect.top + 8) + 'px';
-        settingsPanel.style.left   = panelRect.left + 'px';
-        settingsPanel.style.right  = 'auto';
-        settingsPanel.style.top    = 'auto';
+        settingsPanel.style.top    = panelRect.top + 'px';
+        settingsPanel.style.right  = (window.innerWidth - panelRect.left + 8) + 'px';
+        settingsPanel.style.bottom = 'auto';
+        settingsPanel.style.left   = 'auto';
       }
     }
     panelReaderBtn.addEventListener('click', onSettingsClick);
