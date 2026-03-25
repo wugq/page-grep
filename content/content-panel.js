@@ -22,7 +22,12 @@ function createFloatButton() {
   readerBtn.appendChild(readerSvg);
   readerBtn.title = browser.i18n.getMessage('readerMode') || 'Reader view';
   panel.appendChild(readerBtn);
-  readerBtn.addEventListener('click', () => toggleReaderMode(readerBtn));
+  // In reader mode this button is repurposed as the settings trigger by content-reader.js.
+  // The data-reader-active flag prevents the open/close logic from double-firing.
+  readerBtn.addEventListener('click', () => {
+    if (readerBtn.dataset.readerActive) return;
+    toggleReaderMode(readerBtn);
+  });
 
   const saveBtn = document.createElement('button');
   saveBtn.id = 'ai-scratchpad-btn';

@@ -189,30 +189,11 @@ async function openReaderMode(triggerBtn) {
   siteLabel.id = 'ai-reader-site';
   siteLabel.textContent = article.siteName || location.hostname;
 
-  const actions = document.createElement('div');
-  actions.id = 'ai-reader-toolbar-actions';
-
-  const translateBtn = document.createElement('button');
-  translateBtn.id = 'ai-reader-translate-btn';
-  translateBtn.title = browser.i18n.getMessage('translateScreenContent') || 'Translate';
-  setTranslateIcon(translateBtn);
-
-  const settingsBtn = document.createElement('button');
-  settingsBtn.id = 'ai-reader-settings-btn';
-  settingsBtn.title = browser.i18n.getMessage('readerSettings') || 'Reading settings';
-  settingsBtn.innerHTML = SETTINGS_ICON;
-
   const closeBtn = document.createElement('button');
   closeBtn.id = 'ai-reader-close-btn';
-  closeBtn.title = browser.i18n.getMessage('exitReader') || 'Exit reader';
-  closeBtn.innerHTML = CLOSE_ICON;
+  closeBtn.innerHTML = CLOSE_ICON + ' Exit Reader';
 
-  const left = document.createElement('div');
-  left.id = 'ai-reader-toolbar-left';
-  left.append(closeBtn, siteLabel);
-
-  actions.append(translateBtn, settingsBtn);
-  toolbar.append(left, actions);
+  toolbar.append(siteLabel, closeBtn);
 
   // --- Settings panel ---
   const settingsPanel = buildSettingsPanel(overlay, prefs);
@@ -243,30 +224,50 @@ async function openReaderMode(triggerBtn) {
   body.querySelectorAll('script, style').forEach(el => el.remove());
 
   content.append(meta, body);
-  // settingsPanel is position:fixed but lives inside overlay to inherit CSS theme vars
+  // settingsPanel is position:fixed but inside overlay so it inherits CSS theme vars
   overlay.append(toolbar, settingsPanel, content);
   document.body.appendChild(overlay);
 
-  // Settings popup: position below the button, dismiss on outside click
-  settingsBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const open = settingsPanel.classList.toggle('open');
-    settingsBtn.classList.toggle('active', open);
-    if (open) {
-      const rect = settingsBtn.getBoundingClientRect();
-      settingsPanel.style.top   = (rect.bottom + 8) + 'px';
-      settingsPanel.style.right = (window.innerWidth - rect.right) + 'px';
+  // Repurpose the floating panel reader button as the settings trigger
+  const panelReaderBtn = document.getElementById('ai-reader-mode-btn');
+  if (panelReaderBtn) {
+    const savedHTML  = panelReaderBtn.innerHTML;
+    const savedTitle = panelReaderBtn.title;
+    panelReaderBtn.dataset.readerActive = '1';
+    panelReaderBtn.innerHTML = SETTINGS_ICON;
+    panelReaderBtn.title = browser.i18n.getMessage('readerSettings') || 'Reading settings';
+
+    function onSettingsClick(e) {
+      e.stopPropagation();
+      const open = settingsPanel.classList.toggle('open');
+      panelReaderBtn.classList.toggle('active', open);
+      if (open) {
+        const rect = panelReaderBtn.getBoundingClientRect();
+        settingsPanel.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+        settingsPanel.style.right  = (window.innerWidth - rect.right) + 'px';
+        settingsPanel.style.top    = 'auto';
+      }
     }
-  });
+    panelReaderBtn.addEventListener('click', onSettingsClick);
+
+    overlay._restorePanelBtn = () => {
+      panelReaderBtn.removeEventListener('click', onSettingsClick);
+      panelReaderBtn.innerHTML = savedHTML;
+      panelReaderBtn.title     = savedTitle;
+      panelReaderBtn.classList.remove('active');
+      delete panelReaderBtn.dataset.readerActive;
+    };
+  }
+
+  // Dismiss popup on click outside
   overlay.addEventListener('click', (e) => {
-    if (settingsPanel.classList.contains('open') &&
-        !settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+    if (settingsPanel.classList.contains('open') && !settingsPanel.contains(e.target)) {
       settingsPanel.classList.remove('open');
-      settingsBtn.classList.remove('active');
+      panelReaderBtn?.classList.remove('active');
     }
   });
 
-  // Escape closes
+  // Escape closes reader
   function onKeydown(e) {
     if (e.key === 'Escape') closeReaderMode();
   }
@@ -274,15 +275,12 @@ async function openReaderMode(triggerBtn) {
   overlay._cleanup = () => document.removeEventListener('keydown', onKeydown);
 
   closeBtn.addEventListener('click', closeReaderMode);
-  translateBtn.addEventListener('click', () => runTranslateElements(collectReaderElements(body), translateBtn));
-
-  document.getElementById(PANEL_ID)?.style.setProperty('display', 'none', 'important');
 }
 
 function closeReaderMode() {
   const overlay = document.getElementById(READER_OVERLAY_ID);
   if (!overlay) return;
   overlay._cleanup?.();
+  overlay._restorePanelBtn?.();
   overlay.remove();
-  document.getElementById(PANEL_ID)?.style.removeProperty('display');
 }
