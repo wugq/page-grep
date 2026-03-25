@@ -118,6 +118,8 @@ function openReaderMode(triggerBtn) {
     const elements = collectReaderElements(body);
     runTranslateElements(elements, translateBtn);
   });
+
+  document.getElementById(PANEL_ID)?.style.setProperty('display', 'none', 'important');
 }
 
 function closeReaderMode() {
@@ -125,4 +127,5 @@ function closeReaderMode() {
   if (!overlay) return;
   overlay._cleanup?.();
   overlay.remove();
+  document.getElementById(PANEL_ID)?.style.removeProperty('display');
 }
