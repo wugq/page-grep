@@ -309,6 +309,12 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
+#ai-reader-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
 #ai-reader-site {
   font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
   font-size: 13px;
@@ -316,7 +322,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 50%;
 }
 #ai-reader-toolbar-actions { display: flex; gap: 8px; }
 

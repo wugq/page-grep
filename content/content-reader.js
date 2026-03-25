@@ -207,8 +207,12 @@ async function openReaderMode(triggerBtn) {
   closeBtn.title = browser.i18n.getMessage('exitReader') || 'Exit reader';
   closeBtn.innerHTML = CLOSE_ICON;
 
-  actions.append(translateBtn, settingsBtn, closeBtn);
-  toolbar.append(siteLabel, actions);
+  const left = document.createElement('div');
+  left.id = 'ai-reader-toolbar-left';
+  left.append(closeBtn, siteLabel);
+
+  actions.append(translateBtn, settingsBtn);
+  toolbar.append(left, actions);
 
   // --- Settings panel ---
   const settingsPanel = buildSettingsPanel(overlay, prefs);
