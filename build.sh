@@ -28,6 +28,7 @@ INCLUDE=(
   sidebar
   options
   shared
+  vendor
   icons
   _locales
 )
