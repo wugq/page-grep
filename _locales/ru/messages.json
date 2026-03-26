@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "Перевести содержимое экрана"
   },
+  "translateReaderContent": {
+    "message": "Перевести статью"
+  },
   "translatingProgress": {
     "message": "Перевод $n$/$total$",
     "placeholders": {

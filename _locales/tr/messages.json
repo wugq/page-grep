@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "Ekran içeriğini çevir"
   },
+  "translateReaderContent": {
+    "message": "Makaleyi çevir"
+  },
   "translatingProgress": {
     "message": "Çevriliyor $n$/$total$",
     "placeholders": {

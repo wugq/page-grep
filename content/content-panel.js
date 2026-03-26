@@ -1,6 +1,7 @@
 // content-panel.js — floating panel, drag-and-drop, context menu, article copy
-// Depends on: content-core.js, content-dom.js (collectArticle),
-//             content-translation.js (runTranslateOnPage)
+// Depends on: content-core.js, content-dom.js (collectArticle, findVisibleParagraphs),
+//             content-reader.js (getActiveReaderBody, collectReaderElements),
+//             content-translation.js (runTranslateElements)
 
 function createFloatButton() {
   if (document.getElementById(FLOAT_BTN_ID)) return;
@@ -11,10 +12,14 @@ function createFloatButton() {
   setTranslateIcon(btn);
   btn.title = browser.i18n.getMessage('translateScreenContent');
   panel.appendChild(btn);
-  btn.addEventListener('click', () => runTranslateOnPage(btn));
+  btn.addEventListener('click', () => {
+    const readerBody = getActiveReaderBody();
+    const elements = readerBody ? collectReaderElements(readerBody) : findVisibleParagraphs();
+    runTranslateElements(elements, btn, !!readerBody);
+  });
 
   const readerBtn = document.createElement('button');
-  readerBtn.id = 'ai-reader-mode-btn';
+  readerBtn.id = READER_MODE_BTN_ID;
   readerBtn.className = 'ai-panel-btn';
   const readerSvg = _svgParser.parseFromString(READER_ICON, 'image/svg+xml').documentElement;
   readerSvg.setAttribute('width', '18');
@@ -30,7 +35,7 @@ function createFloatButton() {
   });
 
   const saveBtn = document.createElement('button');
-  saveBtn.id = 'ai-scratchpad-btn';
+  saveBtn.id = SCRATCHPAD_BTN_ID;
   saveBtn.className = 'ai-panel-btn';
   const noteSvg = _svgParser.parseFromString(NOTE_ICON, 'image/svg+xml').documentElement;
   noteSvg.setAttribute('width', '16');
@@ -53,8 +58,7 @@ function createFloatButton() {
       const panelSize = panel.offsetWidth || 48;
       let right, bottom;
       if (panelPosition.right != null) {
-        // New format: right/bottom pixel distances from viewport edges
-        right = parseFloat(panelPosition.right);
+          right = parseFloat(panelPosition.right);
         bottom = parseFloat(panelPosition.bottom);
       } else {
         // Legacy: leftRatio/topRatio → convert to right/bottom
@@ -81,8 +85,8 @@ function makeDraggable(panel) {
   let isDragging = false;
   let hasMoved = false;
   let startX, startY, startLeft, startTop;
-  let _trashZoneEl = null;   // cached element reference during drag
-  let _trashZoneRect = null; // cached rect during drag to avoid getBoundingClientRect on every mousemove
+  let _trashZoneEl = null;
+  let _trashZoneRect = null; // avoids getBoundingClientRect on every mousemove
   const DRAG_THRESHOLD = 5;
 
   panel.addEventListener('mousedown', onDragStart);
@@ -139,7 +143,7 @@ function makeDraggable(panel) {
       panel.style.left = startLeft + 'px';
       panel.style.top = startTop + 'px';
       panel.style.cursor = 'grabbing';
-      if (!document.getElementById(READER_OVERLAY_ID)) {
+      if (!getActiveReaderBody()) {
         _trashZoneEl = getOrCreateTrashZone();
         _trashZoneEl.classList.add('visible');
         _trashZoneRect = _trashZoneEl.getBoundingClientRect(); // cache once; zone is fixed-position
@@ -208,8 +212,6 @@ function makeDraggable(panel) {
   function stopClick(e) { e.stopPropagation(); }
 }
 
-// --- Domain Block (right-click float panel) ---
-
 function showPanelContextMenu(x, y) {
   document.getElementById('ai-panel-menu')?.remove();
   const hostname = location.hostname;
@@ -240,8 +242,6 @@ function showPanelContextMenu(x, y) {
   };
   setTimeout(() => document.addEventListener('mousedown', onOutsideMousedown), 0);
 }
-
-// --- Article copy ---
 
 async function saveArticleToClipboard(btn) {
   if (btn) { btn.disabled = true; btn.classList.add('ai-loading-btn'); }

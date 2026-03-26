@@ -1,16 +1,15 @@
 // content-translation.js — paragraph translation and page-level translate orchestration
-// Depends on: content-core.js, content-dom.js (findVisibleParagraphs),
-//             content-reader.js (getActiveReaderBody, collectReaderElements)
+// Depends on: content-core.js, content-dom.js (findVisibleParagraphs)
 
 // Pre-compiled regexes for translated text link-marker processing
 const LINK_MATCH_RE = /[\[【]LINK(\d+)_START[\]】]([\s\S]*?)[\[【]LINK\d+_END[\]】]/g;
 const LINK_STRIP_RE = /[\[【]LINK\d+_(?:START|END)[\]】]/g;
 
-// --- Translation ---
-
 // Shared core: translates an array of elements, updating btn state throughout.
-// Used by both normal page mode and reader mode.
-async function runTranslateElements(elements, btn) {
+// inReaderMode: true when translating reader overlay content — affects the
+// post-translate button title so it doesn't say "screen content" while the
+// overlay is covering the screen.
+async function runTranslateElements(elements, btn, inReaderMode = false) {
   log(`[PageGrep] 译: translating ${elements.length} elements`);
   if (elements.length === 0) {
     showToast(browser.i18n.getMessage('noTranslatableContent'));
@@ -23,16 +22,11 @@ async function runTranslateElements(elements, btn) {
     if (btn) btn.title = browser.i18n.getMessage('translatingProgress', [String(++done), String(elements.length)]);
   }));
   log(`[PageGrep] 译: done, translated ${elements.length} elements`);
-  if (btn) { btn.disabled = false; setTranslateIcon(btn); btn.title = browser.i18n.getMessage('translateScreenContent'); }
-}
-
-async function runTranslateOnPage(btn) {
-  log('[PageGrep] 译 triggered');
-  const readerBody = getActiveReaderBody();
-  if (readerBody) {
-    await runTranslateElements(collectReaderElements(readerBody), btn);
-  } else {
-    await runTranslateElements(findVisibleParagraphs(), btn);
+  if (btn) {
+    btn.disabled = false;
+    setTranslateIcon(btn);
+    btn.title = browser.i18n.getMessage(inReaderMode ? 'translateReaderContent' : 'translateScreenContent')
+      || (inReaderMode ? 'Translate article' : 'Translate screen content');
   }
 }
 

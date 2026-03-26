@@ -294,6 +294,7 @@
   font-family: Georgia, "Times New Roman", serif;
   animation: ai-reader-fade-in 0.18s ease forwards;
   outline: none;
+  --reader-settings-max-h: 280px;
 }
 #ai-reader-overlay.ai-closing {
   animation: ai-reader-fade-out 0.15s ease forwards;
@@ -341,7 +342,7 @@
   position: fixed;
   z-index: 2147483642;
   width: 220px;
-  max-height: 280px; /* used by JS for sync vertical clamping — keep in sync with SETTINGS_MAX_H */
+  max-height: var(--reader-settings-max-h);
   overflow-x: hidden;
   overflow-y: auto;
   background: var(--rd-bg);

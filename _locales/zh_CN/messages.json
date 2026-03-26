@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "翻译屏幕内容"
   },
+  "translateReaderContent": {
+    "message": "翻译文章"
+  },
   "translatingProgress": {
     "message": "翻译中 $n$/$total$",
     "placeholders": {

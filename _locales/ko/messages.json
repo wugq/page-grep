@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "화면 콘텐츠 번역"
   },
+  "translateReaderContent": {
+    "message": "기사 번역"
+  },
   "translatingProgress": {
     "message": "번역 중 $n$/$total$",
     "placeholders": {

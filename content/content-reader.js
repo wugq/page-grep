@@ -1,5 +1,5 @@
 // content-reader.js — distraction-free reader mode overlay using Mozilla Readability
-// Depends on: content-core.js, content-dom.js (dropAncestors), content-translation.js (runTranslateElements)
+// Depends on: content-core.js, content-dom.js (filterTranslatableElements), content-translation.js (runTranslateElements)
 
 const READER_OVERLAY_ID  = 'ai-reader-overlay';
 const READER_SETTINGS_ID = 'ai-reader-settings';
@@ -49,7 +49,7 @@ function applyPrefs(overlay, prefs) {
 }
 
 // Re-resolve auto theme when the sidebar/system theme changes.
-// Called by applyThemeToPanel() in content-core.js.
+// Registered as a hook so content-core.js does not depend on this module.
 async function refreshReaderTheme() {
   const overlay = document.getElementById(READER_OVERLAY_ID);
   if (!overlay) return;
@@ -58,23 +58,13 @@ async function refreshReaderTheme() {
   overlay.dataset.readerTheme = resolveTheme(prefs);
 }
 
-// --- Element collection ---
+onThemeChange(refreshReaderTheme);
 
 function collectReaderElements(scope) {
-  const candidates = Array.from(
-    scope.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, li')
-  );
-  const filtered = candidates.filter(el => {
-    if (el.dataset.aiWrapped) return false;
-    if (el.closest('[data-ai-wrapped]')) return false;
-    if (el.querySelector('[data-ai-wrapped]')) return false;
-    const text = el.innerText?.trim();
-    return text && text.length >= 20;
-  });
-  return dropAncestors(filtered);
+  // Omits td/figcaption/dd — Readability strips layout tables and most captions.
+  const candidates = scope.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, li');
+  return filterTranslatableElements(candidates);
 }
-
-// --- Settings panel ---
 
 // contentEl: the #ai-reader-content element, needed so width changes trigger its CSS transition.
 function buildSettingsPanel(overlay, prefs, contentEl) {
@@ -83,12 +73,10 @@ function buildSettingsPanel(overlay, prefs, contentEl) {
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-label', browser.i18n.getMessage('readerSettings') || 'Reading settings');
 
-  // Theme section label
   const themeLabel = document.createElement('div');
   themeLabel.className = 'ai-rs-section-label';
   themeLabel.textContent = browser.i18n.getMessage('readerThemeLabel') || 'Theme';
 
-  // Theme row
   const themeRow = makeRow();
   // Display initials so buttons are visually distinguishable without relying on color alone.
   const THEMES = [
@@ -122,7 +110,6 @@ function buildSettingsPanel(overlay, prefs, contentEl) {
   });
   themeBtns.forEach(b => themeRow.appendChild(b));
 
-  // Font size stepper
   const { row: fontRow, minus: fontMinus, val: fontVal, plus: fontPlus } =
     makeStepper(browser.i18n.getMessage('readerFontLabel') || 'Font', FONT_SIZES[prefs.fontSize] + 'px');
   fontMinus.disabled = prefs.fontSize === 0;
@@ -144,7 +131,6 @@ function buildSettingsPanel(overlay, prefs, contentEl) {
     applyPrefs(overlay, prefs); saveReaderPrefs(prefs);
   });
 
-  // Line spacing stepper
   const { row: spacingRow, minus: spacingMinus, val: spacingVal, plus: spacingPlus } =
     makeStepper(browser.i18n.getMessage('readerSpacingLabel') || 'Spacing', LINE_SPACINGS[prefs.lineSpacing] + '×');
   spacingMinus.disabled = prefs.lineSpacing === 0;
@@ -166,7 +152,6 @@ function buildSettingsPanel(overlay, prefs, contentEl) {
     applyPrefs(overlay, prefs); saveReaderPrefs(prefs);
   });
 
-  // Width row
   const widthRow = makeRow();
   const widthBtns = WIDTHS.map(({ key, px, msgKey }) => {
     const label = browser.i18n.getMessage(msgKey) || key;
@@ -197,23 +182,21 @@ function buildSettingsPanel(overlay, prefs, contentEl) {
   return panel;
 }
 
-// Must match max-height in CSS for #ai-reader-settings
-const SETTINGS_MAX_H = 280;
-
-function positionSettingsPopup(popup) {
+function positionSettingsPopup(popup, anchorEl) {
   const POPUP_W = 220;
-  const GAP     = 8;
+  const GAP     = 24; // box-shadow blur is 32px; 24px gives ~8px clear visual gap after shadow
   const MARGIN  = 8;
-  const panel   = document.getElementById(PANEL_ID);
+  // Read max-height from the CSS custom property so JS and CSS stay in sync automatically.
+  const SETTINGS_MAX_H = parseInt(getComputedStyle(popup).getPropertyValue('--reader-settings-max-h')) || 280;
 
   let anchorTop, anchorLeft, anchorRight;
-  if (panel) {
-    const r = panel.getBoundingClientRect();
+  if (anchorEl) {
+    const r = anchorEl.getBoundingClientRect();
     anchorTop   = r.top;
     anchorLeft  = r.left;
     anchorRight = r.right;
   } else {
-    // Floating panel not available — center near top-right of screen
+    // No anchor available — center near top-right of screen
     anchorTop   = MARGIN;
     anchorLeft  = window.innerWidth / 2;
     anchorRight = window.innerWidth / 2;
@@ -293,8 +276,6 @@ function holdRepeat(btn, action) {
   btn.addEventListener('touchcancel', stop);
 }
 
-// --- Open / close ---
-
 function toggleReaderMode(triggerBtn) {
   if (document.getElementById(READER_OVERLAY_ID)) {
     closeReaderMode();
@@ -314,20 +295,31 @@ async function openReaderMode(triggerBtn) {
     triggerBtn.classList.add('ai-loading-btn');
   }
 
-  const docClone = document.cloneNode(true);
-  // Strip translation wrappers so Readability sees original text only.
-  docClone.querySelectorAll('[data-ai-wrapped]').forEach(el => {
-    const original = el.querySelector('.ai-para-original');
-    if (original) {
-      el.innerHTML = original.innerHTML;
-      el.classList.remove('ai-para-wrap', 'show-translation');
-      delete el.dataset.aiWrapped;
-      if (el.style.position === 'relative') el.style.position = '';
+  let article, prefs;
+  try {
+    const docClone = document.cloneNode(true);
+    // Strip translation wrappers so Readability sees original text only.
+    docClone.querySelectorAll('[data-ai-wrapped]').forEach(el => {
+      const original = el.querySelector('.ai-para-original');
+      if (original) {
+        el.innerHTML = original.innerHTML;
+        el.classList.remove('ai-para-wrap', 'show-translation');
+        delete el.dataset.aiWrapped;
+        if (el.style.position === 'relative') el.style.position = '';
+      }
+    });
+    article = new Readability(docClone).parse();
+    prefs   = await loadReaderPrefs();
+  } catch (err) {
+    error('[PageGrep] openReaderMode failed:', err.message);
+    _readerOpening = false;
+    if (triggerBtn) {
+      triggerBtn.disabled = false;
+      triggerBtn.classList.remove('ai-loading-btn');
     }
-  });
-  const reader  = new Readability(docClone);
-  const article = reader.parse();
-  const prefs   = await loadReaderPrefs();
+    showToast(browser.i18n.getMessage('readerNoContent') || 'No readable content found');
+    return;
+  }
 
   _readerOpening = false;
   if (triggerBtn) {
@@ -340,7 +332,6 @@ async function openReaderMode(triggerBtn) {
     return;
   }
 
-  // --- Overlay ---
   const overlay = document.createElement('div');
   overlay.id = READER_OVERLAY_ID;
   overlay.tabIndex = -1; // focusable but not in tab order; allows Space/PageDown to scroll
@@ -353,7 +344,7 @@ async function openReaderMode(triggerBtn) {
   closeBtn.title = exitLabel;
   closeBtn.setAttribute('aria-label', exitLabel);
 
-  // --- Content (created before settingsPanel so we can pass it for width transitions) ---
+  // created before settingsPanel so we can pass it for width transitions
   const content = document.createElement('div');
   content.id = 'ai-reader-content';
 
@@ -402,11 +393,13 @@ async function openReaderMode(triggerBtn) {
 
   // JS boolean is the source of truth for settings panel visibility.
   let settingsOpen = false;
+  let _focusableCache = null; // invalidated whenever settingsOpen changes
   function setSettingsOpen(open) {
     settingsOpen = open;
+    _focusableCache = null;
     // Position (and set transform-origin) BEFORE adding .open so the scale
     // animation starts from the correct corner on every open.
-    if (open) positionSettingsPopup(settingsPanel);
+    if (open) positionSettingsPopup(settingsPanel, panelReaderBtn);
     settingsPanel.classList.toggle('open', open);
     panelReaderBtn?.classList.toggle('active', open);
   }
@@ -414,10 +407,10 @@ async function openReaderMode(triggerBtn) {
   // Repurpose the floating panel reader button as the settings trigger.
   const panelReaderBtn = triggerBtn;
   if (panelReaderBtn) {
-    const savedHTML  = panelReaderBtn.innerHTML;
-    const savedTitle = panelReaderBtn.title;
+    const savedChildren = Array.from(panelReaderBtn.childNodes);
+    const savedTitle    = panelReaderBtn.title;
     panelReaderBtn.dataset.readerActive = '1';
-    panelReaderBtn.innerHTML = SETTINGS_ICON;
+    panelReaderBtn.replaceChildren(_svgParser.parseFromString(SETTINGS_ICON, 'image/svg+xml').documentElement);
     panelReaderBtn.title = browser.i18n.getMessage('readerSettings') || 'Reading settings';
 
     function onSettingsClick(e) {
@@ -428,8 +421,8 @@ async function openReaderMode(triggerBtn) {
 
     cleanupFns.push(() => {
       panelReaderBtn.removeEventListener('click', onSettingsClick);
-      panelReaderBtn.innerHTML = savedHTML;
-      panelReaderBtn.title     = savedTitle;
+      panelReaderBtn.replaceChildren(...savedChildren);
+      panelReaderBtn.title = savedTitle;
       panelReaderBtn.classList.remove('active');
       delete panelReaderBtn.dataset.readerActive;
     });
@@ -451,14 +444,19 @@ async function openReaderMode(triggerBtn) {
       return;
     }
     if (e.key === 'Tab') {
-      const sel = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
-      // Exclude settings panel buttons while the panel is closed.
-      const insideOverlay = Array.from(overlay.querySelectorAll(sel))
-        .filter(el => settingsOpen || !settingsPanel.contains(el));
-      // Include the settings trigger (outside overlay DOM) when settings is closed.
-      const all = (panelReaderBtn?.isConnected && !settingsOpen)
-        ? [...insideOverlay, panelReaderBtn]
-        : insideOverlay;
+      // Build (or recall) focusable list. Don't cache when settings is open —
+      // stepper buttons may become disabled (min/max reached) during that session,
+      // which would make a cached list stale.
+      let all = _focusableCache;
+      if (!all) {
+        const sel = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        const insideOverlay = Array.from(overlay.querySelectorAll(sel))
+          .filter(el => settingsOpen || !settingsPanel.contains(el));
+        all = (panelReaderBtn?.isConnected && !settingsOpen)
+          ? [...insideOverlay, panelReaderBtn]
+          : insideOverlay;
+        if (!settingsOpen) _focusableCache = all;
+      }
       if (all.length < 2) return;
       const first = all[0];
       const last  = all[all.length - 1];
@@ -471,6 +469,14 @@ async function openReaderMode(triggerBtn) {
   }
   document.addEventListener('keydown', onKeydown);
   cleanupFns.push(() => document.removeEventListener('keydown', onKeydown));
+
+  // Reposition the settings popup on viewport resize (e.g. sidebar open/close)
+  // so it stays adjacent to the floating panel button.
+  function onResize() {
+    if (settingsOpen) positionSettingsPopup(settingsPanel, panelReaderBtn);
+  }
+  window.addEventListener('resize', onResize);
+  cleanupFns.push(() => window.removeEventListener('resize', onResize));
 
   overlay._cleanupFns   = cleanupFns;
   overlay._savedScrollY = savedScrollY;
@@ -486,14 +492,16 @@ function closeReaderMode() {
   overlay._cleanupFns?.forEach(fn => fn());
   _readerBody = null;
   document.documentElement.style.overflow = '';
-  window.scrollTo(0, overlay._savedScrollY || 0);
+  window.scrollTo(0, overlay._savedScrollY ?? 0);
   browser.runtime.sendMessage({ action: 'readerModeChanged', active: false }).catch(() => {});
-  // If float button was toggled off while reader mode was open, remove it now.
-  browser.storage.local.get(STORAGE_KEYS.SHOW_FLOAT_BTN).then(({ showFloatBtn }) => {
-    if (showFloatBtn === false) {
+  // If the float button was hidden (global toggle or site block) while reader
+  // mode was open, apply the deferred removal now that reader mode has exited.
+  browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS]).then(({ showFloatBtn, blockedDomains }) => {
+    const siteBlocked = Array.isArray(blockedDomains) && blockedDomains.includes(location.hostname);
+    if (showFloatBtn === false || siteBlocked) {
       document.getElementById(FLOAT_BTN_ID)?.remove();
-      document.getElementById('ai-reader-mode-btn')?.remove();
-      document.getElementById('ai-scratchpad-btn')?.remove();
+      document.getElementById(READER_MODE_BTN_ID)?.remove();
+      document.getElementById(SCRATCHPAD_BTN_ID)?.remove();
       removePanelIfEmpty();
     }
   });

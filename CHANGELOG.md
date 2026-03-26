@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5] - 2026-03-26
+
+### Added
+- **Reader mode** — distraction-free reading overlay powered by Mozilla Readability, with per-page font size, line spacing, width, and theme controls (auto/light/sepia/dark); settings persist across sessions
+- **Translate in reader mode** — the translate button works inside the reader overlay, targeting only the article content
+- **Reader mode i18n** — all reader UI strings localised across all 13 supported locales
+
+### Fixed
+- Floating panel and hide-on-site toggles in the sidebar are now locked while reader mode is active, preventing the panel from being removed while the reader settings trigger is in use
+- Settings popup repositions correctly when the sidebar is toggled open or closed
+- Scroll position is correctly restored when closing reader mode even when the page was scrolled to the top
+
+### Changed
+- Module architecture refactored: `content.js` split into seven focused modules (`content-core`, `content-dom`, `content-translation`, `content-collectors`, `content-panel`, `content-selection`, `content-init`)
+
 ## [1.4] - 2026-03-23
 
 ### Added

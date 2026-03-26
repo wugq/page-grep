@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "Dịch nội dung màn hình"
   },
+  "translateReaderContent": {
+    "message": "Dịch bài viết"
+  },
   "translatingProgress": {
     "message": "Đang dịch $n$/$total$",
     "placeholders": {

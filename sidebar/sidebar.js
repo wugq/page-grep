@@ -11,9 +11,11 @@ function updateReaderModeUI(active) {
   });
   const floatCheckbox = document.getElementById('show-float-btn');
   if (floatCheckbox) floatCheckbox.disabled = active;
+  // Also lock the hide-on-site toggle: removing the panel while reader mode is
+  // active would destroy the settings trigger and leave reader mode uncontrollable.
+  const hideOnSiteToggle = document.getElementById('hide-on-site-toggle');
+  if (hideOnSiteToggle) hideOnSiteToggle.disabled = active;
 }
-
-// --- Tab Navigation ---
 
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
@@ -31,14 +33,11 @@ tabBtns.forEach(btn => {
   });
 });
 
-// --- Initialization ---
-
 async function init() {
   const { showFloatBtn, userInterests, theme } = await browser.storage.local.get([
     STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.USER_INTERESTS, STORAGE_KEYS.THEME
   ]);
 
-  // Theme Toggle
   const themeToggle = document.getElementById('theme-toggle');
   if (themeToggle) {
     themeToggle.checked = isThemeDark(theme);
@@ -53,7 +52,6 @@ async function init() {
     if (!theme && themeToggle) themeToggle.checked = e.matches;
   });
 
-  // Global Toggles
   const floatCheckbox = document.getElementById('show-float-btn');
   if (floatCheckbox) floatCheckbox.checked = showFloatBtn !== false;
   floatCheckbox?.addEventListener('change', () => {
@@ -79,7 +77,6 @@ async function init() {
     });
   });
 
-  // Interests Config (pill-based)
   const pillsContainer = document.getElementById('pills-container');
   const interestsInput = document.getElementById('interests-input');
   const statusEl = document.getElementById('interests-status');
@@ -128,12 +125,10 @@ async function init() {
 
   renderPills();
 
-  // Options Button
   document.getElementById('options-btn').addEventListener('click', () => {
     browser.runtime.openOptionsPage();
   });
 
-  // Action Buttons
   document.getElementById('summary-btn').addEventListener('click', async () => {
     setButtonLoading('summary-btn', true);
     const sent = await sendToActiveTab({ action: 'runSummary' });
@@ -152,12 +147,9 @@ async function init() {
     }
   });
 
-  // Initial Data Load
   loadFromActiveTab();
   updateHideOnSiteToggle();
 }
-
-// --- Messaging ---
 
 async function getActiveTabId() {
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
@@ -227,8 +219,6 @@ async function loadFromActiveTab() {
   }
   updateHideOnSiteToggle();
 }
-
-// --- UI Helpers ---
 
 const LOADING_TIMEOUT_MS = 25000; // slightly less than API_TIMEOUT_MS (30s) in background.js
 const _loadingTimers = {};
@@ -342,8 +332,6 @@ function renderHighlights(items) {
   });
 }
 
-// --- Listeners ---
-
 browser.runtime.onMessage.addListener((message, sender) => {
   const senderTabId = sender?.tab?.id;
   if (senderTabId && senderTabId !== lastTabId) return;
@@ -412,5 +400,4 @@ browser.storage.onChanged.addListener((changes) => {
   }
 });
 
-// Start
 (window.i18nReady || Promise.resolve()).then(() => init().catch(console.error));
