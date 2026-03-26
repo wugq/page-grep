@@ -104,6 +104,7 @@ function findVisibleParagraphs() {
   const filtered = Array.from(candidates).filter(el => {
     if (el.dataset.aiWrapped) return false;
     if (el.closest('[data-ai-wrapped]')) return false;
+    if (el.querySelector('[data-ai-wrapped]')) return false;
     if (excludeChrome && el.closest(CHROME_SELECTOR)) return false;
     const text = el.innerText?.trim();
     if (!text || text.length < 20) return false;

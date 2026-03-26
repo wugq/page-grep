@@ -293,6 +293,7 @@
   color: var(--rd-text);
   font-family: Georgia, "Times New Roman", serif;
   animation: ai-reader-fade-in 0.18s ease forwards;
+  outline: none;
 }
 #ai-reader-overlay.ai-closing {
   animation: ai-reader-fade-out 0.15s ease forwards;
@@ -371,17 +372,21 @@
 /* Theme buttons: show "Aa" with actual theme colors */
 .ai-rs-theme-btn {
   flex: 1;
-  height: 32px;
-  padding: 0;
-  border-radius: 8px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  font-family: Georgia, serif;
-  font-size: 14px;
-  font-weight: 600;
+  height: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  cursor: pointer !important;
+  font-family: Georgia, serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
   transition: border-color 0.15s, transform 0.15s;
-  white-space: nowrap;
-  min-width: 0;
+  white-space: nowrap !important;
+  min-width: 0 !important;
+  -webkit-appearance: none;
+  appearance: none;
 }
 /* Auto button inherits overlay colors */
 .ai-rs-theme-btn[data-theme="auto"] {
@@ -426,17 +431,22 @@
   color: var(--rd-text);
 }
 .ai-rs-step-btn {
-  width: 28px; height: 28px;
-  border: 1px solid var(--rd-border);
-  border-radius: 50%;
-  background: var(--rd-ctrl-bg);
-  color: var(--rd-text);
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
+  width: 28px !important; height: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  border: 1px solid var(--rd-border) !important;
+  border-radius: 50% !important;
+  background: var(--rd-ctrl-bg) !important;
+  color: var(--rd-text) !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
   transition: background 0.12s, transform 0.12s;
-  flex-shrink: 0;
+  flex-shrink: 0 !important;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .ai-rs-step-btn:hover    { background: var(--rd-ctrl-active-bg); transform: scale(1.1); }
 .ai-rs-step-btn:disabled { opacity: 0.3; cursor: default; transform: none; }
@@ -444,17 +454,22 @@
 /* Width buttons: segmented control */
 .ai-rs-width-btn {
   flex: 1;
-  height: 30px;
-  border: 1px solid var(--rd-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--rd-muted);
-  cursor: pointer;
-  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
-  font-size: 12px;
-  font-weight: 500;
+  height: 30px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  border: 1px solid var(--rd-border) !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: var(--rd-muted) !important;
+  cursor: pointer !important;
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
-  max-width: 90px;
+  max-width: 90px !important;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .ai-rs-width-btn:hover  { color: var(--rd-text); }
 .ai-rs-width-btn.active {

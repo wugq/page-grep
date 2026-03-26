@@ -66,6 +66,8 @@ function collectReaderElements(scope) {
   );
   const filtered = candidates.filter(el => {
     if (el.dataset.aiWrapped) return false;
+    if (el.closest('[data-ai-wrapped]')) return false;
+    if (el.querySelector('[data-ai-wrapped]')) return false;
     const text = el.innerText?.trim();
     return text && text.length >= 20;
   });
@@ -341,6 +343,7 @@ async function openReaderMode(triggerBtn) {
   // --- Overlay ---
   const overlay = document.createElement('div');
   overlay.id = READER_OVERLAY_ID;
+  overlay.tabIndex = -1; // focusable but not in tab order; allows Space/PageDown to scroll
   applyPrefs(overlay, prefs);
 
   const closeBtn = document.createElement('button');
@@ -390,8 +393,9 @@ async function openReaderMode(triggerBtn) {
   document.documentElement.style.overflow = 'hidden';
   browser.runtime.sendMessage({ action: 'readerModeChanged', active: true }).catch(() => {});
 
-  // Move keyboard focus into the overlay so keyboard users have an immediate entry point.
-  closeBtn.focus();
+  // Focus the overlay scroll container so Space/PageDown scroll the article.
+  // The close button and settings remain reachable via Tab (focus trap below).
+  overlay.focus();
 
   // Collect teardown callbacks — flushed immediately on close, before the fade-out.
   const cleanupFns = [];
