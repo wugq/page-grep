@@ -1572,8 +1572,8 @@ Readability.prototype = {
       var textLength = this._getInnerText(articleContent, true).length;
       if (textLength < this._charThreshold) {
         parseSuccessful = false;
-        // eslint-disable-next-line no-unsanitized/property
-        page.innerHTML = pageCacheHtml;
+        var tmpDoc1 = new DOMParser().parseFromString(pageCacheHtml, "text/html");
+        page.replaceChildren(...Array.from(tmpDoc1.body.childNodes));
 
         this._attempts.push({
           articleContent,
@@ -1951,8 +1951,8 @@ Readability.prototype = {
       // document contents, so doing this should be safe.
       // (Also we heavily discourage people from allowing script to
       // run at all in this document...)
-      // eslint-disable-next-line no-unsanitized/property
-      tmp.innerHTML = noscript.innerHTML;
+      var tmpDoc2 = new DOMParser().parseFromString(noscript.innerHTML, "text/html");
+      tmp.replaceChildren(...Array.from(tmpDoc2.body.childNodes));
 
       // If noscript has previous sibling and it only contains image,
       // replace it with noscript content. However we also keep old
