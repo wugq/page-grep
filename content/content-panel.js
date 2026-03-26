@@ -51,19 +51,28 @@ function createFloatButton() {
     if (panelPosition) {
       const MARGIN = 10;
       const panelSize = panel.offsetWidth || 48;
-      // Support ratio-based (new) and legacy pixel-based (old) stored positions
-      const rawLeft = panelPosition.leftRatio != null
-        ? panelPosition.leftRatio * window.innerWidth
-        : parseFloat(panelPosition.left) || 0;
-      const rawTop = panelPosition.topRatio != null
-        ? panelPosition.topRatio * window.innerHeight
-        : parseFloat(panelPosition.top) || 0;
-      const left = Math.max(MARGIN, Math.min(window.innerWidth - panelSize - MARGIN, rawLeft));
-      const top = Math.max(MARGIN, Math.min(window.innerHeight - panelSize - MARGIN, rawTop));
-      panel.style.bottom = 'auto';
-      panel.style.right = 'auto';
-      panel.style.left = left + 'px';
-      panel.style.top = top + 'px';
+      let right, bottom;
+      if (panelPosition.right != null) {
+        // New format: right/bottom pixel distances from viewport edges
+        right = parseFloat(panelPosition.right);
+        bottom = parseFloat(panelPosition.bottom);
+      } else {
+        // Legacy: leftRatio/topRatio → convert to right/bottom
+        const rawLeft = panelPosition.leftRatio != null
+          ? panelPosition.leftRatio * window.innerWidth
+          : parseFloat(panelPosition.left) || 0;
+        const rawTop = panelPosition.topRatio != null
+          ? panelPosition.topRatio * window.innerHeight
+          : parseFloat(panelPosition.top) || 0;
+        right = window.innerWidth - rawLeft - panelSize;
+        bottom = window.innerHeight - rawTop - panelSize;
+      }
+      right = Math.max(MARGIN, Math.min(window.innerWidth - panelSize - MARGIN, right));
+      bottom = Math.max(MARGIN, Math.min(window.innerHeight - panelSize - MARGIN, bottom));
+      panel.style.left = 'auto';
+      panel.style.top = 'auto';
+      panel.style.right = right + 'px';
+      panel.style.bottom = bottom + 'px';
     }
   });
 }
@@ -181,11 +190,17 @@ function makeDraggable(panel) {
       return;
     }
 
+    // Convert left/top back to right/bottom so position stays viewport-relative
+    const rect = panel.getBoundingClientRect();
+    const right = Math.round(window.innerWidth - rect.right);
+    const bottom = Math.round(window.innerHeight - rect.bottom);
+    panel.style.left = 'auto';
+    panel.style.top = 'auto';
+    panel.style.right = right + 'px';
+    panel.style.bottom = bottom + 'px';
+
     browser.storage.local.set({
-      [STORAGE_KEYS.PANEL_POSITION]: {
-        leftRatio: parseFloat(panel.style.left) / window.innerWidth,
-        topRatio: parseFloat(panel.style.top) / window.innerHeight,
-      }
+      [STORAGE_KEYS.PANEL_POSITION]: { right: right + 'px', bottom: bottom + 'px' }
     });
     panel.addEventListener('click', stopClick, { capture: true, once: true });
   }

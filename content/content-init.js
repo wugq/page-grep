@@ -103,6 +103,7 @@ browser.storage.onChanged.addListener((changes) => {
       });
     } else {
       document.getElementById(FLOAT_BTN_ID)?.remove();
+      document.getElementById('ai-reader-mode-btn')?.remove();
       document.getElementById('ai-scratchpad-btn')?.remove();
       clearAllHighlights();
       removePanelIfEmpty();
@@ -114,6 +115,7 @@ browser.storage.onChanged.addListener((changes) => {
     if (blocked.includes(location.hostname)) {
       selectionTranslateEnabled = false;
       document.getElementById(FLOAT_BTN_ID)?.remove();
+      document.getElementById('ai-reader-mode-btn')?.remove();
       document.getElementById('ai-scratchpad-btn')?.remove();
       clearAllHighlights();
       removePanelIfEmpty();

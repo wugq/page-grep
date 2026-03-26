@@ -12,7 +12,7 @@ const LINK_STRIP_RE = /[\[【]LINK\d+_(?:START|END)[\]】]/g;
 async function runTranslateElements(elements, btn) {
   log(`[PageGrep] 译: translating ${elements.length} elements`);
   if (elements.length === 0) {
-    if (btn) { btn.title = browser.i18n.getMessage('noTranslatableContent'); setTimeout(() => { btn.title = browser.i18n.getMessage('translateScreenContent'); }, 1500); }
+    showToast(browser.i18n.getMessage('noTranslatableContent'));
     return;
   }
   if (btn) { btn.disabled = true; btn.textContent = '…'; }
@@ -27,7 +27,12 @@ async function runTranslateElements(elements, btn) {
 
 async function runTranslateOnPage(btn) {
   log('[PageGrep] 译 triggered');
-  await runTranslateElements(findVisibleParagraphs(), btn);
+  const readerBody = document.getElementById('ai-reader-body');
+  if (readerBody) {
+    await runTranslateElements(collectReaderElements(readerBody), btn);
+  } else {
+    await runTranslateElements(findVisibleParagraphs(), btn);
+  }
 }
 
 async function wrapAndTranslate(el) {
