@@ -302,7 +302,7 @@ async function openReaderMode(triggerBtn) {
     docClone.querySelectorAll('[data-ai-wrapped]').forEach(el => {
       const original = el.querySelector('.ai-para-original');
       if (original) {
-        el.innerHTML = original.innerHTML;
+        el.replaceChildren(...Array.from(original.childNodes).map(n => n.cloneNode(true)));
         el.classList.remove('ai-para-wrap', 'show-translation');
         delete el.dataset.aiWrapped;
         if (el.style.position === 'relative') el.style.position = '';
@@ -339,7 +339,7 @@ async function openReaderMode(triggerBtn) {
 
   const closeBtn = document.createElement('button');
   closeBtn.id = 'ai-reader-close-btn';
-  closeBtn.innerHTML = CLOSE_ICON;
+  closeBtn.replaceChildren(_svgParser.parseFromString(CLOSE_ICON, 'image/svg+xml').documentElement);
   const exitLabel = browser.i18n.getMessage('exitReader') || 'Exit reader';
   closeBtn.title = exitLabel;
   closeBtn.setAttribute('aria-label', exitLabel);
@@ -366,8 +366,9 @@ async function openReaderMode(triggerBtn) {
 
   const body = document.createElement('div');
   body.id = 'ai-reader-body';
-  body.innerHTML = article.content;
-  body.querySelectorAll('script, style').forEach(el => el.remove());
+  const articleDoc = new DOMParser().parseFromString(article.content, 'text/html');
+  articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
+  body.replaceChildren(...Array.from(articleDoc.body.childNodes));
   _readerBody = body;
 
   content.append(meta, body);
