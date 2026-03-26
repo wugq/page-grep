@@ -276,6 +276,15 @@
   "readerMode": {
     "message": "Режим чтения"
   },
+  "readerNoContent": {
+    "message": "На этой странице не найдено читаемого контента"
+  },
+  "readerThemeLabel": {
+    "message": "Тема"
+  },
+  "readerModeNotice": {
+    "message": "Режим чтения активен — резюме и выделения будут использовать страницу за оверлеем"
+  },
   "exitReader": {
     "message": "Выйти из режима чтения"
   },

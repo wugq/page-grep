@@ -274,7 +274,16 @@
     "message": "設定"
   },
   "readerMode": {
-    "message": "リーダービュー"
+    "message": "リーダーモード"
+  },
+  "readerNoContent": {
+    "message": "このページで読めるコンテンツが見つかりませんでした"
+  },
+  "readerThemeLabel": {
+    "message": "テーマ"
+  },
+  "readerModeNotice": {
+    "message": "リーダーモードが有効です — 要約とハイライトはオーバーレイ背後のページ内容を使用します"
   },
   "exitReader": {
     "message": "リーダーを閉じる"

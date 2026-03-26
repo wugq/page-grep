@@ -276,6 +276,15 @@
   "readerMode": {
     "message": "Chế độ đọc"
   },
+  "readerNoContent": {
+    "message": "Không tìm thấy bài viết có thể đọc trên trang này"
+  },
+  "readerThemeLabel": {
+    "message": "Chủ đề"
+  },
+  "readerModeNotice": {
+    "message": "Chế độ đọc đang hoạt động — tóm tắt và điểm nổi bật sẽ sử dụng nội dung trang phía sau"
+  },
   "exitReader": {
     "message": "Thoát chế độ đọc"
   },

@@ -1,5 +1,6 @@
 // content-translation.js — paragraph translation and page-level translate orchestration
-// Depends on: content-core.js, content-dom.js (findVisibleParagraphs)
+// Depends on: content-core.js, content-dom.js (findVisibleParagraphs),
+//             content-reader.js (getActiveReaderBody, collectReaderElements)
 
 // Pre-compiled regexes for translated text link-marker processing
 const LINK_MATCH_RE = /[\[【]LINK(\d+)_START[\]】]([\s\S]*?)[\[【]LINK\d+_END[\]】]/g;
@@ -27,7 +28,7 @@ async function runTranslateElements(elements, btn) {
 
 async function runTranslateOnPage(btn) {
   log('[PageGrep] 译 triggered');
-  const readerBody = document.getElementById('ai-reader-body');
+  const readerBody = getActiveReaderBody();
   if (readerBody) {
     await runTranslateElements(collectReaderElements(readerBody), btn);
   } else {

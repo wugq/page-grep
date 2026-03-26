@@ -276,6 +276,15 @@
   "readerMode": {
     "message": "Modalità lettura"
   },
+  "readerNoContent": {
+    "message": "Nessun articolo leggibile trovato in questa pagina"
+  },
+  "readerThemeLabel": {
+    "message": "Tema"
+  },
+  "readerModeNotice": {
+    "message": "La modalità lettura è attiva — il riepilogo e i punti salienti useranno la pagina dietro il visualizzatore"
+  },
   "exitReader": {
     "message": "Esci dal lettore"
   },

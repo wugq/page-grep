@@ -91,6 +91,12 @@ function collectArticle() {
   };
 }
 
+// Drop ancestors: if an element contains another candidate, keep only the inner one.
+// Shared by findVisibleParagraphs and collectReaderElements.
+function dropAncestors(els) {
+  return els.filter(el => !els.some(other => other !== el && el.contains(other)));
+}
+
 function findVisibleParagraphs() {
   const scope = findMainContentScope();
   const excludeChrome = scope === document.body;
@@ -104,8 +110,7 @@ function findVisibleParagraphs() {
     const rect = el.getBoundingClientRect();
     return rect.bottom > 0 && rect.top < window.innerHeight;
   });
-  // Drop ancestors: if el contains another candidate, only translate the inner one.
-  return filtered.filter(el => !filtered.some(other => other !== el && el.contains(other)));
+  return dropAncestors(filtered);
 }
 
 function detectPageLanguage() {

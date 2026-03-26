@@ -274,7 +274,16 @@
     "message": "设置"
   },
   "readerMode": {
-    "message": "阅读视图"
+    "message": "阅读模式"
+  },
+  "readerNoContent": {
+    "message": "此页面未找到可阅读的文章"
+  },
+  "readerThemeLabel": {
+    "message": "主题"
+  },
+  "readerModeNotice": {
+    "message": "阅读模式已开启 — 摘要和高亮将使用覆盖层背后的页面内容"
   },
   "exitReader": {
     "message": "退出阅读模式"

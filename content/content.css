@@ -266,21 +266,21 @@
   --rd-border: rgba(0,0,0,0.08); --rd-meta-border: rgba(0,0,0,0.1);
   --rd-link: #6366f1; --rd-quote: #666; --rd-ctrl-bg: rgba(0,0,0,0.06);
   --rd-ctrl-color: #444; --rd-ctrl-active-bg: rgba(0,0,0,0.12);
-  --rd-settings-bg: rgba(0,0,0,0.025);
+  --rd-settings-bg: rgba(0,0,0,0.025); --rd-accent: #6366f1;
 }
 #ai-reader-overlay[data-reader-theme="sepia"] {
   --rd-bg: #f4ecd8; --rd-text: #5b4636; --rd-muted: #9c7c5e;
   --rd-border: rgba(91,70,54,0.12); --rd-meta-border: rgba(91,70,54,0.15);
   --rd-link: #8b5e3c; --rd-quote: #8b7355; --rd-ctrl-bg: rgba(91,70,54,0.1);
   --rd-ctrl-color: #5b4636; --rd-ctrl-active-bg: rgba(91,70,54,0.2);
-  --rd-settings-bg: rgba(91,70,54,0.04);
+  --rd-settings-bg: rgba(91,70,54,0.04); --rd-accent: #8b5e3c;
 }
 #ai-reader-overlay[data-reader-theme="dark"] {
   --rd-bg: #1c1c1e; --rd-text: #d0d0d0; --rd-muted: #888;
   --rd-border: rgba(255,255,255,0.08); --rd-meta-border: rgba(255,255,255,0.1);
   --rd-link: #818cf8; --rd-quote: #aaa; --rd-ctrl-bg: rgba(255,255,255,0.1);
   --rd-ctrl-color: #ccc; --rd-ctrl-active-bg: rgba(255,255,255,0.18);
-  --rd-settings-bg: rgba(255,255,255,0.03);
+  --rd-settings-bg: rgba(255,255,255,0.03); --rd-accent: #818cf8;
 }
 
 /* --- Reader overlay --- */
@@ -294,7 +294,12 @@
   font-family: Georgia, "Times New Roman", serif;
   animation: ai-reader-fade-in 0.18s ease forwards;
 }
-@keyframes ai-reader-fade-in { from { opacity: 0; } to { opacity: 1; } }
+#ai-reader-overlay.ai-closing {
+  animation: ai-reader-fade-out 0.15s ease forwards;
+  pointer-events: none;
+}
+@keyframes ai-reader-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ai-reader-fade-out { from { opacity: 1; } to { opacity: 0; } }
 
 /* Close button — fixed top-right, subtle until hovered */
 #ai-reader-close-btn {
@@ -302,22 +307,32 @@
   top: 16px;
   right: 24px;
   z-index: 2147483641;
-  width: 32px;
-  height: 32px;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--rd-ctrl-bg);
   color: var(--rd-ctrl-color);
-  border: none;
-  border-radius: 50%;
+  border: none !important;
+  border-radius: 50% !important;
   cursor: pointer;
-  opacity: 0.65;
+  opacity: 0.8;
   transition: opacity 0.15s, transform 0.15s;
+  flex-shrink: 0 !important;
 }
-#ai-reader-close-btn:hover {
+#ai-reader-close-btn:hover { opacity: 1; transform: scale(1.1); }
+#ai-reader-close-btn:focus { outline: none; }
+#ai-reader-close-btn:focus-visible {
+  outline: 2px solid var(--rd-accent);
+  outline-offset: 2px;
   opacity: 1;
-  transform: scale(1.1);
 }
 
 /* Settings popup */
@@ -325,15 +340,17 @@
   position: fixed;
   z-index: 2147483642;
   width: 220px;
+  max-height: 280px; /* used by JS for sync vertical clamping — keep in sync with SETTINGS_MAX_H */
+  overflow-x: hidden;
+  overflow-y: auto;
   background: var(--rd-bg);
   border: 1px solid var(--rd-border);
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
-  overflow: hidden;
   opacity: 0;
   pointer-events: none;
   transform: scale(0.96);
-  transform-origin: top right; /* overridden dynamically by JS */
+  transform-origin: top right; /* overridden dynamically by JS before .open is added */
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 #ai-reader-settings.open {
@@ -373,8 +390,25 @@
   font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
   font-size: 11px;
 }
+/* Concrete theme buttons: hardcode their own colors so they always look right
+   regardless of the currently active theme. Values mirror the --rd-bg/--rd-text
+   tokens defined in the [data-reader-theme] blocks above. */
+.ai-rs-theme-btn[data-theme="light"] { background: #f9f7f4; color: #1a1a1a; }
+.ai-rs-theme-btn[data-theme="sepia"] { background: #f4ecd8; color: #5b4636; }
+.ai-rs-theme-btn[data-theme="dark"]  { background: #1c1c1e; color: #d0d0d0; }
+/* Section label above a row group */
+.ai-rs-section-label {
+  width: 100%;
+  padding: 10px 14px 0;
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rd-muted);
+}
 .ai-rs-theme-btn:hover  { transform: scale(1.05); }
-.ai-rs-theme-btn.active { border-color: #6366f1; }
+.ai-rs-theme-btn.active { border-color: var(--rd-accent); }
 
 /* Stepper rows (font size, line spacing) */
 .ai-rs-stepper-label {
@@ -424,9 +458,9 @@
 }
 .ai-rs-width-btn:hover  { color: var(--rd-text); }
 .ai-rs-width-btn.active {
-  background: #6366f1;
+  background: var(--rd-accent);
   color: white;
-  border-color: #6366f1;
+  border-color: var(--rd-accent);
   font-weight: 600;
 }
 
@@ -471,7 +505,7 @@
 #ai-reader-body h5,
 #ai-reader-body h6 { font-size: var(--reader-font-size, 18px); font-weight: 700; line-height: 1.3; margin: 1.4em 0 0.4em; }
 #ai-reader-body blockquote {
-  border-left: 3px solid #6366f1;
+  border-left: 3px solid var(--rd-accent);
   margin: 1.2em 0; padding: 2px 20px;
   color: var(--rd-quote); font-style: italic;
   line-height: var(--reader-line-height, 1.8);

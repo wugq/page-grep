@@ -274,7 +274,16 @@
     "message": "Ayarlar"
   },
   "readerMode": {
-    "message": "Okuyucu görünümü"
+    "message": "Okuyucu modu"
+  },
+  "readerNoContent": {
+    "message": "Bu sayfada okunabilir makale bulunamadı"
+  },
+  "readerThemeLabel": {
+    "message": "Tema"
+  },
+  "readerModeNotice": {
+    "message": "Okuyucu modu etkin — özet ve vurgular, görüntüleyicinin arkasındaki sayfayı kullanacak"
   },
   "exitReader": {
     "message": "Okuyucudan çık"

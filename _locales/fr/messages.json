@@ -274,7 +274,16 @@
     "message": "Paramètres"
   },
   "readerMode": {
-    "message": "Vue lecteur"
+    "message": "Mode lecture"
+  },
+  "readerNoContent": {
+    "message": "Aucun article lisible trouvé sur cette page"
+  },
+  "readerThemeLabel": {
+    "message": "Thème"
+  },
+  "readerModeNotice": {
+    "message": "Le mode lecture est actif — le résumé et les surlignages utiliseront la page derrière l'affichage"
   },
   "exitReader": {
     "message": "Quitter le lecteur"

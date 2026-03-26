@@ -67,6 +67,7 @@ const CHROME_SELECTOR = 'nav, header, footer, aside, [role="navigation"], [role=
 async function applyThemeToPanel() {
   const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
   document.getElementById(PANEL_ID)?.classList.toggle('dark', isThemeDark(theme));
+  refreshReaderTheme(); // no-op if reader is closed; defined in content-reader.js
 }
 
 // --- Domain blocklist helper ---

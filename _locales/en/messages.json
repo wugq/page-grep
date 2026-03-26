@@ -274,7 +274,16 @@
     "message": "Settings"
   },
   "readerMode": {
-    "message": "Reader view"
+    "message": "Reader mode"
+  },
+  "readerNoContent": {
+    "message": "No readable article found on this page"
+  },
+  "readerThemeLabel": {
+    "message": "Theme"
+  },
+  "readerModeNotice": {
+    "message": "Reader mode is active — summary and highlights will use the page behind the overlay"
   },
   "exitReader": {
     "message": "Exit reader"

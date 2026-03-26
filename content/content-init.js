@@ -12,6 +12,10 @@ browser.runtime.onMessage.addListener((message) => {
     return Promise.resolve({ items: HIGHLIGHT_STATE.items || [] });
   }
 
+  if (message.action === 'getReaderModeState') {
+    return Promise.resolve({ active: !!getActiveReaderBody() });
+  }
+
   if (message.action === 'summaryHover') {
     const target = SUMMARY_STATE.elements?.[message.index]?.el;
     if (target?.isConnected) {
@@ -101,7 +105,7 @@ browser.storage.onChanged.addListener((changes) => {
           createFloatButton();
         }
       });
-    } else {
+    } else if (!getActiveReaderBody()) {
       document.getElementById(FLOAT_BTN_ID)?.remove();
       document.getElementById('ai-reader-mode-btn')?.remove();
       document.getElementById('ai-scratchpad-btn')?.remove();

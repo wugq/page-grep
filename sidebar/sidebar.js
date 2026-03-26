@@ -1,4 +1,17 @@
 let lastTabId = null;
+let readerModeActive = false;
+
+function updateReaderModeUI(active) {
+  readerModeActive = active;
+  const notice = document.getElementById('reader-mode-notice');
+  if (notice) notice.classList.toggle('hidden', !active);
+  ['summary-btn', 'highlight-btn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = active;
+  });
+  const floatCheckbox = document.getElementById('show-float-btn');
+  if (floatCheckbox) floatCheckbox.disabled = active;
+}
 
 // --- Tab Navigation ---
 
@@ -197,15 +210,18 @@ async function loadFromActiveTab() {
   hideError();
 
   try {
-    const [summaryRes, highlightRes] = await Promise.all([
+    const [summaryRes, highlightRes, readerRes] = await Promise.all([
       browser.tabs.sendMessage(tabId, { action: 'getSummaryData' }).catch(() => null),
-      browser.tabs.sendMessage(tabId, { action: 'getHighlightData' }).catch(() => null)
+      browser.tabs.sendMessage(tabId, { action: 'getHighlightData' }).catch(() => null),
+      browser.tabs.sendMessage(tabId, { action: 'getReaderModeState' }).catch(() => null),
     ]);
 
+    updateReaderModeUI(!!readerRes?.active);
     renderSummary(summaryRes?.points || []);
     renderHighlights(highlightRes?.items || []);
   } catch (err) {
     // Tab might not have content script yet or is restricted
+    updateReaderModeUI(false);
     renderSummary([]);
     renderHighlights([]);
   }
@@ -331,6 +347,11 @@ function renderHighlights(items) {
 browser.runtime.onMessage.addListener((message, sender) => {
   const senderTabId = sender?.tab?.id;
   if (senderTabId && senderTabId !== lastTabId) return;
+
+  if (message.action === 'readerModeChanged') {
+    updateReaderModeUI(!!message.active);
+    return;
+  }
 
   if (message.action === 'summaryUpdated') {
     renderSummary(message.points || []);

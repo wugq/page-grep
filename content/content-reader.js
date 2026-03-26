@@ -1,8 +1,16 @@
 // content-reader.js — distraction-free reader mode overlay using Mozilla Readability
-// Depends on: content-core.js, content-translation.js (runTranslateElements)
+// Depends on: content-core.js, content-dom.js (dropAncestors), content-translation.js (runTranslateElements)
 
 const READER_OVERLAY_ID  = 'ai-reader-overlay';
 const READER_SETTINGS_ID = 'ai-reader-settings';
+
+// Tracks the active reader body element so other modules can query it without
+// knowing the internal DOM ID. Set by openReaderMode, cleared by closeReaderMode.
+let _readerBody = null;
+function getActiveReaderBody() { return _readerBody; }
+
+// Prevents re-entrant calls while the async parse is in progress.
+let _readerOpening = false;
 
 // READER_ICON is defined in content-core.js
 const CLOSE_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
@@ -10,7 +18,11 @@ const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height
 
 const FONT_SIZES    = [14, 15, 16, 17, 18, 20, 22, 24, 28]; // index 0–8, default 4 (18px)
 const LINE_SPACINGS = [1.4, 1.6, 1.8, 2.0, 2.2];           // index 0–4, default 2 (1.8)
-const WIDTHS        = { narrow: 480, normal: 680, wide: 860 };
+const WIDTHS = [
+  { key: 'narrow', px: 480, msgKey: 'readerWidthNarrow' },
+  { key: 'normal', px: 680, msgKey: 'readerWidthNormal' },
+  { key: 'wide',   px: 860, msgKey: 'readerWidthWide'   },
+];
 const DEFAULT_PREFS = { theme: 'auto', fontSize: 4, lineSpacing: 2, width: 'normal' };
 
 // --- Prefs helpers ---
@@ -33,7 +45,17 @@ function applyPrefs(overlay, prefs) {
   overlay.dataset.readerTheme = resolveTheme(prefs);
   overlay.style.setProperty('--reader-font-size',   FONT_SIZES[prefs.fontSize] + 'px');
   overlay.style.setProperty('--reader-line-height', String(LINE_SPACINGS[prefs.lineSpacing]));
-  overlay.style.setProperty('--reader-width',       WIDTHS[prefs.width] + 'px');
+  overlay.style.setProperty('--reader-width',       (WIDTHS.find(w => w.key === prefs.width)?.px ?? 680) + 'px');
+}
+
+// Re-resolve auto theme when the sidebar/system theme changes.
+// Called by applyThemeToPanel() in content-core.js.
+async function refreshReaderTheme() {
+  const overlay = document.getElementById(READER_OVERLAY_ID);
+  if (!overlay) return;
+  const prefs = await loadReaderPrefs();
+  if (prefs.theme !== 'auto') return;
+  overlay.dataset.readerTheme = resolveTheme(prefs);
 }
 
 // --- Element collection ---
@@ -47,36 +69,51 @@ function collectReaderElements(scope) {
     const text = el.innerText?.trim();
     return text && text.length >= 20;
   });
-  return filtered.filter(el => !filtered.some(other => other !== el && el.contains(other)));
+  return dropAncestors(filtered);
 }
 
 // --- Settings panel ---
 
-function buildSettingsPanel(overlay, prefs) {
+// contentEl: the #ai-reader-content element, needed so width changes trigger its CSS transition.
+function buildSettingsPanel(overlay, prefs, contentEl) {
   const panel = document.createElement('div');
   panel.id = READER_SETTINGS_ID;
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-label', browser.i18n.getMessage('readerSettings') || 'Reading settings');
+
+  // Theme section label
+  const themeLabel = document.createElement('div');
+  themeLabel.className = 'ai-rs-section-label';
+  themeLabel.textContent = browser.i18n.getMessage('readerThemeLabel') || 'Theme';
 
   // Theme row
   const themeRow = makeRow();
+  // Display initials so buttons are visually distinguishable without relying on color alone.
   const THEMES = [
-    { key: 'auto',  bg: '',        color: '',        msgKey: 'readerThemeAuto'  },
-    { key: 'light', bg: '#f9f7f4', color: '#1a1a1a', msgKey: 'readerThemeLight' },
-    { key: 'sepia', bg: '#f4ecd8', color: '#5b4636', msgKey: 'readerThemeSepia' },
-    { key: 'dark',  bg: '#1c1c1e', color: '#e8e8e8', msgKey: 'readerThemeDark'  },
+    { key: 'auto',  msgKey: 'readerThemeAuto',  glyph: null       },
+    { key: 'light', msgKey: 'readerThemeLight', glyph: 'L'        },
+    { key: 'sepia', msgKey: 'readerThemeSepia', glyph: 'S'        },
+    { key: 'dark',  msgKey: 'readerThemeDark',  glyph: 'D'        },
   ];
-  const themeBtns = THEMES.map(({ key, bg, color, msgKey }) => {
+  const themeBtns = THEMES.map(({ key, msgKey, glyph }) => {
     const label = browser.i18n.getMessage(msgKey) || msgKey;
     const btn = document.createElement('button');
     btn.className = 'ai-rs-theme-btn';
     btn.dataset.theme = key;
     btn.title = label;
-    if (bg) { btn.style.background = bg; btn.style.color = color; }
-    btn.textContent = key === 'auto' ? label : 'Aa';
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('aria-pressed', prefs.theme === key ? 'true' : 'false');
+    // Colors are handled by CSS [data-theme] rules — no inline styles needed.
+    btn.textContent = glyph ?? label;
     if (prefs.theme === key) btn.classList.add('active');
     btn.addEventListener('click', () => {
       prefs.theme = key;
       applyPrefs(overlay, prefs);
-      themeBtns.forEach(b => b.classList.toggle('active', b.dataset.theme === key));
+      themeBtns.forEach(b => {
+        const isActive = b.dataset.theme === key;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
       saveReaderPrefs(prefs);
     });
     return btn;
@@ -129,58 +166,75 @@ function buildSettingsPanel(overlay, prefs) {
 
   // Width row
   const widthRow = makeRow();
-  const WIDTHS_DEF = [
-    { key: 'narrow', label: browser.i18n.getMessage('readerWidthNarrow') || 'Narrow' },
-    { key: 'normal', label: browser.i18n.getMessage('readerWidthNormal') || 'Normal' },
-    { key: 'wide',   label: browser.i18n.getMessage('readerWidthWide')   || 'Wide'   },
-  ];
-  const widthBtns = WIDTHS_DEF.map(({ key, label }) => {
+  const widthBtns = WIDTHS.map(({ key, px, msgKey }) => {
+    const label = browser.i18n.getMessage(msgKey) || key;
     const btn = document.createElement('button');
     btn.className = 'ai-rs-width-btn';
     btn.dataset.width = key;
     btn.textContent = label;
+    btn.setAttribute('aria-pressed', prefs.width === key ? 'true' : 'false');
     if (prefs.width === key) btn.classList.add('active');
     btn.addEventListener('click', () => {
       prefs.width = key;
       applyPrefs(overlay, prefs);
-      widthBtns.forEach(b => b.classList.toggle('active', b.dataset.width === key));
+      // Set maxWidth directly on the content element so the CSS transition fires.
+      // (CSS transitions do not animate through custom property changes.)
+      if (contentEl) contentEl.style.maxWidth = px + 'px';
+      widthBtns.forEach(b => {
+        const isActive = b.dataset.width === key;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
       saveReaderPrefs(prefs);
     });
     return btn;
   });
   widthBtns.forEach(b => widthRow.appendChild(b));
 
-  panel.append(themeRow, fontRow, spacingRow, widthRow);
+  panel.append(themeLabel, themeRow, fontRow, spacingRow, widthRow);
   return panel;
 }
+
+// Must match max-height in CSS for #ai-reader-settings
+const SETTINGS_MAX_H = 280;
 
 function positionSettingsPopup(popup) {
   const POPUP_W = 220;
   const GAP     = 8;
   const MARGIN  = 8;
   const panel   = document.getElementById(PANEL_ID);
-  if (!panel) return;
-  const r = panel.getBoundingClientRect();
 
-  // Prefer left of panel; fall back to right if it would clip
-  const fitsLeft = r.left - GAP - POPUP_W >= MARGIN;
-  let left = fitsLeft
-    ? r.left - GAP - POPUP_W
-    : Math.min(r.right + GAP, window.innerWidth - POPUP_W - MARGIN);
+  let anchorTop, anchorLeft, anchorRight;
+  if (panel) {
+    const r = panel.getBoundingClientRect();
+    anchorTop   = r.top;
+    anchorLeft  = r.left;
+    anchorRight = r.right;
+  } else {
+    // Floating panel not available — center near top-right of screen
+    anchorTop   = MARGIN;
+    anchorLeft  = window.innerWidth / 2;
+    anchorRight = window.innerWidth / 2;
+  }
 
+  const fitsLeft = anchorLeft - GAP - POPUP_W >= MARGIN;
+  const left = fitsLeft
+    ? anchorLeft - GAP - POPUP_W
+    : Math.min(anchorRight + GAP, window.innerWidth - POPUP_W - MARGIN);
+
+  // Clamp top synchronously using the CSS max-height constant — no rAF needed.
+  const rawTop = anchorTop;
+  const top = rawTop + SETTINGS_MAX_H > window.innerHeight - MARGIN
+    ? Math.max(MARGIN, window.innerHeight - SETTINGS_MAX_H - MARGIN)
+    : rawTop;
+
+  // Set transform-origin before the caller adds .open so the scale animation
+  // starts from the correct corner.
+  popup.style.transformOrigin = fitsLeft ? 'top right' : 'top left';
   popup.style.left   = left + 'px';
-  popup.style.top    = r.top + 'px';
+  popup.style.top    = top + 'px';
   popup.style.right  = 'auto';
   popup.style.bottom = 'auto';
-  popup.style.transformOrigin = fitsLeft ? 'top right' : 'top left';
-
-  // Clamp vertically after paint so we know the rendered height
-  requestAnimationFrame(() => {
-    const pr = popup.getBoundingClientRect();
-    if (pr.bottom > window.innerHeight - MARGIN) {
-      popup.style.top = Math.max(MARGIN, window.innerHeight - pr.height - MARGIN) + 'px';
-    }
-  });
 }
 
 function makeRow() {
@@ -197,12 +251,14 @@ function makeStepper(label, initialVal) {
   const minus = document.createElement('button');
   minus.className = 'ai-rs-step-btn';
   minus.textContent = '−';
+  minus.setAttribute('aria-label', `${label} decrease`);
   const val = document.createElement('span');
   val.className = 'ai-rs-stepper-val';
   val.textContent = initialVal;
   const plus = document.createElement('button');
   plus.className = 'ai-rs-step-btn';
   plus.textContent = '+';
+  plus.setAttribute('aria-label', `${label} increase`);
   row.append(lbl, minus, val, plus);
   return { row, minus, val, plus };
 }
@@ -232,6 +288,7 @@ function holdRepeat(btn, action) {
   btn.addEventListener('mouseup', stop);
   btn.addEventListener('mouseleave', stop);
   btn.addEventListener('touchend', stop);
+  btn.addEventListener('touchcancel', stop);
 }
 
 // --- Open / close ---
@@ -245,13 +302,18 @@ function toggleReaderMode(triggerBtn) {
 }
 
 async function openReaderMode(triggerBtn) {
-  if (triggerBtn) { triggerBtn.disabled = true; }
+  // Guard against re-entrant calls during the async parse, and against a
+  // second open if the overlay is already in the DOM.
+  if (_readerOpening || document.getElementById(READER_OVERLAY_ID)) return;
+  _readerOpening = true;
+
+  if (triggerBtn) {
+    triggerBtn.disabled = true;
+    triggerBtn.classList.add('ai-loading-btn');
+  }
 
   const docClone = document.cloneNode(true);
-  // Strip any translation wrappers so Readability sees the original text only.
-  // When the floating panel translate button is used while in reader mode it can
-  // wrap actual page paragraphs; those wrapped elements would otherwise bleed
-  // both-language content into the reader on the next open.
+  // Strip translation wrappers so Readability sees original text only.
   docClone.querySelectorAll('[data-ai-wrapped]').forEach(el => {
     const original = el.querySelector('.ai-para-original');
     if (original) {
@@ -261,14 +323,18 @@ async function openReaderMode(triggerBtn) {
       if (el.style.position === 'relative') el.style.position = '';
     }
   });
-  const reader = new Readability(docClone);
+  const reader  = new Readability(docClone);
   const article = reader.parse();
-  const prefs = await loadReaderPrefs();
+  const prefs   = await loadReaderPrefs();
 
-  if (triggerBtn) { triggerBtn.disabled = false; }
+  _readerOpening = false;
+  if (triggerBtn) {
+    triggerBtn.disabled = false;
+    triggerBtn.classList.remove('ai-loading-btn');
+  }
 
   if (!article || !article.content) {
-    showToast(browser.i18n.getMessage('noAnalyzableContent') || 'No readable content found');
+    showToast(browser.i18n.getMessage('readerNoContent') || 'No readable content found');
     return;
   }
 
@@ -280,12 +346,11 @@ async function openReaderMode(triggerBtn) {
   const closeBtn = document.createElement('button');
   closeBtn.id = 'ai-reader-close-btn';
   closeBtn.innerHTML = CLOSE_ICON;
-  closeBtn.title = browser.i18n.getMessage('exitReader') || 'Exit reader';
+  const exitLabel = browser.i18n.getMessage('exitReader') || 'Exit reader';
+  closeBtn.title = exitLabel;
+  closeBtn.setAttribute('aria-label', exitLabel);
 
-  // --- Settings panel ---
-  const settingsPanel = buildSettingsPanel(overlay, prefs);
-
-  // --- Content ---
+  // --- Content (created before settingsPanel so we can pass it for width transitions) ---
   const content = document.createElement('div');
   content.id = 'ai-reader-content';
 
@@ -309,15 +374,41 @@ async function openReaderMode(triggerBtn) {
   body.id = 'ai-reader-body';
   body.innerHTML = article.content;
   body.querySelectorAll('script, style').forEach(el => el.remove());
+  _readerBody = body;
 
   content.append(meta, body);
+
+  // --- Settings panel (receives content so width clicks can trigger its CSS transition) ---
+  const settingsPanel = buildSettingsPanel(overlay, prefs, content);
+
   // settingsPanel is position:fixed but inside overlay so it inherits CSS theme vars
   overlay.append(closeBtn, settingsPanel, content);
+
+  // Save scroll position before locking the page so we can restore it on close.
+  const savedScrollY = window.scrollY;
   document.body.appendChild(overlay);
   document.documentElement.style.overflow = 'hidden';
+  browser.runtime.sendMessage({ action: 'readerModeChanged', active: true }).catch(() => {});
 
-  // Repurpose the floating panel reader button as the settings trigger
-  const panelReaderBtn = document.getElementById('ai-reader-mode-btn');
+  // Move keyboard focus into the overlay so keyboard users have an immediate entry point.
+  closeBtn.focus();
+
+  // Collect teardown callbacks — flushed immediately on close, before the fade-out.
+  const cleanupFns = [];
+
+  // JS boolean is the source of truth for settings panel visibility.
+  let settingsOpen = false;
+  function setSettingsOpen(open) {
+    settingsOpen = open;
+    // Position (and set transform-origin) BEFORE adding .open so the scale
+    // animation starts from the correct corner on every open.
+    if (open) positionSettingsPopup(settingsPanel);
+    settingsPanel.classList.toggle('open', open);
+    panelReaderBtn?.classList.toggle('active', open);
+  }
+
+  // Repurpose the floating panel reader button as the settings trigger.
+  const panelReaderBtn = triggerBtn;
   if (panelReaderBtn) {
     const savedHTML  = panelReaderBtn.innerHTML;
     const savedTitle = panelReaderBtn.title;
@@ -327,37 +418,58 @@ async function openReaderMode(triggerBtn) {
 
     function onSettingsClick(e) {
       e.stopPropagation();
-      const open = settingsPanel.classList.toggle('open');
-      panelReaderBtn.classList.toggle('active', open);
-      if (open) {
-        positionSettingsPopup(settingsPanel);
-      }
+      setSettingsOpen(!settingsOpen);
     }
     panelReaderBtn.addEventListener('click', onSettingsClick);
 
-    overlay._restorePanelBtn = () => {
+    cleanupFns.push(() => {
       panelReaderBtn.removeEventListener('click', onSettingsClick);
       panelReaderBtn.innerHTML = savedHTML;
       panelReaderBtn.title     = savedTitle;
       panelReaderBtn.classList.remove('active');
       delete panelReaderBtn.dataset.readerActive;
-    };
+    });
   }
 
-  // Dismiss popup on click outside
+  // Dismiss settings popup on click outside
   overlay.addEventListener('click', (e) => {
-    if (settingsPanel.classList.contains('open') && !settingsPanel.contains(e.target)) {
-      settingsPanel.classList.remove('open');
-      panelReaderBtn?.classList.remove('active');
+    if (settingsOpen && !settingsPanel.contains(e.target)) {
+      setSettingsOpen(false);
     }
   });
 
-  // Escape closes reader
+  // Keyboard handler:
+  //   Escape — close settings panel first; close the whole reader only if settings is already closed.
+  //   Tab    — focus trap: cycle within the overlay + the optional settings trigger button.
   function onKeydown(e) {
-    if (e.key === 'Escape') closeReaderMode();
+    if (e.key === 'Escape') {
+      if (settingsOpen) { setSettingsOpen(false); } else { closeReaderMode(); }
+      return;
+    }
+    if (e.key === 'Tab') {
+      const sel = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      // Exclude settings panel buttons while the panel is closed.
+      const insideOverlay = Array.from(overlay.querySelectorAll(sel))
+        .filter(el => settingsOpen || !settingsPanel.contains(el));
+      // Include the settings trigger (outside overlay DOM) when settings is closed.
+      const all = (panelReaderBtn?.isConnected && !settingsOpen)
+        ? [...insideOverlay, panelReaderBtn]
+        : insideOverlay;
+      if (all.length < 2) return;
+      const first = all[0];
+      const last  = all[all.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    }
   }
   document.addEventListener('keydown', onKeydown);
-  overlay._cleanup = () => document.removeEventListener('keydown', onKeydown);
+  cleanupFns.push(() => document.removeEventListener('keydown', onKeydown));
+
+  overlay._cleanupFns   = cleanupFns;
+  overlay._savedScrollY = savedScrollY;
 
   closeBtn.addEventListener('click', closeReaderMode);
 }
@@ -365,8 +477,22 @@ async function openReaderMode(triggerBtn) {
 function closeReaderMode() {
   const overlay = document.getElementById(READER_OVERLAY_ID);
   if (!overlay) return;
-  overlay._cleanup?.();
-  overlay._restorePanelBtn?.();
-  overlay.remove();
+  // Flush cleanup immediately: restores the panel button and removes event listeners.
+  // The overlay stays in the DOM briefly for the fade-out animation.
+  overlay._cleanupFns?.forEach(fn => fn());
+  _readerBody = null;
   document.documentElement.style.overflow = '';
+  window.scrollTo(0, overlay._savedScrollY || 0);
+  browser.runtime.sendMessage({ action: 'readerModeChanged', active: false }).catch(() => {});
+  // If float button was toggled off while reader mode was open, remove it now.
+  browser.storage.local.get(STORAGE_KEYS.SHOW_FLOAT_BTN).then(({ showFloatBtn }) => {
+    if (showFloatBtn === false) {
+      document.getElementById(FLOAT_BTN_ID)?.remove();
+      document.getElementById('ai-reader-mode-btn')?.remove();
+      document.getElementById('ai-scratchpad-btn')?.remove();
+      removePanelIfEmpty();
+    }
+  });
+  overlay.classList.add('ai-closing');
+  overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
 }

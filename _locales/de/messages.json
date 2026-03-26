@@ -274,7 +274,16 @@
     "message": "Einstellungen"
   },
   "readerMode": {
-    "message": "Leseansicht"
+    "message": "Lesemodus"
+  },
+  "readerNoContent": {
+    "message": "Kein lesbarer Artikel auf dieser Seite gefunden"
+  },
+  "readerThemeLabel": {
+    "message": "Design"
+  },
+  "readerModeNotice": {
+    "message": "Lesemodus ist aktiv – Zusammenfassung und Markierungen verwenden den Seiteninhalt hinter der Ansicht"
   },
   "exitReader": {
     "message": "Leser beenden"
