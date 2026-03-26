@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "翻译屏幕内容"
   },
+  "translateReaderContent": {
+    "message": "翻译文章"
+  },
   "translatingProgress": {
     "message": "翻译中 $n$/$total$",
     "placeholders": {
@@ -272,5 +275,50 @@
   },
   "settingsLinkLabel": {
     "message": "设置"
+  },
+  "readerMode": {
+    "message": "阅读模式"
+  },
+  "readerNoContent": {
+    "message": "此页面未找到可阅读的文章"
+  },
+  "readerThemeLabel": {
+    "message": "主题"
+  },
+  "readerModeNotice": {
+    "message": "阅读模式已开启 — 摘要和高亮将使用覆盖层背后的页面内容"
+  },
+  "exitReader": {
+    "message": "退出阅读模式"
+  },
+  "readerSettings": {
+    "message": "阅读设置"
+  },
+  "readerThemeAuto": {
+    "message": "自动"
+  },
+  "readerThemeLight": {
+    "message": "浅色"
+  },
+  "readerThemeSepia": {
+    "message": "复古"
+  },
+  "readerThemeDark": {
+    "message": "深色"
+  },
+  "readerFontLabel": {
+    "message": "字号"
+  },
+  "readerSpacingLabel": {
+    "message": "行距"
+  },
+  "readerWidthNarrow": {
+    "message": "窄"
+  },
+  "readerWidthNormal": {
+    "message": "适中"
+  },
+  "readerWidthWide": {
+    "message": "宽"
   }
 }

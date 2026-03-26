@@ -1,16 +1,12 @@
 // content-dom.js — DOM analysis: content scope detection, article/element collection
 // Depends on: content-core.js (CHROME_SELECTOR, threshold constants)
 
-// --- Content collection thresholds ---
-const MAX_ARTICLE_LINES    = 200;  // max lines for copy-to-clipboard
-const MAX_ARTICLE_ELEMENTS = 180;  // max elements in article-mode collection
-const MAX_LIST_ELEMENTS    = 140;  // max elements in list-mode collection
-const MAX_HN_ELEMENTS      = 160;  // max elements on HackerNews
-
-// --- Content scope detection ---
+const MAX_ARTICLE_LINES    = 200;
+const MAX_ARTICLE_ELEMENTS = 180;
+const MAX_LIST_ELEMENTS    = 140;
+const MAX_HN_ELEMENTS      = 160;
 
 function findMainContentScope() {
-  // 1. Try to find a clear "main" container first
   const mainSelectors = [
     '[role="main"]',
     'main',
@@ -22,12 +18,10 @@ function findMainContentScope() {
     if (el) return el;
   }
 
-  // 2. If no clear main container, check for article.
   // If there's exactly one article, it's likely a single-article page.
   const articles = document.querySelectorAll('article');
   if (articles.length === 1) return articles[0];
 
-  // 3. Fallback to common class-based content areas
   const fallbackSelectors = [
     '.post-content', '.article-content', '.entry-content',
     '.article-body', '.article__body', '.post-body', '.story-body', '.content-body',
@@ -38,7 +32,6 @@ function findMainContentScope() {
     if (el) return el;
   }
 
-  // 4. If nothing else matches, use the whole body
   return document.body;
 }
 
@@ -91,21 +84,42 @@ function collectArticle() {
   };
 }
 
-function findVisibleParagraphs() {
-  const scope = findMainContentScope();
-  const excludeChrome = scope === document.body;
-  const candidates = scope.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, td, figcaption, dd');
+// Shared by findVisibleParagraphs and collectReaderElements.
+function dropAncestors(els) {
+  return els.filter(el => !els.some(other => other !== el && el.contains(other)));
+}
+
+// Shared filter applied to translation candidates:
+//   - skips already-translated elements
+//   - skips elements shorter than 20 characters
+//   - removes ancestor elements when a descendant is also a candidate
+// Options:
+//   excludeChrome   — skip elements inside nav/header/footer chrome (page-mode only)
+//   checkVisibility — skip off-screen elements and use innerText (page-mode only;
+//                     reader DOM has no hidden elements so textContent suffices there)
+function filterTranslatableElements(candidates, { excludeChrome = false, checkVisibility = false } = {}) {
   const filtered = Array.from(candidates).filter(el => {
     if (el.dataset.aiWrapped) return false;
     if (el.closest('[data-ai-wrapped]')) return false;
+    if (el.querySelector('[data-ai-wrapped]')) return false;
     if (excludeChrome && el.closest(CHROME_SELECTOR)) return false;
-    const text = el.innerText?.trim();
+    // innerText forces layout reflow but correctly ignores CSS-hidden text.
+    // Use it only when visibility-checking the live page DOM.
+    const text = (checkVisibility ? el.innerText : el.textContent)?.trim();
     if (!text || text.length < 20) return false;
-    const rect = el.getBoundingClientRect();
-    return rect.bottom > 0 && rect.top < window.innerHeight;
+    if (checkVisibility) {
+      const rect = el.getBoundingClientRect();
+      if (!(rect.bottom > 0 && rect.top < window.innerHeight)) return false;
+    }
+    return true;
   });
-  // Drop ancestors: if el contains another candidate, only translate the inner one.
-  return filtered.filter(el => !filtered.some(other => other !== el && el.contains(other)));
+  return dropAncestors(filtered);
+}
+
+function findVisibleParagraphs() {
+  const scope = findMainContentScope();
+  const candidates = scope.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, td, figcaption, dd');
+  return filterTranslatableElements(candidates, { excludeChrome: scope === document.body, checkVisibility: true });
 }
 
 function detectPageLanguage() {

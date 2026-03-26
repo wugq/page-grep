@@ -440,6 +440,22 @@ input:checked + .slider:before { transform: translateX(16px); }
   border-color: #7f1d1d;
 }
 
+.reader-notice {
+  padding: 10px 14px;
+  margin: 0 0 16px;
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.dark .reader-notice {
+  background-color: #1e3a5f;
+  color: #93c5fd;
+  border-color: #1e40af;
+}
+
 .status-msg {
   display: block;
   font-size: 12px;

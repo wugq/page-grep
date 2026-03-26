@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "Dịch nội dung màn hình"
   },
+  "translateReaderContent": {
+    "message": "Dịch bài viết"
+  },
   "translatingProgress": {
     "message": "Đang dịch $n$/$total$",
     "placeholders": {
@@ -272,5 +275,50 @@
   },
   "settingsLinkLabel": {
     "message": "Cài đặt"
+  },
+  "readerMode": {
+    "message": "Chế độ đọc"
+  },
+  "readerNoContent": {
+    "message": "Không tìm thấy bài viết có thể đọc trên trang này"
+  },
+  "readerThemeLabel": {
+    "message": "Chủ đề"
+  },
+  "readerModeNotice": {
+    "message": "Chế độ đọc đang hoạt động — tóm tắt và điểm nổi bật sẽ sử dụng nội dung trang phía sau"
+  },
+  "exitReader": {
+    "message": "Thoát chế độ đọc"
+  },
+  "readerSettings": {
+    "message": "Cài đặt đọc"
+  },
+  "readerThemeAuto": {
+    "message": "Tự động"
+  },
+  "readerThemeLight": {
+    "message": "Sáng"
+  },
+  "readerThemeSepia": {
+    "message": "Sepia"
+  },
+  "readerThemeDark": {
+    "message": "Tối"
+  },
+  "readerFontLabel": {
+    "message": "Cỡ chữ"
+  },
+  "readerSpacingLabel": {
+    "message": "Khoảng cách"
+  },
+  "readerWidthNarrow": {
+    "message": "Hẹp"
+  },
+  "readerWidthNormal": {
+    "message": "Bình thường"
+  },
+  "readerWidthWide": {
+    "message": "Rộng"
   }
 }

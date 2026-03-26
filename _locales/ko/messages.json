@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "화면 콘텐츠 번역"
   },
+  "translateReaderContent": {
+    "message": "기사 번역"
+  },
   "translatingProgress": {
     "message": "번역 중 $n$/$total$",
     "placeholders": {
@@ -272,5 +275,50 @@
   },
   "settingsLinkLabel": {
     "message": "설정"
+  },
+  "readerMode": {
+    "message": "리더 모드"
+  },
+  "readerNoContent": {
+    "message": "이 페이지에서 읽을 수 있는 기사를 찾을 수 없습니다"
+  },
+  "readerThemeLabel": {
+    "message": "테마"
+  },
+  "readerModeNotice": {
+    "message": "리더 모드가 활성화되어 있습니다 — 요약 및 하이라이트는 오버레이 뒤의 페이지 내용을 사용합니다"
+  },
+  "exitReader": {
+    "message": "리더 닫기"
+  },
+  "readerSettings": {
+    "message": "읽기 설정"
+  },
+  "readerThemeAuto": {
+    "message": "자동"
+  },
+  "readerThemeLight": {
+    "message": "밝게"
+  },
+  "readerThemeSepia": {
+    "message": "세피아"
+  },
+  "readerThemeDark": {
+    "message": "어둡게"
+  },
+  "readerFontLabel": {
+    "message": "글꼴 크기"
+  },
+  "readerSpacingLabel": {
+    "message": "줄 간격"
+  },
+  "readerWidthNarrow": {
+    "message": "좁게"
+  },
+  "readerWidthNormal": {
+    "message": "보통"
+  },
+  "readerWidthWide": {
+    "message": "넓게"
   }
 }

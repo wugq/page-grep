@@ -1,8 +1,6 @@
 // content-collectors.js — page element collection, hover helpers, summary & highlight flows
 // Depends on: content-core.js, content-dom.js (findMainContentScope, detectPageLanguage)
 
-// --- Hover / highlight state ---
-
 const HOVER_ELEMENTS = new Set();
 
 function hoverElement(el, type) {
@@ -41,8 +39,6 @@ function updateSummarySidebar(points, elements) {
   browser.runtime.sendMessage({ action: 'openSidebar' });
 }
 
-// --- Summary flow ---
-
 async function runSummaryFromPage() {
   log('[PageGrep] runSummary triggered');
   const elements = collectPageElements();
@@ -69,8 +65,6 @@ async function runSummaryFromPage() {
   }
 }
 
-// --- Interest highlighting flow ---
-
 // Registry of site-specific element collectors. Add new entries here to support
 // additional sites without modifying the general-purpose collection logic below.
 const SITE_COLLECTORS = {
@@ -87,7 +81,6 @@ function collectPageElements() {
 
   const scope = findMainContentScope();
 
-  // 1. Detect if it is likely an article page first.
   // We look for many long paragraphs. If we see a high density of text in paragraphs,
   // it is almost certainly an article page, even if there are sidebar lists.
   const paras = Array.from(scope.querySelectorAll('p')).filter(p => {
@@ -101,14 +94,12 @@ function collectPageElements() {
     return collectArticleElements(scope);
   }
 
-  // 2. Otherwise try list-style collection (grouping headlines + snippets)
   const listItems = collectGenericListElements(scope);
   if (listItems && listItems.length >= 4) {
     log(`[PageGrep] list-style collection: found ${listItems.length} items`);
     return listItems.slice(0, MAX_LIST_ELEMENTS);
   }
 
-  // 3. Fallback to article-style collection if list items are few or detection failed
   log(`[PageGrep] fallback to article-style collection`);
   return collectArticleElements(scope);
 }

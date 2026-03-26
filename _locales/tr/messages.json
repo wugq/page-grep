@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "Ekran içeriğini çevir"
   },
+  "translateReaderContent": {
+    "message": "Makaleyi çevir"
+  },
   "translatingProgress": {
     "message": "Çevriliyor $n$/$total$",
     "placeholders": {
@@ -272,5 +275,50 @@
   },
   "settingsLinkLabel": {
     "message": "Ayarlar"
+  },
+  "readerMode": {
+    "message": "Okuyucu modu"
+  },
+  "readerNoContent": {
+    "message": "Bu sayfada okunabilir makale bulunamadı"
+  },
+  "readerThemeLabel": {
+    "message": "Tema"
+  },
+  "readerModeNotice": {
+    "message": "Okuyucu modu etkin — özet ve vurgular, görüntüleyicinin arkasındaki sayfayı kullanacak"
+  },
+  "exitReader": {
+    "message": "Okuyucudan çık"
+  },
+  "readerSettings": {
+    "message": "Okuma ayarları"
+  },
+  "readerThemeAuto": {
+    "message": "Otomatik"
+  },
+  "readerThemeLight": {
+    "message": "Açık"
+  },
+  "readerThemeSepia": {
+    "message": "Sepya"
+  },
+  "readerThemeDark": {
+    "message": "Koyu"
+  },
+  "readerFontLabel": {
+    "message": "Yazı tipi"
+  },
+  "readerSpacingLabel": {
+    "message": "Satır aralığı"
+  },
+  "readerWidthNarrow": {
+    "message": "Dar"
+  },
+  "readerWidthNormal": {
+    "message": "Normal"
+  },
+  "readerWidthWide": {
+    "message": "Geniş"
   }
 }

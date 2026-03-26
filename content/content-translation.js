@@ -5,24 +5,29 @@
 const LINK_MATCH_RE = /[\[【]LINK(\d+)_START[\]】]([\s\S]*?)[\[【]LINK\d+_END[\]】]/g;
 const LINK_STRIP_RE = /[\[【]LINK\d+_(?:START|END)[\]】]/g;
 
-// --- Translation ---
-
-async function runTranslateOnPage(btn) {
-  log('[PageGrep] 译 triggered');
-  const visible = findVisibleParagraphs();
-  log(`[PageGrep] 译: found ${visible.length} visible paragraphs`);
-  if (visible.length === 0) {
-    if (btn) { btn.title = browser.i18n.getMessage('noTranslatableContent'); setTimeout(() => { btn.title = browser.i18n.getMessage('translateScreenContent'); }, 1500); }
+// Shared core: translates an array of elements, updating btn state throughout.
+// inReaderMode: true when translating reader overlay content — affects the
+// post-translate button title so it doesn't say "screen content" while the
+// overlay is covering the screen.
+async function runTranslateElements(elements, btn, inReaderMode = false) {
+  log(`[PageGrep] 译: translating ${elements.length} elements`);
+  if (elements.length === 0) {
+    showToast(browser.i18n.getMessage('noTranslatableContent'));
     return;
   }
   if (btn) { btn.disabled = true; btn.textContent = '…'; }
   let done = 0;
-  await Promise.all(visible.map(async el => {
+  await Promise.all(elements.map(async el => {
     await wrapAndTranslate(el);
-    if (btn) btn.title = browser.i18n.getMessage('translatingProgress', [String(++done), String(visible.length)]);
+    if (btn) btn.title = browser.i18n.getMessage('translatingProgress', [String(++done), String(elements.length)]);
   }));
-  log(`[PageGrep] 译: done, translated ${visible.length} paragraphs`);
-  if (btn) { btn.disabled = false; setTranslateIcon(btn); btn.title = browser.i18n.getMessage('translateScreenContent'); }
+  log(`[PageGrep] 译: done, translated ${elements.length} elements`);
+  if (btn) {
+    btn.disabled = false;
+    setTranslateIcon(btn);
+    btn.title = browser.i18n.getMessage(inReaderMode ? 'translateReaderContent' : 'translateScreenContent')
+      || (inReaderMode ? 'Translate article' : 'Translate screen content');
+  }
 }
 
 async function wrapAndTranslate(el) {

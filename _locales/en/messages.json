@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "Translate screen content"
   },
+  "translateReaderContent": {
+    "message": "Translate article"
+  },
   "translatingProgress": {
     "message": "Translating $n$/$total$",
     "placeholders": {
@@ -272,5 +275,50 @@
   },
   "settingsLinkLabel": {
     "message": "Settings"
+  },
+  "readerMode": {
+    "message": "Reader mode"
+  },
+  "readerNoContent": {
+    "message": "No readable article found on this page"
+  },
+  "readerThemeLabel": {
+    "message": "Theme"
+  },
+  "readerModeNotice": {
+    "message": "Reader mode is active — summary and highlights will use the page behind the overlay"
+  },
+  "exitReader": {
+    "message": "Exit reader"
+  },
+  "readerSettings": {
+    "message": "Reading settings"
+  },
+  "readerThemeAuto": {
+    "message": "Auto"
+  },
+  "readerThemeLight": {
+    "message": "Light"
+  },
+  "readerThemeSepia": {
+    "message": "Sepia"
+  },
+  "readerThemeDark": {
+    "message": "Dark"
+  },
+  "readerFontLabel": {
+    "message": "Font"
+  },
+  "readerSpacingLabel": {
+    "message": "Spacing"
+  },
+  "readerWidthNarrow": {
+    "message": "Narrow"
+  },
+  "readerWidthNormal": {
+    "message": "Normal"
+  },
+  "readerWidthWide": {
+    "message": "Wide"
   }
 }

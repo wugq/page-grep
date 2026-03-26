@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "Перевести содержимое экрана"
   },
+  "translateReaderContent": {
+    "message": "Перевести статью"
+  },
   "translatingProgress": {
     "message": "Перевод $n$/$total$",
     "placeholders": {
@@ -272,5 +275,50 @@
   },
   "settingsLinkLabel": {
     "message": "Настройки"
+  },
+  "readerMode": {
+    "message": "Режим чтения"
+  },
+  "readerNoContent": {
+    "message": "На этой странице не найдено читаемого контента"
+  },
+  "readerThemeLabel": {
+    "message": "Тема"
+  },
+  "readerModeNotice": {
+    "message": "Режим чтения активен — резюме и выделения будут использовать страницу за оверлеем"
+  },
+  "exitReader": {
+    "message": "Выйти из режима чтения"
+  },
+  "readerSettings": {
+    "message": "Настройки чтения"
+  },
+  "readerThemeAuto": {
+    "message": "Авто"
+  },
+  "readerThemeLight": {
+    "message": "Светлый"
+  },
+  "readerThemeSepia": {
+    "message": "Сепия"
+  },
+  "readerThemeDark": {
+    "message": "Тёмный"
+  },
+  "readerFontLabel": {
+    "message": "Шрифт"
+  },
+  "readerSpacingLabel": {
+    "message": "Интервал"
+  },
+  "readerWidthNarrow": {
+    "message": "Узкий"
+  },
+  "readerWidthNormal": {
+    "message": "Обычный"
+  },
+  "readerWidthWide": {
+    "message": "Широкий"
   }
 }

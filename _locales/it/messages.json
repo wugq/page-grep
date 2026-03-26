@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "Traduci contenuto dello schermo"
   },
+  "translateReaderContent": {
+    "message": "Traduci articolo"
+  },
   "translatingProgress": {
     "message": "Traduzione $n$/$total$",
     "placeholders": {
@@ -272,5 +275,50 @@
   },
   "settingsLinkLabel": {
     "message": "Impostazioni"
+  },
+  "readerMode": {
+    "message": "Modalità lettura"
+  },
+  "readerNoContent": {
+    "message": "Nessun articolo leggibile trovato in questa pagina"
+  },
+  "readerThemeLabel": {
+    "message": "Tema"
+  },
+  "readerModeNotice": {
+    "message": "La modalità lettura è attiva — il riepilogo e i punti salienti useranno la pagina dietro il visualizzatore"
+  },
+  "exitReader": {
+    "message": "Esci dal lettore"
+  },
+  "readerSettings": {
+    "message": "Impostazioni lettura"
+  },
+  "readerThemeAuto": {
+    "message": "Auto"
+  },
+  "readerThemeLight": {
+    "message": "Chiaro"
+  },
+  "readerThemeSepia": {
+    "message": "Seppia"
+  },
+  "readerThemeDark": {
+    "message": "Scuro"
+  },
+  "readerFontLabel": {
+    "message": "Carattere"
+  },
+  "readerSpacingLabel": {
+    "message": "Interlinea"
+  },
+  "readerWidthNarrow": {
+    "message": "Stretto"
+  },
+  "readerWidthNormal": {
+    "message": "Normale"
+  },
+  "readerWidthWide": {
+    "message": "Largo"
   }
 }

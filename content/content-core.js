@@ -18,15 +18,14 @@ const log   = (...a) => devlog('log',   ...a);
 const warn  = (...a) => devlog('warn',  ...a);
 const error = (...a) => devlog('error', ...a);
 
-// --- DOM ID constants ---
-
-const PANEL_ID       = 'ai-reader-panel';
-const FLOAT_BTN_ID   = 'ai-translate-btn';
-
-// --- SVG icon strings ---
+const PANEL_ID           = 'ai-reader-panel';
+const FLOAT_BTN_ID       = 'ai-translate-btn';
+const READER_MODE_BTN_ID = 'ai-reader-mode-btn';
+const SCRATCHPAD_BTN_ID  = 'ai-scratchpad-btn';
 
 const TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
 const NOTE_ICON      = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" style="pointer-events:none"><rect x="3.5" y="1.5" width="13" height="17" rx="1.5" stroke="currentColor" stroke-width="1.5"/><line x1="6.5" y1="7" x2="13.5" y2="7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="10" x2="13.5" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="13" x2="10.5" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`;
+const READER_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
 // Toggle btn icons: translate icon (show translated) vs undo/back arrow (show original)
 const TOGGLE_TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
 const TOGGLE_ORIGINAL_ICON  = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>`;
@@ -41,8 +40,6 @@ function setToggleIcon(btn, showingTranslation) {
   const doc = _svgParser.parseFromString(src, 'image/svg+xml');
   btn.replaceChildren(doc.documentElement);
 }
-
-// --- Shared mutable state ---
 
 const SUMMARY_STATE = {
   points: null,
@@ -61,14 +58,18 @@ let _cachedTheme;
 
 const CHROME_SELECTOR = 'nav, header, footer, aside, [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"], .sidebar, #sidebar, .nav, #nav, .menu, #menu, .footer, #footer';
 
-// --- Theme helper ---
+// --- Theme change hook registry ---
+// Feature modules (e.g. content-reader.js) register callbacks here so
+// content-core.js does not need to know about them directly.
+
+const _themeChangeHooks = [];
+function onThemeChange(fn) { _themeChangeHooks.push(fn); }
 
 async function applyThemeToPanel() {
   const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
   document.getElementById(PANEL_ID)?.classList.toggle('dark', isThemeDark(theme));
+  _themeChangeHooks.forEach(fn => fn());
 }
-
-// --- Domain blocklist helper ---
 
 async function blockCurrentDomain() {
   const hostname = location.hostname;
@@ -79,8 +80,6 @@ async function blockCurrentDomain() {
     await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: [...list, hostname] });
   }
 }
-
-// --- Shared panel lifecycle ---
 
 function getOrCreatePanel() {
   let panel = document.getElementById(PANEL_ID);
@@ -97,8 +96,6 @@ function removePanelIfEmpty() {
   const panel = document.getElementById(PANEL_ID);
   if (panel && panel.children.length === 0) panel.remove();
 }
-
-// --- API key error helpers ---
 
 function isApiKeyError(msg, code) {
   if (code === 'NO_API_KEY') return true;

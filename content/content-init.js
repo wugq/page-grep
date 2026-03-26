@@ -1,8 +1,6 @@
 // content-init.js — bootstrap: initial storage read, message listener, storage change listener
 // Loaded last; depends on all other content modules.
 
-// --- Message listener ---
-
 browser.runtime.onMessage.addListener((message) => {
   if (message.action === 'getSummaryData') {
     return Promise.resolve({ points: SUMMARY_STATE.points || [] });
@@ -10,6 +8,10 @@ browser.runtime.onMessage.addListener((message) => {
 
   if (message.action === 'getHighlightData') {
     return Promise.resolve({ items: HIGHLIGHT_STATE.items || [] });
+  }
+
+  if (message.action === 'getReaderModeState') {
+    return Promise.resolve({ active: !!getActiveReaderBody() });
   }
 
   if (message.action === 'summaryHover') {
@@ -70,8 +72,6 @@ browser.runtime.onMessage.addListener((message) => {
   }
 });
 
-// --- Initialization ---
-
 log('[PageGrep] content script loaded', location.href);
 browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS, STORAGE_KEYS.THEME]).then(async ({ showFloatBtn, blockedDomains, theme }) => {
   _cachedTheme = theme;
@@ -101,9 +101,10 @@ browser.storage.onChanged.addListener((changes) => {
           createFloatButton();
         }
       });
-    } else {
+    } else if (!getActiveReaderBody()) {
       document.getElementById(FLOAT_BTN_ID)?.remove();
-      document.getElementById('ai-scratchpad-btn')?.remove();
+      document.getElementById(READER_MODE_BTN_ID)?.remove();
+      document.getElementById(SCRATCHPAD_BTN_ID)?.remove();
       clearAllHighlights();
       removePanelIfEmpty();
     }
@@ -113,10 +114,16 @@ browser.storage.onChanged.addListener((changes) => {
       ? changes[STORAGE_KEYS.BLOCKED_DOMAINS].newValue : [];
     if (blocked.includes(location.hostname)) {
       selectionTranslateEnabled = false;
-      document.getElementById(FLOAT_BTN_ID)?.remove();
-      document.getElementById('ai-scratchpad-btn')?.remove();
-      clearAllHighlights();
-      removePanelIfEmpty();
+      // Don't remove the panel while reader mode is active — the reader mode
+      // button is the settings trigger and removing it leaves reader mode
+      // uncontrollable. closeReaderMode() will clean up on exit.
+      if (!getActiveReaderBody()) {
+        document.getElementById(FLOAT_BTN_ID)?.remove();
+        document.getElementById(READER_MODE_BTN_ID)?.remove();
+        document.getElementById(SCRATCHPAD_BTN_ID)?.remove();
+        clearAllHighlights();
+        removePanelIfEmpty();
+      }
     } else {
       selectionTranslateEnabled = true;
       browser.storage.local.get(STORAGE_KEYS.SHOW_FLOAT_BTN).then(({ showFloatBtn }) => {

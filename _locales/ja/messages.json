@@ -185,6 +185,9 @@
   "translateScreenContent": {
     "message": "画面のコンテンツを翻訳"
   },
+  "translateReaderContent": {
+    "message": "記事を翻訳"
+  },
   "translatingProgress": {
     "message": "翻訳中 $n$/$total$",
     "placeholders": {
@@ -272,5 +275,50 @@
   },
   "settingsLinkLabel": {
     "message": "設定"
+  },
+  "readerMode": {
+    "message": "リーダーモード"
+  },
+  "readerNoContent": {
+    "message": "このページで読めるコンテンツが見つかりませんでした"
+  },
+  "readerThemeLabel": {
+    "message": "テーマ"
+  },
+  "readerModeNotice": {
+    "message": "リーダーモードが有効です — 要約とハイライトはオーバーレイ背後のページ内容を使用します"
+  },
+  "exitReader": {
+    "message": "リーダーを閉じる"
+  },
+  "readerSettings": {
+    "message": "読書設定"
+  },
+  "readerThemeAuto": {
+    "message": "自動"
+  },
+  "readerThemeLight": {
+    "message": "ライト"
+  },
+  "readerThemeSepia": {
+    "message": "セピア"
+  },
+  "readerThemeDark": {
+    "message": "ダーク"
+  },
+  "readerFontLabel": {
+    "message": "文字サイズ"
+  },
+  "readerSpacingLabel": {
+    "message": "行間"
+  },
+  "readerWidthNarrow": {
+    "message": "狭い"
+  },
+  "readerWidthNormal": {
+    "message": "普通"
+  },
+  "readerWidthWide": {
+    "message": "広い"
   }
 }
