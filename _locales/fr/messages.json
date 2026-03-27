@@ -286,7 +286,7 @@
     "message": "Thème"
   },
   "readerModeNotice": {
-    "message": "Le mode lecture est actif — le résumé et les surlignages utiliseront la page derrière l'affichage"
+    "message": "Mode lecture actif — le résumé et les surlignages analysent le contenu du lecteur"
   },
   "exitReader": {
     "message": "Quitter le lecteur"

@@ -286,7 +286,7 @@
     "message": "Tema"
   },
   "readerModeNotice": {
-    "message": "La modalità lettura è attiva — il riepilogo e i punti salienti useranno la pagina dietro il visualizzatore"
+    "message": "Modalità lettura attiva — il riepilogo e i punti salienti analizzano il contenuto del lettore"
   },
   "exitReader": {
     "message": "Esci dal lettore"

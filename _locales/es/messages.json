@@ -286,7 +286,7 @@
     "message": "Tema"
   },
   "readerModeNotice": {
-    "message": "El modo lector está activo — el resumen y los destacados usarán la página detrás del visor"
+    "message": "Modo lector activo — el resumen y los destacados analizan el contenido del lector"
   },
   "exitReader": {
     "message": "Salir del lector"

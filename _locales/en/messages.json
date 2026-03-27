@@ -286,7 +286,7 @@
     "message": "Theme"
   },
   "readerModeNotice": {
-    "message": "Reader mode is active — summary and highlights will use the page behind the overlay"
+    "message": "Reader mode active — summary and highlights analyze the reader content"
   },
   "exitReader": {
     "message": "Exit reader"

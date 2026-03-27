@@ -9,4 +9,6 @@ const STORAGE_KEYS = Object.freeze({
   PANEL_POSITION: 'panelPosition',
   BLOCKED_DOMAINS: 'blockedDomains',
   READER_PREFS: 'readerPrefs',
+  READER_STATES: 'readerStates',
+  PAGE_STATES: 'pageStates',
 });

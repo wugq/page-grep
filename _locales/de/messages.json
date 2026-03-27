@@ -286,7 +286,7 @@
     "message": "Design"
   },
   "readerModeNotice": {
-    "message": "Lesemodus ist aktiv – Zusammenfassung und Markierungen verwenden den Seiteninhalt hinter der Ansicht"
+    "message": "Lesemodus aktiv – Zusammenfassung und Markierungen analysieren den Leserinhalt"
   },
   "exitReader": {
     "message": "Leser beenden"

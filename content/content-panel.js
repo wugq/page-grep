@@ -15,7 +15,9 @@ function createFloatButton() {
   btn.addEventListener('click', () => {
     const readerBody = getActiveReaderBody();
     const elements = readerBody ? collectReaderElements(readerBody) : findVisibleParagraphs();
-    runTranslateElements(elements, btn, !!readerBody);
+    runTranslateElements(elements, btn, !!readerBody).then(() => {
+      if (readerBody) saveCurrentReaderTranslations(elements);
+    });
   });
 
   const readerBtn = document.createElement('button');

@@ -286,7 +286,7 @@
     "message": "Chủ đề"
   },
   "readerModeNotice": {
-    "message": "Chế độ đọc đang hoạt động — tóm tắt và điểm nổi bật sẽ sử dụng nội dung trang phía sau"
+    "message": "Chế độ đọc đang hoạt động — tóm tắt và điểm nổi bật phân tích nội dung của trình đọc"
   },
   "exitReader": {
     "message": "Thoát chế độ đọc"

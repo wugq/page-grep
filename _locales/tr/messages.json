@@ -286,7 +286,7 @@
     "message": "Tema"
   },
   "readerModeNotice": {
-    "message": "Okuyucu modu etkin — özet ve vurgular, görüntüleyicinin arkasındaki sayfayı kullanacak"
+    "message": "Okuyucu modu etkin — özet ve vurgular okuyucu içeriğini analiz eder"
   },
   "exitReader": {
     "message": "Okuyucudan çık"

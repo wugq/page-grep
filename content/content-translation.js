@@ -30,6 +30,39 @@ async function runTranslateElements(elements, btn, inReaderMode = false) {
   }
 }
 
+// Restore a previously-cached translation without calling the API.
+// onToggle(showing) is called whenever the user flips the paragraph.
+function restoreTranslation(el, savedHtml, showing, onToggle) {
+  el.dataset.aiWrapped = '1';
+  const pos = window.getComputedStyle(el).position;
+  if (pos === 'static') el.style.position = 'relative';
+
+  const originalSpan = document.createElement('span');
+  originalSpan.className = 'ai-para-original';
+  while (el.firstChild) originalSpan.appendChild(el.firstChild);
+
+  const translatedSpan = document.createElement('span');
+  translatedSpan.className = 'ai-para-translated';
+  translatedSpan.innerHTML = savedHtml;
+
+  el.append(originalSpan, translatedSpan);
+  el.classList.add('ai-para-wrap');
+  if (showing) el.classList.add('show-translation');
+
+  const btn = document.createElement('button');
+  btn.className = 'ai-toggle-btn';
+  setToggleIcon(btn, showing);
+  btn.title = browser.i18n.getMessage(showing ? 'showOriginal' : 'showTranslated');
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const newShowing = el.classList.toggle('show-translation');
+    setToggleIcon(btn, newShowing);
+    btn.title = browser.i18n.getMessage(newShowing ? 'showOriginal' : 'showTranslated');
+    onToggle?.(newShowing);
+  });
+  el.appendChild(btn);
+}
+
 async function wrapAndTranslate(el) {
   el.dataset.aiWrapped = '1';
   const pos = window.getComputedStyle(el).position;

@@ -286,7 +286,7 @@
     "message": "Tema"
   },
   "readerModeNotice": {
-    "message": "O modo leitura está ativo — o resumo e os destaques usarão a página por trás do visualizador"
+    "message": "Modo leitura ativo — o resumo e os destaques analisam o conteúdo do leitor"
   },
   "exitReader": {
     "message": "Sair do leitor"

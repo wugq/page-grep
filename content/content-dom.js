@@ -129,7 +129,21 @@ function detectPageLanguage() {
   if (lang.startsWith('ko')) return 'Korean';
   // Fall back to content analysis
   const sample = document.body?.innerText?.slice(0, 600) || '';
+  return detectLanguageFromSample(sample);
+}
+
+// Detect language from an arbitrary text sample (e.g. already-collected elements).
+// Used when the visible content may differ from document.documentElement.lang —
+// e.g. reader mode with translated paragraphs.
+function detectLanguageFromSample(text) {
+  const sample = text.slice(0, 600);
   const cjkChars = (sample.match(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g) || []).length;
-  if (cjkChars > 15) return 'Chinese';
+  if (cjkChars > 15) {
+    if (/[\uac00-\ud7af]/.test(sample)) return 'Korean';
+    if (/[\u3040-\u30ff]/.test(sample)) return 'Japanese';
+    return 'Chinese';
+  }
+  if (/[\u0400-\u04ff]/.test(sample)) return 'Russian';
+  if (/[\u0600-\u06ff]/.test(sample)) return 'Arabic';
   return 'English';
 }
