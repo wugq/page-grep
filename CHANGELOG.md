@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.6] - 2026-03-27
+
+### Added
+- **Reader state persistence** — reader mode now restores cached paragraph translations, summary targets, and reading position when you reopen the same article
+
+### Fixed
+- Reader mode now opens cleanly on first entry, with the floating reader button correctly switching into the settings trigger
+- Cached summary items in reader mode once again scroll to the correct article location after reopening
+- Cached page summaries now restore clickable scroll targets on normal pages too
+- Sidebar content state no longer gets overwritten by stale responses when switching tabs quickly
+- Clearing settings now also clears cached page summaries, reader state, and reader preferences
+- While reader mode is active, the floating panel can no longer be hidden through the right-click context menu
+
+### Changed
+- Sidebar toggle rows now show a clearer disabled state while reader mode temporarily locks panel-removal controls
+- Summary cards and floating panel buttons now use more accurate click affordances
+
 ## [1.5] - 2026-03-26
 
 ### Added

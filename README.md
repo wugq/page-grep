@@ -7,10 +7,12 @@ A Firefox extension that helps you read and discover content on web pages using 
 ## Features
 
 - **In-place translation** — translates visible paragraphs on screen without leaving the page. Each paragraph gets a hover-revealed toggle button to switch between original and translated text.
+- **Reader mode** — opens a distraction-free reading overlay with saved theme, width, font size, and spacing controls.
+- **Reader state restore** — remembers reader-mode translations, summary targets, and reading position for each page.
 - **Smart selection toolbar** — select any text on a translated paragraph to get "↩ Original" (revert that paragraph) and "Copy + Original" (copy source + translation together). On untranslated text, get "Translate" and "Copy" instead.
 - **Copy article to clipboard** — the clipboard button in the floating panel extracts the page article as clean Markdown and copies it instantly.
 - **Interest highlighting** — describe topics you care about (e.g. "AI, macroeconomics, sports"), and the extension uses AI to find and highlight matching content on any page, with reasons shown in the sidebar.
-- **Page summarization** — generates an AI-powered summary of the page, grouped into sections with bullet points, shown in the sidebar. Click any item to scroll to that section.
+- **Page summarization** — generates an AI-powered summary of the current page or reader article, grouped into sections with bullet points in the sidebar. Click any item to scroll to that section.
 - **Text selection translate** — select any text on a page to get a floating "Translate" pill; clicking it shows the translation in a popup tooltip.
 - **Draggable floating panel** — a compact panel in the bottom-right corner. Drag it to reposition; drag it to the trash zone at the bottom to dismiss. Position is saved across page loads.
 - **Per-domain blocking** — right-click the floating panel to hide it on the current site. A "Hide on this site" toggle in the sidebar also reflects and controls this state. Blocked domains are managed in Settings.
@@ -66,11 +68,12 @@ A compact panel appears in the bottom-right corner of every page (when enabled).
 | Button | Action |
 |--------|--------|
 | Translate icon | Translate all visible paragraphs on screen in-place |
+| Reader icon | Open reader mode; while reader mode is active, this becomes the reading settings button |
 | Clipboard icon | Extract the page article as Markdown and copy it to the clipboard |
 
 The panel is draggable — click and drag to reposition it. Drag it toward the bottom of the screen to reveal a trash zone; release there to hide the panel on the current site. Position is remembered across page loads.
 
-Right-click the panel for a **Hide on this site** context menu option. The panel can also be toggled globally via **Show Floating Button** in Settings, or per-site via the sidebar's **Hide on this site** toggle.
+Right-click the panel for a **Hide on this site** context menu option. The panel can also be toggled globally via **Show Floating Button** in Settings, or per-site via the sidebar's **Hide on this site** toggle. While reader mode is active, panel-removal controls are temporarily locked so the settings trigger stays available.
 
 ### Translate
 
@@ -100,8 +103,9 @@ Right-click the panel for a **Hide on this site** context menu option. The panel
 
 1. Click the extension icon to open the sidebar
 2. Click **Generate Summary**
-3. The page content is summarized into 2–5 sections with titles and bullet points
-4. Click any item in the summary to scroll to the corresponding section on the page
+3. The current page content is summarized into 2–5 sections with titles and bullet points
+4. If reader mode is open, summary and highlights operate on the reader article instead of the page behind the overlay
+5. Click any item in the summary to scroll to the corresponding section on the page
 
 ## Project Structure
 
@@ -111,7 +115,14 @@ reader/
 ├── background/
 │   └── background.js      # OpenAI API calls (translate, summarize, highlight)
 ├── content/
-│   └── content.js         # Floating panel, in-place translation, highlighting
+│   ├── content-core.js
+│   ├── content-dom.js
+│   ├── content-translation.js
+│   ├── content-collectors.js
+│   ├── content-reader.js
+│   ├── content-panel.js
+│   ├── content-selection.js
+│   └── content-init.js
 ├── sidebar/
 │   ├── sidebar.html
 │   ├── sidebar.js         # Sidebar UI: summary, interests, settings link
@@ -148,6 +159,7 @@ All settings are stored locally in `browser.storage.local`:
 | Show Floating Button | Show/hide the floating panel globally | Enabled |
 | Blocked Domains | Per-domain list to hide the float button; managed via right-click or sidebar toggle | — |
 | UI Language | Override the extension UI language | Browser default |
+| Reader Preferences | Reader theme, width, font size, and spacing | Saved per browser profile |
 
 ## Privacy
 
