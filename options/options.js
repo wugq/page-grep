@@ -102,7 +102,8 @@ document.getElementById('clear-btn').addEventListener('click', async () => {
   await browser.storage.local.remove([
     STORAGE_KEYS.API_KEY, STORAGE_KEYS.MODEL, STORAGE_KEYS.THEME,
     STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.USER_INTERESTS, STORAGE_KEYS.UI_LANG, STORAGE_KEYS.TRANSLATE_LANG,
-    STORAGE_KEYS.BLOCKED_DOMAINS, STORAGE_KEYS.PANEL_POSITION
+    STORAGE_KEYS.BLOCKED_DOMAINS, STORAGE_KEYS.PANEL_POSITION,
+    STORAGE_KEYS.READER_PREFS, STORAGE_KEYS.READER_STATES, STORAGE_KEYS.PAGE_STATES
   ]);
   document.getElementById('api-key').value = '';
   document.getElementById('model-select').value = 'gpt-4o-mini';

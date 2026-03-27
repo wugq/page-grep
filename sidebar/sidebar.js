@@ -5,10 +5,8 @@ function updateReaderModeUI(active) {
   readerModeActive = active;
   const notice = document.getElementById('reader-mode-notice');
   if (notice) notice.classList.toggle('hidden', !active);
-  ['summary-btn', 'highlight-btn'].forEach(id => {
-    const btn = document.getElementById(id);
-    if (btn) btn.disabled = active;
-  });
+  // Summary and highlight work in reader mode (they collect from the reader body),
+  // so only lock the panel controls that would break reader mode if changed.
   const floatCheckbox = document.getElementById('show-float-btn');
   if (floatCheckbox) floatCheckbox.disabled = active;
   // Also lock the hide-on-site toggle: removing the panel while reader mode is
@@ -193,6 +191,18 @@ async function updateHideOnSiteToggle() {
   hideOnSiteRow.classList.remove('hidden');
 }
 
+async function refreshContentState() {
+  if (!lastTabId) return;
+  const tabId = lastTabId;
+  const [summaryRes, highlightRes] = await Promise.all([
+    browser.tabs.sendMessage(tabId, { action: 'getSummaryData' }).catch(() => null),
+    browser.tabs.sendMessage(tabId, { action: 'getHighlightData' }).catch(() => null),
+  ]);
+  if (lastTabId !== tabId) return;
+  renderSummary(summaryRes?.points || []);
+  renderHighlights(highlightRes?.items || []);
+}
+
 async function loadFromActiveTab() {
   const tabId = await getActiveTabId();
   if (!tabId) return;
@@ -207,11 +217,13 @@ async function loadFromActiveTab() {
       browser.tabs.sendMessage(tabId, { action: 'getHighlightData' }).catch(() => null),
       browser.tabs.sendMessage(tabId, { action: 'getReaderModeState' }).catch(() => null),
     ]);
+    if (lastTabId !== tabId) return;
 
     updateReaderModeUI(!!readerRes?.active);
     renderSummary(summaryRes?.points || []);
     renderHighlights(highlightRes?.items || []);
   } catch (err) {
+    if (lastTabId !== tabId) return;
     // Tab might not have content script yet or is restricted
     updateReaderModeUI(false);
     renderSummary([]);
@@ -338,6 +350,9 @@ browser.runtime.onMessage.addListener((message, sender) => {
 
   if (message.action === 'readerModeChanged') {
     updateReaderModeUI(!!message.active);
+    // Content script has swapped SUMMARY_STATE to the reader/page instance —
+    // re-query so the sidebar displays the right cached summary.
+    refreshContentState();
     return;
   }
 

@@ -31,21 +31,39 @@ function clearAllHighlights() {
   HOVER_ELEMENTS.forEach(el => unhoverElement(el));
 }
 
+function restoreSummaryElements(summaryState, elements) {
+  if (!summaryState?.points?.length) return [];
+  const cachedTargets = Array.isArray(summaryState.targets) ? summaryState.targets : null;
+  if (!cachedTargets?.length) return elements;
+
+  const buckets = new Map();
+  elements.forEach((item) => {
+    const key = item.text;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(item);
+  });
+
+  return cachedTargets.map((text, index) => {
+    const bucket = buckets.get(text);
+    if (bucket?.length) return bucket.shift();
+    return elements[index] || { el: null, text };
+  });
+}
+
 function cacheSummary(points, elements, isReaderMode) {
+  const summary = {
+    points,
+    targets: elements.map(item => item.text)
+  };
   if (isReaderMode) {
-    saveReaderState(state => {
-      state.summary = {
-        points,
-        targets: elements.map(item => item.text)
-      };
-    });
+    saveReaderState(state => { state.summary = summary; });
     return;
   }
   const url = location.origin + location.pathname;
   browser.storage.local.get(STORAGE_KEYS.PAGE_STATES).then(({ pageStates }) => {
     const states = pageStates || {};
     if (!states[url]) states[url] = {};
-    states[url].summary = { points };
+    states[url].summary = summary;
     const keys = Object.keys(states);
     if (keys.length > 50) keys.slice(0, keys.length - 50).forEach(k => delete states[k]);
     browser.storage.local.set({ [STORAGE_KEYS.PAGE_STATES]: states });

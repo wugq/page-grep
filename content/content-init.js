@@ -73,6 +73,17 @@ browser.runtime.onMessage.addListener((message) => {
 });
 
 log('[PageGrep] content script loaded', location.href);
+
+// Pre-populate page-mode summary from cache so the sidebar can show it
+// immediately without requiring the user to re-run.
+browser.storage.local.get(STORAGE_KEYS.PAGE_STATES).then(({ pageStates }) => {
+  const cached = (pageStates || {})[location.origin + location.pathname]?.summary;
+  if (cached?.points?.length) {
+    SUMMARY_STATE.points = cached.points;
+    SUMMARY_STATE.elements = restoreSummaryElements(cached, collectPageElements());
+  }
+});
+
 browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS, STORAGE_KEYS.THEME]).then(async ({ showFloatBtn, blockedDomains, theme }) => {
   _cachedTheme = theme;
   await applyI18nOverride();
