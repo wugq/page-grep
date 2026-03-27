@@ -26,6 +26,10 @@ let _readerStates = null;
 let _articleHtml = null;
 let _articleMeta = null;
 
+// True while a saved article is loaded into the reader overlay (via the library
+// panel). Suppresses scroll-position tracking for the live page URL.
+let _libraryArticleLoaded = false;
+
 function getReaderUrl() {
   return location.origin + location.pathname;
 }
@@ -104,6 +108,7 @@ const CLOSE_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height
 const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>`;
 const SAVE_ICON     = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
 const SAVED_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
+const LIBRARY_ICON  = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
 
 const FONT_SIZES    = [14, 15, 16, 17, 18, 20, 22, 24, 28]; // index 0–8, default 4 (18px)
 const LINE_SPACINGS = [1.4, 1.6, 1.8, 2.0, 2.2];           // index 0–4, default 2 (1.8)
@@ -407,6 +412,158 @@ async function onSaveBtnClick(btn) {
   }
 }
 
+// Build the slide-in library panel. onOpen(article) is called when the user
+// picks an article; the panel closes itself beforehand.
+function buildLibraryPanel(onOpen) {
+  const panel = document.createElement('div');
+  panel.id = 'ai-reader-library';
+
+  const header = document.createElement('div');
+  header.className = 'ai-lib-header';
+  const headerTitle = document.createElement('span');
+  headerTitle.textContent = browser.i18n.getMessage('savedTab') || 'Saved';
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'ai-lib-close-btn';
+  closeBtn.textContent = '×';
+  closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+  header.append(headerTitle, closeBtn);
+  panel.appendChild(header);
+
+  const listEl = document.createElement('div');
+  listEl.className = 'ai-lib-list';
+  panel.appendChild(listEl);
+
+  async function refresh() {
+    const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
+    const articles = Array.isArray(savedArticles) ? savedArticles : [];
+    listEl.replaceChildren();
+
+    if (articles.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'ai-lib-empty';
+      empty.textContent = browser.i18n.getMessage('savedArticlesEmpty') || 'No saved articles yet';
+      listEl.appendChild(empty);
+      return;
+    }
+
+    articles.forEach((article) => {
+      const item = document.createElement('div');
+      item.className = 'ai-lib-item';
+
+      const titleEl = document.createElement('div');
+      titleEl.className = 'ai-lib-title';
+      titleEl.textContent = article.title || article.url;
+      item.appendChild(titleEl);
+
+      const metaParts = [article.siteName, article.savedAt ? new Date(article.savedAt).toLocaleDateString() : null].filter(Boolean);
+      if (metaParts.length) {
+        const metaEl = document.createElement('div');
+        metaEl.className = 'ai-lib-meta';
+        metaEl.textContent = metaParts.join(' · ');
+        item.appendChild(metaEl);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'ai-lib-actions';
+
+      const openBtn = document.createElement('button');
+      openBtn.className = 'ai-lib-open-btn';
+      openBtn.textContent = browser.i18n.getMessage('openSavedArticle') || 'Open';
+      openBtn.addEventListener('click', () => {
+        panel.classList.remove('open');
+        onOpen(article);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'ai-lib-delete-btn';
+      deleteBtn.textContent = browser.i18n.getMessage('deleteSavedArticle') || 'Delete';
+      deleteBtn.addEventListener('click', async () => {
+        const { savedArticles: current } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
+        const updated = (Array.isArray(current) ? current : [])
+          .filter(a => !(a.url === article.url && a.savedAt === article.savedAt));
+        await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: updated });
+        refresh();
+      });
+
+      actions.append(openBtn, deleteBtn);
+      item.appendChild(actions);
+      listEl.appendChild(item);
+    });
+  }
+
+  panel._refresh = refresh;
+  return panel;
+}
+
+// Replace the content inside an already-open reader overlay with a saved article.
+function loadSavedArticleIntoReader(article, overlay, saveBtn) {
+  _libraryArticleLoaded = true;
+
+  // Meta
+  const titleEl = document.getElementById('ai-reader-title');
+  if (titleEl) titleEl.textContent = article.title || '';
+
+  const meta = document.getElementById('ai-reader-meta');
+  let bylineEl = document.getElementById('ai-reader-byline');
+  const bylineParts = [article.byline, article.siteName, article.publishedTime].filter(Boolean);
+  if (bylineParts.length) {
+    if (!bylineEl) {
+      bylineEl = document.createElement('div');
+      bylineEl.id = 'ai-reader-byline';
+      titleEl?.insertAdjacentElement('afterend', bylineEl);
+    }
+    bylineEl.textContent = bylineParts.join(' · ');
+  } else if (bylineEl) {
+    bylineEl.textContent = '';
+  }
+
+  // Source URL
+  let sourceEl = meta?.querySelector('.ai-reader-source');
+  if (!sourceEl && meta) {
+    sourceEl = document.createElement('div');
+    sourceEl.className = 'ai-reader-source';
+    meta.appendChild(sourceEl);
+  }
+  if (sourceEl) {
+    sourceEl.replaceChildren();
+    const label = document.createElement('span');
+    label.textContent = (browser.i18n.getMessage('savedArticleSource') || 'Source') + ': ';
+    const link = document.createElement('a');
+    link.href = article.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = article.url;
+    sourceEl.append(label, link);
+  }
+
+  // Body
+  const body = document.getElementById('ai-reader-body');
+  if (body) {
+    const articleDoc = new DOMParser().parseFromString(article.html || '', 'text/html');
+    articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
+    body.replaceChildren(...Array.from(articleDoc.body.childNodes));
+    _readerBody = body;
+
+    if (article.translations && Object.keys(article.translations).length) {
+      const elements = collectReaderElements(body);
+      elements.forEach((el, idx) => {
+        const saved = article.translations[idx];
+        if (!saved) return;
+        restoreTranslation(el, saved.html, saved.showing, () => {});
+      });
+      attachTranslationToggleTracking(elements);
+    }
+
+    SUMMARY_STATE.points = [];
+    SUMMARY_STATE.elements = restoreSummaryElements(null, collectArticleElements(body));
+  }
+
+  overlay.scrollTop = 0;
+
+  // The save button is meaningless while viewing a saved-from-library article.
+  if (saveBtn) saveBtn.style.display = 'none';
+}
+
 function toggleReaderMode(triggerBtn) {
   if (document.getElementById(READER_OVERLAY_ID)) {
     closeReaderMode();
@@ -496,6 +653,25 @@ async function openReaderMode(triggerBtn) {
   updateSaveBtn(saveBtn, isSaved);
   saveBtn.addEventListener('click', () => onSaveBtnClick(saveBtn));
 
+  const libraryBtn = document.createElement('button');
+  libraryBtn.id = 'ai-reader-library-btn';
+  libraryBtn.replaceChildren(_svgParser.parseFromString(LIBRARY_ICON, 'image/svg+xml').documentElement);
+  const libraryLabel = browser.i18n.getMessage('savedTab') || 'Saved';
+  libraryBtn.title = libraryLabel;
+  libraryBtn.setAttribute('aria-label', libraryLabel);
+
+  const libraryPanel = buildLibraryPanel((article) => {
+    loadSavedArticleIntoReader(article, overlay, saveBtn);
+    libraryBtn.classList.remove('active');
+  });
+
+  libraryBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = libraryPanel.classList.toggle('open');
+    libraryBtn.classList.toggle('active', isOpen);
+    if (isOpen) libraryPanel._refresh();
+  });
+
   // created before settingsPanel so we can pass it for width transitions
   const content = document.createElement('div');
   content.id = 'ai-reader-content';
@@ -548,7 +724,7 @@ async function openReaderMode(triggerBtn) {
   const settingsPanel = buildSettingsPanel(overlay, prefs, content);
 
   // settingsPanel is position:fixed but inside overlay so it inherits CSS theme vars
-  overlay.append(closeBtn, saveBtn, settingsPanel, content);
+  overlay.append(closeBtn, saveBtn, libraryBtn, libraryPanel, settingsPanel, content);
 
   // Save scroll position before locking the page so we can restore it on close.
   const savedScrollY = window.scrollY;
@@ -588,8 +764,10 @@ async function openReaderMode(triggerBtn) {
   const cleanupFns = [];
 
   // Persist reading position on scroll (debounced) so it survives crashes/unloads.
+  // Skipped when a saved article is loaded in-place (no URL to persist against).
   let _scrollSaveTimer = null;
   overlay.addEventListener('scroll', () => {
+    if (_libraryArticleLoaded) return;
     clearTimeout(_scrollSaveTimer);
     _scrollSaveTimer = setTimeout(() => {
       saveReaderState(state => { state.readingIndex = findReadingIndex(overlay); });
@@ -634,19 +812,26 @@ async function openReaderMode(triggerBtn) {
     });
   }
 
-  // Dismiss settings popup on click outside
+  // Dismiss library panel or settings on click outside
   overlay.addEventListener('click', (e) => {
+    if (libraryPanel.classList.contains('open') && !libraryPanel.contains(e.target) && !libraryBtn.contains(e.target)) {
+      libraryPanel.classList.remove('open');
+      libraryBtn.classList.remove('active');
+    }
     if (settingsOpen && !settingsPanel.contains(e.target)) {
       setSettingsOpen(false);
     }
   });
 
   // Keyboard handler:
-  //   Escape — close settings panel first; close the whole reader only if settings is already closed.
+  //   Escape — close library first, then settings, then the whole reader.
   //   Tab    — focus trap: cycle within the overlay + the optional settings trigger button.
   function onKeydown(e) {
     if (e.key === 'Escape') {
-      if (settingsOpen) { setSettingsOpen(false); } else { closeReaderMode(); }
+      if (libraryPanel.classList.contains('open')) {
+        libraryPanel.classList.remove('open');
+        libraryBtn.classList.remove('active');
+      } else if (settingsOpen) { setSettingsOpen(false); } else { closeReaderMode(); }
       return;
     }
     if (e.key === 'Tab') {
@@ -702,6 +887,7 @@ function closeReaderMode() {
   _readerStates = null;
   _articleHtml = null;
   _articleMeta = null;
+  _libraryArticleLoaded = false;
 
   // Restore page-mode summary before notifying the sidebar.
   SUMMARY_STATE.points = _pageSummaryBackup?.points || [];
@@ -726,164 +912,3 @@ function closeReaderMode() {
   overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
 }
 
-// Open a previously saved article in reader mode on the current page.
-// The article HTML and translations are taken from storage — no network call needed.
-async function openSavedArticle(article) {
-  if (_readerOpening || document.getElementById(READER_OVERLAY_ID)) return;
-  _readerOpening = true;
-
-  let prefs;
-  try {
-    prefs = await loadReaderPrefs();
-  } catch (err) {
-    _readerOpening = false;
-    showToast(browser.i18n.getMessage('operationFailed') || 'Failed to open article');
-    return;
-  }
-
-  _readerOpening = false;
-
-  const overlay = document.createElement('div');
-  overlay.id = READER_OVERLAY_ID;
-  overlay.tabIndex = -1;
-  applyPrefs(overlay, prefs);
-
-  const closeBtn = document.createElement('button');
-  closeBtn.id = 'ai-reader-close-btn';
-  closeBtn.replaceChildren(_svgParser.parseFromString(CLOSE_ICON, 'image/svg+xml').documentElement);
-  const exitLabel = browser.i18n.getMessage('exitReader') || 'Exit reader';
-  closeBtn.title = exitLabel;
-  closeBtn.setAttribute('aria-label', exitLabel);
-
-  const content = document.createElement('div');
-  content.id = 'ai-reader-content';
-
-  const meta = document.createElement('div');
-  meta.id = 'ai-reader-meta';
-
-  const titleEl = document.createElement('h1');
-  titleEl.id = 'ai-reader-title';
-  titleEl.textContent = article.title || '';
-  meta.appendChild(titleEl);
-
-  const bylineParts = [article.byline, article.siteName, article.publishedTime].filter(Boolean);
-  if (bylineParts.length > 0) {
-    const bylineEl = document.createElement('div');
-    bylineEl.id = 'ai-reader-byline';
-    bylineEl.textContent = bylineParts.join(' · ');
-    meta.appendChild(bylineEl);
-  }
-
-  const sourceEl = document.createElement('div');
-  sourceEl.className = 'ai-reader-source';
-  const sourceLabel = document.createElement('span');
-  sourceLabel.textContent = (browser.i18n.getMessage('savedArticleSource') || 'Source') + ': ';
-  const sourceLink = document.createElement('a');
-  sourceLink.href = article.url;
-  sourceLink.target = '_blank';
-  sourceLink.rel = 'noopener noreferrer';
-  sourceLink.textContent = article.url;
-  sourceEl.append(sourceLabel, sourceLink);
-  meta.appendChild(sourceEl);
-
-  const body = document.createElement('div');
-  body.id = 'ai-reader-body';
-  const articleDoc = new DOMParser().parseFromString(article.html || '', 'text/html');
-  articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
-  body.replaceChildren(...Array.from(articleDoc.body.childNodes));
-  _readerBody = body;
-  const summaryElements = collectArticleElements(body);
-
-  if (article.translations && Object.keys(article.translations).length) {
-    const elements = collectReaderElements(body);
-    elements.forEach((el, idx) => {
-      const saved = article.translations[idx];
-      if (!saved) return;
-      restoreTranslation(el, saved.html, saved.showing, () => {});
-    });
-    attachTranslationToggleTracking(elements);
-  }
-
-  content.append(meta, body);
-
-  const settingsBtn = document.createElement('button');
-  settingsBtn.id = 'ai-reader-settings-btn';
-  settingsBtn.replaceChildren(_svgParser.parseFromString(SETTINGS_ICON, 'image/svg+xml').documentElement);
-  const settingsLabel = browser.i18n.getMessage('readerSettings') || 'Reading settings';
-  settingsBtn.title = settingsLabel;
-  settingsBtn.setAttribute('aria-label', settingsLabel);
-
-  const settingsPanel = buildSettingsPanel(overlay, prefs, content);
-  overlay.append(closeBtn, settingsBtn, settingsPanel, content);
-
-  const savedScrollY = window.scrollY;
-  document.body.appendChild(overlay);
-  document.documentElement.style.overflow = 'hidden';
-
-  _pageSummaryBackup = {
-    points: Array.isArray(SUMMARY_STATE.points) ? SUMMARY_STATE.points.slice() : [],
-    elements: Array.isArray(SUMMARY_STATE.elements) ? SUMMARY_STATE.elements.slice() : []
-  };
-  SUMMARY_STATE.points = [];
-  SUMMARY_STATE.elements = restoreSummaryElements(null, summaryElements);
-
-  browser.runtime.sendMessage({ action: 'readerModeChanged', active: true }).catch(() => {});
-  overlay.focus();
-
-  const cleanupFns = [];
-
-  let settingsOpen = false;
-  let _focusableCache = null;
-  function setSettingsOpen(open) {
-    settingsOpen = open;
-    _focusableCache = null;
-    if (open) positionSettingsPopup(settingsPanel, settingsBtn);
-    settingsPanel.classList.toggle('open', open);
-    settingsBtn.classList.toggle('active', open);
-  }
-
-  settingsBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    setSettingsOpen(!settingsOpen);
-  });
-
-  overlay.addEventListener('click', (e) => {
-    if (settingsOpen && !settingsPanel.contains(e.target)) setSettingsOpen(false);
-  });
-
-  function onKeydown(e) {
-    if (e.key === 'Escape') {
-      if (settingsOpen) { setSettingsOpen(false); } else { closeReaderMode(); }
-      return;
-    }
-    if (e.key === 'Tab') {
-      let all = _focusableCache;
-      if (!all) {
-        const sel = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
-        all = Array.from(overlay.querySelectorAll(sel)).filter(el => settingsOpen || !settingsPanel.contains(el));
-        if (!settingsOpen) _focusableCache = all;
-      }
-      if (all.length < 2) return;
-      const first = all[0];
-      const last  = all[all.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault(); last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault(); first.focus();
-      }
-    }
-  }
-  document.addEventListener('keydown', onKeydown);
-  cleanupFns.push(() => document.removeEventListener('keydown', onKeydown));
-
-  function onResize() {
-    if (settingsOpen) positionSettingsPopup(settingsPanel, settingsBtn);
-  }
-  window.addEventListener('resize', onResize);
-  cleanupFns.push(() => window.removeEventListener('resize', onResize));
-
-  overlay._cleanupFns   = cleanupFns;
-  overlay._savedScrollY = savedScrollY;
-
-  closeBtn.addEventListener('click', closeReaderMode);
-}
