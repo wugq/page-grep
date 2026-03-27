@@ -222,6 +222,11 @@ function showPanelContextMenu(x, y) {
   const menu = document.createElement('div');
   menu.id = 'ai-panel-menu';
   if (isThemeDark(_cachedTheme)) menu.classList.add('dark');
+  const onOutsideMousedown = (e) => {
+    if (menu.contains(e.target)) return;
+    menu.remove();
+    document.removeEventListener('mousedown', onOutsideMousedown);
+  };
   const item = document.createElement('button');
   item.textContent = browser.i18n.getMessage('hideOnSite', [hostname]) || `Hide on ${hostname}`;
   item.addEventListener('click', async () => {
@@ -239,11 +244,6 @@ function showPanelContextMenu(x, y) {
     if (rect.right > window.innerWidth - 8) menu.style.left = (x - rect.width) + 'px';
     if (rect.bottom > window.innerHeight - 8) menu.style.top = (y - rect.height) + 'px';
   });
-  const onOutsideMousedown = (e) => {
-    if (menu.contains(e.target)) return;
-    menu.remove();
-    document.removeEventListener('mousedown', onOutsideMousedown);
-  };
   setTimeout(() => document.addEventListener('mousedown', onOutsideMousedown), 0);
 }
 

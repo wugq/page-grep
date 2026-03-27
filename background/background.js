@@ -67,7 +67,9 @@ async function callAI(systemPrompt, userContent, apiKey, model, jsonMode = false
     throw new Error(error.error?.message || `API error: ${response.status}`);
   }
   const data = await response.json();
-  return data.choices[0].message.content;
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Empty response from API');
+  return content;
 }
 
 async function getApiSettings() {

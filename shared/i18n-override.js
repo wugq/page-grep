@@ -19,7 +19,8 @@ async function applyI18nOverride() {
         Object.entries(entry.placeholders).forEach(([name, placeholder]) => {
           const contentMatch = /^\$(\d+)$/.exec(placeholder.content || '');
           const subIdx = contentMatch ? parseInt(contentMatch[1], 10) - 1 : 0;
-          msg = msg.replace(new RegExp('\\$' + name + '\\$', 'gi'), subs[subIdx] ?? '');
+          const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          msg = msg.replace(new RegExp('\\$' + escapedName + '\\$', 'gi'), subs[subIdx] ?? '');
         });
       }
       return msg;
