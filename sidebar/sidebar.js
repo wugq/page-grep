@@ -8,11 +8,17 @@ function updateReaderModeUI(active) {
   // Summary and highlight work in reader mode (they collect from the reader body),
   // so only lock the panel controls that would break reader mode if changed.
   const floatCheckbox = document.getElementById('show-float-btn');
-  if (floatCheckbox) floatCheckbox.disabled = active;
+  if (floatCheckbox) {
+    floatCheckbox.disabled = active;
+    floatCheckbox.closest('.toggle-row')?.classList.toggle('disabled', active);
+  }
   // Also lock the hide-on-site toggle: removing the panel while reader mode is
   // active would destroy the settings trigger and leave reader mode uncontrollable.
   const hideOnSiteToggle = document.getElementById('hide-on-site-toggle');
-  if (hideOnSiteToggle) hideOnSiteToggle.disabled = active;
+  if (hideOnSiteToggle) {
+    hideOnSiteToggle.disabled = active;
+    hideOnSiteToggle.closest('.toggle-row')?.classList.toggle('disabled', active);
+  }
 }
 
 const tabBtns = document.querySelectorAll('.tab-btn');

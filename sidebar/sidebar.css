@@ -299,7 +299,7 @@ body {
   border-radius: 14px;
   padding: 18px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
+  cursor: default;
   box-shadow: var(--item-shadow);
 }
 
@@ -333,6 +333,7 @@ body {
   opacity: 0.9;
   padding: 6px 8px;
   border-radius: 8px;
+  cursor: pointer;
   transition: background 0.2s;
 }
 
@@ -373,6 +374,16 @@ body {
   cursor: pointer;
 }
 
+.toggle-row.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.toggle-row.disabled .switch,
+.toggle-row.disabled .toggle-label {
+  cursor: not-allowed;
+}
+
 .toggle-label {
   font-size: 13px;
   color: var(--muted);
@@ -388,6 +399,15 @@ body {
 }
 
 .switch input { opacity: 0; width: 0; height: 0; }
+
+.switch input:disabled + .slider {
+  background: var(--border);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+.switch input:disabled + .slider:before {
+  background-color: rgba(255,255,255,0.9);
+}
 
 .slider {
   position: absolute;
@@ -494,4 +514,3 @@ input:checked + .slider:before { transform: translateX(16px); }
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-

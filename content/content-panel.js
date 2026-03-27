@@ -49,6 +49,7 @@ function createFloatButton() {
 
   panel.addEventListener('contextmenu', (e) => {
     e.preventDefault();
+    if (getActiveReaderBody()) return;
     showPanelContextMenu(e.clientX, e.clientY);
   });
 
@@ -215,6 +216,7 @@ function makeDraggable(panel) {
 }
 
 function showPanelContextMenu(x, y) {
+  if (getActiveReaderBody()) return;
   document.getElementById('ai-panel-menu')?.remove();
   const hostname = location.hostname;
   const menu = document.createElement('div');
