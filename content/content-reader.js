@@ -94,6 +94,25 @@ function attachTranslationToggleTracking(elements) {
   });
 }
 
+function restoreReaderSummaryElements(summaryState, elements) {
+  if (!summaryState?.points?.length) return [];
+  const cachedTargets = Array.isArray(summaryState.targets) ? summaryState.targets : null;
+  if (!cachedTargets?.length) return elements;
+
+  const buckets = new Map();
+  elements.forEach((item) => {
+    const key = item.text;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(item);
+  });
+
+  return cachedTargets.map((text, index) => {
+    const bucket = buckets.get(text);
+    if (bucket?.length) return bucket.shift();
+    return elements[index] || { el: null, text };
+  });
+}
+
 // READER_ICON is defined in content-core.js
 const CLOSE_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>`;
@@ -455,6 +474,7 @@ async function openReaderMode(triggerBtn) {
   articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
   body.replaceChildren(...Array.from(articleDoc.body.childNodes));
   _readerBody = body;
+  const summaryElements = collectArticleElements(body);
 
   // Restore cached translations (no API call).
   // Collect elements before any restoreTranslation call — filterTranslatableElements
@@ -493,9 +513,9 @@ async function openReaderMode(triggerBtn) {
     elements: Array.isArray(SUMMARY_STATE.elements) ? SUMMARY_STATE.elements.slice() : []
   };
   SUMMARY_STATE.points = urlState.summary?.points || [];
-  // Rebuild live DOM refs for cached reader summaries so sidebar hover/click
-  // can still target the current reader content without re-running summary.
-  SUMMARY_STATE.elements = SUMMARY_STATE.points.length ? collectArticleElements(body) : [];
+  // Restore live DOM refs for cached reader summaries using the original
+  // reader text collected before translation wrappers are reapplied.
+  SUMMARY_STATE.elements = restoreReaderSummaryElements(urlState.summary, summaryElements);
 
   browser.runtime.sendMessage({ action: 'readerModeChanged', active: true }).catch(() => {});
 
@@ -505,7 +525,7 @@ async function openReaderMode(triggerBtn) {
 
   // Restore last reading position (element-index-based, survives font/width changes).
   // Uses getReaderPositionElements — stable regardless of translation state.
-  if (urlState.readingIndex) {
+  if (urlState.readingIndex != null) {
     const target = getReaderPositionElements(body)[urlState.readingIndex];
     if (target) {
       requestAnimationFrame(() => {

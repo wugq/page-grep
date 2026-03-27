@@ -31,6 +31,27 @@ function clearAllHighlights() {
   HOVER_ELEMENTS.forEach(el => unhoverElement(el));
 }
 
+function cacheSummary(points, elements, isReaderMode) {
+  if (isReaderMode) {
+    saveReaderState(state => {
+      state.summary = {
+        points,
+        targets: elements.map(item => item.text)
+      };
+    });
+    return;
+  }
+  const url = location.origin + location.pathname;
+  browser.storage.local.get(STORAGE_KEYS.PAGE_STATES).then(({ pageStates }) => {
+    const states = pageStates || {};
+    if (!states[url]) states[url] = {};
+    states[url].summary = { points };
+    const keys = Object.keys(states);
+    if (keys.length > 50) keys.slice(0, keys.length - 50).forEach(k => delete states[k]);
+    browser.storage.local.set({ [STORAGE_KEYS.PAGE_STATES]: states });
+  });
+}
+
 function updateSummarySidebar(points, elements) {
   SUMMARY_STATE.points = points;
   SUMMARY_STATE.elements = elements;
@@ -41,8 +62,13 @@ function updateSummarySidebar(points, elements) {
 
 async function runSummaryFromPage() {
   log('[PageGrep] runSummary triggered');
-  const elements = collectPageElements();
-  const pageLanguage = detectPageLanguage();
+  const readerBody = getActiveReaderBody();
+  const elements = readerBody ? collectArticleElements(readerBody) : collectPageElements();
+  // In reader mode the content may be translated, so detect language from the
+  // actual visible text rather than document.documentElement.lang.
+  const pageLanguage = readerBody
+    ? detectLanguageFromSample(elements.slice(0, 10).map(e => e.text).join(' '))
+    : detectPageLanguage();
   log(`[PageGrep] summary: collected ${elements.length} page elements, language: ${pageLanguage}`);
   if (elements.length === 0) {
     browser.runtime.sendMessage({ action: 'summaryError', error: browser.i18n.getMessage('noAnalyzableContent') });
@@ -59,6 +85,7 @@ async function runSummaryFromPage() {
     if (!response.success) throwFromResponse(response);
     log(`[PageGrep] summary: received ${response.points.length} points`, response.points);
     updateSummarySidebar(response.points, elements);
+    cacheSummary(response.points, elements, !!readerBody);
   } catch (err) {
     error('[PageGrep] summary: failed:', err.message);
     browser.runtime.sendMessage({ action: 'summaryError', error: err.message, code: err.code });
@@ -257,7 +284,8 @@ async function runInterestingFromPage() {
     return;
   }
 
-  const elements = collectPageElements();
+  const readerBody = getActiveReaderBody();
+  const elements = readerBody ? collectArticleElements(readerBody) : collectPageElements();
   HIGHLIGHT_STATE.elements = elements;
   log(`[PageGrep] ★: collected ${elements.length} elements, interests: "${userInterests}"`);
   if (elements.length === 0) {
