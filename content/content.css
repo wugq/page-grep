@@ -45,6 +45,8 @@
   position: fixed !important;
   bottom: 24px;
   right: 20px;
+  top: auto;
+  left: auto;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -264,31 +266,38 @@
 #ai-reader-overlay[data-reader-theme="light"] {
   --rd-bg: #f9f7f4; --rd-text: #1a1a1a; --rd-muted: #888;
   --rd-border: rgba(0,0,0,0.08); --rd-meta-border: rgba(0,0,0,0.1);
-  --rd-link: #6366f1; --rd-quote: #666; --rd-ctrl-bg: rgba(0,0,0,0.06);
-  --rd-ctrl-color: #444; --rd-ctrl-active-bg: rgba(0,0,0,0.12);
+  --rd-link: #6366f1; --rd-quote: #666; --rd-ctrl-bg: rgba(255,255,255,0.85);
+  --rd-ctrl-color: #222; --rd-ctrl-border: rgba(0,0,0,0.14);
+  --rd-ctrl-active-bg: rgba(0,0,0,0.08);
   --rd-settings-bg: rgba(0,0,0,0.025); --rd-accent: #6366f1;
 }
 #ai-reader-overlay[data-reader-theme="sepia"] {
   --rd-bg: #f4ecd8; --rd-text: #5b4636; --rd-muted: #9c7c5e;
   --rd-border: rgba(91,70,54,0.12); --rd-meta-border: rgba(91,70,54,0.15);
-  --rd-link: #8b5e3c; --rd-quote: #8b7355; --rd-ctrl-bg: rgba(91,70,54,0.1);
-  --rd-ctrl-color: #5b4636; --rd-ctrl-active-bg: rgba(91,70,54,0.2);
+  --rd-link: #8b5e3c; --rd-quote: #8b7355; --rd-ctrl-bg: rgba(255,248,235,0.88);
+  --rd-ctrl-color: #4a3728; --rd-ctrl-border: rgba(91,70,54,0.22);
+  --rd-ctrl-active-bg: rgba(91,70,54,0.12);
   --rd-settings-bg: rgba(91,70,54,0.04); --rd-accent: #8b5e3c;
 }
 #ai-reader-overlay[data-reader-theme="dark"] {
   --rd-bg: #1c1c1e; --rd-text: #d0d0d0; --rd-muted: #888;
   --rd-border: rgba(255,255,255,0.08); --rd-meta-border: rgba(255,255,255,0.1);
-  --rd-link: #818cf8; --rd-quote: #aaa; --rd-ctrl-bg: rgba(255,255,255,0.1);
-  --rd-ctrl-color: #ccc; --rd-ctrl-active-bg: rgba(255,255,255,0.18);
+  --rd-link: #818cf8; --rd-quote: #aaa; --rd-ctrl-bg: rgba(50,50,55,0.92);
+  --rd-ctrl-color: #e8e8e8; --rd-ctrl-border: rgba(255,255,255,0.14);
+  --rd-ctrl-active-bg: rgba(255,255,255,0.12);
   --rd-settings-bg: rgba(255,255,255,0.03); --rd-accent: #818cf8;
 }
 
 /* --- Reader overlay --- */
 #ai-reader-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483640;
-  overflow-y: auto;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483640 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-sizing: border-box !important;
   background: var(--rd-bg);
   color: var(--rd-text);
   font-family: Georgia, "Times New Roman", serif;
@@ -303,81 +312,26 @@
 @keyframes ai-reader-fade-in  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ai-reader-fade-out { from { opacity: 1; } to { opacity: 0; } }
 
-/* Close button — fixed top-right, subtle until hovered */
-#ai-reader-close-btn {
-  position: fixed;
-  top: 16px;
-  right: 24px;
-  z-index: 2147483641;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
-  max-width: 32px !important;
-  max-height: 32px !important;
-  padding: 0 !important;
-  box-sizing: border-box !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--rd-ctrl-bg);
-  color: var(--rd-ctrl-color);
-  border: none !important;
-  border-radius: 50% !important;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.15s, transform 0.15s;
-  flex-shrink: 0 !important;
-}
-#ai-reader-close-btn:hover { opacity: 1; transform: scale(1.1); }
-#ai-reader-close-btn:focus { outline: none; }
-#ai-reader-close-btn:focus-visible {
-  outline: 2px solid var(--rd-accent);
-  outline-offset: 2px;
-  opacity: 1;
+/* Inner scroll container — keeps buttons/panels above the scroll area and
+   avoids the `overflow:auto` + `position:fixed` interaction bugs. */
+#ai-reader-scroll {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;         /* explicit low z-index — buttons sit above at 2147483641 */
+  overflow-y: scroll !important; /* !important guards against site CSS overrides */
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;  /* prevent scroll chaining to page scroll container */
 }
 
-/* Save button — same shape as close btn, positioned to its left */
-#ai-reader-save-btn {
-  position: fixed;
-  top: 16px;
-  right: 64px;
-  z-index: 2147483641;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
-  max-width: 32px !important;
-  max-height: 32px !important;
-  padding: 0 !important;
-  box-sizing: border-box !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--rd-ctrl-bg);
-  color: var(--rd-ctrl-color);
-  border: none !important;
-  border-radius: 50% !important;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.15s, transform 0.15s, color 0.15s;
-  flex-shrink: 0 !important;
-}
-#ai-reader-save-btn:hover { opacity: 1; transform: scale(1.1); }
-#ai-reader-save-btn.saved { color: var(--rd-accent); opacity: 1; }
-#ai-reader-save-btn:focus { outline: none; }
-#ai-reader-save-btn:focus-visible {
-  outline: 2px solid var(--rd-accent);
-  outline-offset: 2px;
-  opacity: 1;
-}
-
-/* Library (reading list) button — top-left, mirrors save/close button shape */
+/* Shared style for all four reader control buttons */
+#ai-reader-close-btn,
+#ai-reader-save-btn,
+#ai-reader-back-btn,
 #ai-reader-library-btn {
-  position: fixed;
-  top: 16px;
-  left: 24px;
-  z-index: 2147483641;
+  position: absolute !important;
+  top: 16px !important;
+  z-index: 2147483641 !important;
+  pointer-events: auto !important;
   width: 32px !important;
   height: 32px !important;
   min-width: 32px !important;
@@ -389,32 +343,65 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--rd-ctrl-bg);
-  color: var(--rd-ctrl-color);
-  border: none !important;
+  background: var(--rd-ctrl-bg) !important;
+  color: var(--rd-ctrl-color) !important;
+  border: 1px solid var(--rd-ctrl-border, rgba(0,0,0,0.12)) !important;
   border-radius: 50% !important;
   cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.15s, transform 0.15s, color 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  transition: transform 0.15s, box-shadow 0.15s, color 0.15s;
   flex-shrink: 0 !important;
 }
-#ai-reader-library-btn:hover { opacity: 1; transform: scale(1.1); }
-#ai-reader-library-btn.active { opacity: 1; color: var(--rd-accent); }
+#ai-reader-close-btn:hover,
+#ai-reader-save-btn:hover,
+#ai-reader-back-btn:hover,
+#ai-reader-library-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Per-button positions */
+#ai-reader-close-btn   { right: 24px !important; }
+#ai-reader-save-btn    { right: 64px !important; }
+#ai-reader-back-btn    { right: 104px !important; }
+#ai-reader-library-btn { left: 24px !important; }
+
+/* Close button */
+#ai-reader-close-btn:focus { outline: none; }
+#ai-reader-close-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; }
+
+/* Save button */
+#ai-reader-save-btn.saved { color: var(--rd-accent) !important; }
+#ai-reader-save-btn:focus { outline: none; }
+#ai-reader-save-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; }
+
+/* Back button */
+#ai-reader-back-btn:focus { outline: none; }
+#ai-reader-back-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; }
+
+/* Library button */
+#ai-reader-library-btn.active { color: var(--rd-accent) !important; }
 #ai-reader-library-btn:focus { outline: none; }
-#ai-reader-library-btn:focus-visible {
-  outline: 2px solid var(--rd-accent);
-  outline-offset: 2px;
-  opacity: 1;
+#ai-reader-library-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; opacity: 1; }
+
+/* Backdrop behind the library panel — inserted into DOM only when library is open,
+   removed when closed, so it never interferes with scroll-event dispatch. */
+#ai-reader-library-backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2147483641 !important;
+  background: rgba(0, 0, 0, 0.35);
+  cursor: default;
 }
 
 /* Library slide-in panel */
 #ai-reader-library {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 300px;
-  z-index: 2147483642;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 300px !important;
+  z-index: 2147483642 !important;
   background: var(--rd-bg);
   border-right: 1px solid var(--rd-border);
   overflow-y: auto;
@@ -455,6 +442,30 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.ai-lib-loading {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--rd-muted);
+  font-size: 13px;
+}
+.ai-lib-loading::after {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--rd-border);
+  border-top-color: var(--rd-accent);
+  border-radius: 50%;
+  animation: ai-lib-spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes ai-lib-spin { to { transform: rotate(360deg); } }
+.ai-lib-error {
+  padding: 24px 16px;
+  text-align: center;
+  color: #ef4444;
+  font-size: 13px;
 }
 .ai-lib-empty {
   padding: 32px 16px;
@@ -526,8 +537,8 @@
 
 /* Settings popup */
 #ai-reader-settings {
-  position: fixed;
-  z-index: 2147483642;
+  position: absolute !important;
+  z-index: 2147483642 !important;
   width: 220px;
   max-height: var(--reader-settings-max-h);
   overflow-x: hidden;
@@ -537,14 +548,20 @@
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
   opacity: 0;
-  pointer-events: none;
+  pointer-events: none !important;
   transform: scale(0.96);
   transform-origin: top right; /* overridden dynamically by JS before .open is added */
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
+/* Also disable pointer-events on all children when closed — CSS pointer-events:none
+   on a parent does NOT automatically cascade to children, so page CSS can still make
+   child elements intercept clicks. */
+#ai-reader-settings:not(.open) * {
+  pointer-events: none !important;
+}
 #ai-reader-settings.open {
   opacity: 1;
-  pointer-events: auto;
+  pointer-events: auto !important;
   transform: translateY(0) scale(1);
 }
 .ai-rs-row {

@@ -347,5 +347,8 @@
   },
   "savedArticleSource": {
     "message": "Source"
+  },
+  "backToArticle": {
+    "message": "Back to article"
   }
 }

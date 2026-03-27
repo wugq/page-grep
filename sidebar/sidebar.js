@@ -98,7 +98,7 @@ async function init() {
       removeBtn.className = 'pill-remove';
       removeBtn.textContent = '×';
       removeBtn.addEventListener('click', () => {
-        interestPills.splice(i, 1);
+        interestPills = interestPills.filter(p => p !== label);
         saveAndRender();
       });
       tag.appendChild(removeBtn);

@@ -29,15 +29,21 @@ let _articleMeta = null;
 // True while a saved article is loaded into the reader overlay (via the library
 // panel). Suppresses scroll-position tracking for the live page URL.
 let _libraryArticleLoaded = false;
+let _libraryArticleUrl   = null; // URL of the library article currently shown in reader
+
+// Snapshot of the live article taken before the first library load, so we can
+// restore it when the user clicks "Back to article".
+let _liveArticleSnapshot = null;
 
 function getReaderUrl() {
   return location.origin + location.pathname;
 }
 
-// Apply updater(urlEntry) to the current URL's state entry and persist.
-function saveReaderState(updater) {
+// Apply updater(urlEntry) to the given URL's state entry and persist.
+// Pass targetUrl explicitly when updating a library article's state.
+function saveReaderState(updater, targetUrl) {
   if (!_readerStates) return;
-  const url = getReaderUrl();
+  const url = targetUrl || getReaderUrl();
   if (!_readerStates[url]) _readerStates[url] = {};
   updater(_readerStates[url]);
   // Keep only the 50 most recently written entries to cap storage usage.
@@ -56,12 +62,12 @@ function getReaderPositionElements(scope) {
 // Find the index of the first reader element whose bottom edge is at/below a
 // threshold inside the overlay — this is the "reading position" anchor that
 // survives font-size and width changes.
-function findReadingIndex(overlay) {
+function findReadingIndex(scrollEl) {
   if (!_readerBody) return 0;
   const elements = getReaderPositionElements(_readerBody);
   if (!elements.length) return 0;
-  const overlayRect = overlay.getBoundingClientRect();
-  const threshold = overlayRect.top + 80;
+  const scrollRect = scrollEl.getBoundingClientRect();
+  const threshold = scrollRect.top + 80;
   for (let i = 0; i < elements.length; i++) {
     if (elements[i].getBoundingClientRect().bottom >= threshold) return i;
   }
@@ -82,13 +88,16 @@ function saveCurrentReaderTranslations(elements) {
     }
   });
   if (!Object.keys(translations).length) return;
-  saveReaderState(state => { state.translations = translations; });
+  saveReaderState(state => { state.translations = translations; }, _libraryArticleUrl || undefined);
   attachTranslationToggleTracking(elements);
 }
 
 // Attach a secondary click listener to each toggle button that keeps the
 // stored showing state in sync. Idempotent via data-toggle-tracked.
 function attachTranslationToggleTracking(elements) {
+  // Capture the library URL at call time so the closures below use the correct
+  // URL even if _libraryArticleUrl changes later (e.g. user navigates back).
+  const trackUrl = _libraryArticleUrl || null;
   elements.forEach((el, idx) => {
     if (!el.dataset.aiWrapped) return;
     const btn = el.querySelector('.ai-toggle-btn');
@@ -98,7 +107,7 @@ function attachTranslationToggleTracking(elements) {
       const showing = el.classList.contains('show-translation');
       saveReaderState(state => {
         if (state.translations?.[idx]) state.translations[idx].showing = showing;
-      });
+      }, trackUrl || undefined);
     });
   });
 }
@@ -109,6 +118,7 @@ const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height
 const SAVE_ICON     = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
 const SAVED_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
 const LIBRARY_ICON  = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
+const BACK_ICON     = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><polyline points="15 18 9 12 15 6"/></svg>`;
 
 const FONT_SIZES    = [14, 15, 16, 17, 18, 20, 22, 24, 28]; // index 0–8, default 4 (18px)
 const LINE_SPACINGS = [1.4, 1.6, 1.8, 2.0, 2.2];           // index 0–4, default 2 (1.8)
@@ -381,40 +391,45 @@ function updateSaveBtn(btn, saved) {
 }
 
 async function onSaveBtnClick(btn) {
-  const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
-  const articles = Array.isArray(savedArticles) ? savedArticles : [];
-  const url = getReaderUrl();
-  const existingIdx = articles.findIndex(a => a.url === url);
+  try {
+    const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
+    const articles = Array.isArray(savedArticles) ? savedArticles : [];
+    const url = getReaderUrl();
+    const existingIdx = articles.findIndex(a => a.url === url);
 
-  if (existingIdx >= 0) {
-    articles.splice(existingIdx, 1);
-    await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
-    updateSaveBtn(btn, false);
-    showToast(browser.i18n.getMessage('articleUnsaved') || 'Removed from saved');
-  } else {
-    if (!_articleHtml) return;
-    const translations = _readerStates?.[url]?.translations || {};
-    const newArticle = {
-      url,
-      title: _articleMeta?.title || document.title,
-      byline: _articleMeta?.byline || null,
-      siteName: _articleMeta?.siteName || null,
-      publishedTime: _articleMeta?.publishedTime || null,
-      savedAt: Date.now(),
-      html: _articleHtml,
-      translations,
-    };
-    articles.unshift(newArticle);
-    if (articles.length > 20) articles.length = 20;
-    await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
-    updateSaveBtn(btn, true);
-    showToast(browser.i18n.getMessage('articleSaved') || 'Article saved');
+    if (existingIdx >= 0) {
+      articles.splice(existingIdx, 1);
+      await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
+      updateSaveBtn(btn, false);
+      showToast(browser.i18n.getMessage('articleUnsaved') || 'Removed from saved');
+    } else {
+      if (!_articleHtml) return;
+      const translations = _readerStates?.[url]?.translations || {};
+      const newArticle = {
+        url,
+        title: _articleMeta?.title || document.title,
+        byline: _articleMeta?.byline || null,
+        siteName: _articleMeta?.siteName || null,
+        publishedTime: _articleMeta?.publishedTime || null,
+        savedAt: Date.now(),
+        html: _articleHtml,
+        translations,
+      };
+      articles.unshift(newArticle);
+      if (articles.length > 20) articles.length = 20;
+      await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
+      updateSaveBtn(btn, true);
+      showToast(browser.i18n.getMessage('articleSaved') || 'Article saved');
+    }
+  } catch (err) {
+    error('[PageGrep] onSaveBtnClick failed:', err.message);
+    showToast(browser.i18n.getMessage('operationFailed') || 'Operation failed');
   }
 }
 
 // Build the slide-in library panel. onOpen(article) is called when the user
 // picks an article; the panel closes itself beforehand.
-function buildLibraryPanel(onOpen) {
+function buildLibraryPanel(onOpen, onClose) {
   const panel = document.createElement('div');
   panel.id = 'ai-reader-library';
 
@@ -425,7 +440,7 @@ function buildLibraryPanel(onOpen) {
   const closeBtn = document.createElement('button');
   closeBtn.className = 'ai-lib-close-btn';
   closeBtn.textContent = '×';
-  closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+  closeBtn.addEventListener('click', () => { if (onClose) onClose(); else panel.classList.remove('open'); });
   header.append(headerTitle, closeBtn);
   panel.appendChild(header);
 
@@ -434,8 +449,24 @@ function buildLibraryPanel(onOpen) {
   panel.appendChild(listEl);
 
   async function refresh() {
-    const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
-    const articles = Array.isArray(savedArticles) ? savedArticles : [];
+    listEl.replaceChildren();
+    const loadingEl = document.createElement('div');
+    loadingEl.className = 'ai-lib-loading';
+    listEl.appendChild(loadingEl);
+
+    let articles;
+    try {
+      const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
+      articles = Array.isArray(savedArticles) ? savedArticles : [];
+    } catch (err) {
+      listEl.replaceChildren();
+      const errorEl = document.createElement('div');
+      errorEl.className = 'ai-lib-error';
+      errorEl.textContent = browser.i18n.getMessage('operationFailed') || 'Failed to load saved articles';
+      listEl.appendChild(errorEl);
+      return;
+    }
+
     listEl.replaceChildren();
 
     if (articles.length === 0) {
@@ -496,8 +527,21 @@ function buildLibraryPanel(onOpen) {
 }
 
 // Replace the content inside an already-open reader overlay with a saved article.
-function loadSavedArticleIntoReader(article, overlay, saveBtn) {
+function loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn) {
+  // Snapshot the live article before the first library load so the user can return.
+  // Skip when the library article is the same page — no navigation needed.
+  if (!_libraryArticleLoaded && article.url !== getReaderUrl()) {
+    _liveArticleSnapshot = {
+      title: document.getElementById('ai-reader-title')?.textContent || '',
+      bylineText: document.getElementById('ai-reader-byline')?.textContent || '',
+      html: _articleHtml,
+      url: getReaderUrl(),
+      summaryPoints: Array.isArray(SUMMARY_STATE.points) ? SUMMARY_STATE.points.slice() : [],
+      summaryElements: Array.isArray(SUMMARY_STATE.elements) ? SUMMARY_STATE.elements.slice() : [],
+    };
+  }
   _libraryArticleLoaded = true;
+  _libraryArticleUrl = article.url;
 
   // Meta
   const titleEl = document.getElementById('ai-reader-title');
@@ -544,10 +588,16 @@ function loadSavedArticleIntoReader(article, overlay, saveBtn) {
     body.replaceChildren(...Array.from(articleDoc.body.childNodes));
     _readerBody = body;
 
-    if (article.translations && Object.keys(article.translations).length) {
+    // Prefer readerStates translations (updated on every translate action) over
+    // the snapshot baked into the saved article at save time.
+    const translations = (_readerStates?.[article.url]?.translations &&
+      Object.keys(_readerStates[article.url].translations).length)
+      ? _readerStates[article.url].translations
+      : article.translations;
+    if (translations && Object.keys(translations).length) {
       const elements = collectReaderElements(body);
       elements.forEach((el, idx) => {
-        const saved = article.translations[idx];
+        const saved = translations[idx];
         if (!saved) return;
         restoreTranslation(el, saved.html, saved.showing, () => {});
       });
@@ -558,10 +608,69 @@ function loadSavedArticleIntoReader(article, overlay, saveBtn) {
     SUMMARY_STATE.elements = restoreSummaryElements(null, collectArticleElements(body));
   }
 
-  overlay.scrollTop = 0;
+  (overlay._scrollEl || overlay).scrollTo({ top: 0, behavior: 'smooth' });
 
-  // The save button is meaningless while viewing a saved-from-library article.
+  // Show back button only when the library article differs from the current page.
+  // If it's the same URL there's nowhere to "go back" to.
+  const isSamePage = article.url === getReaderUrl();
+  if (backBtn) backBtn.style.display = isSamePage ? 'none' : '';
   if (saveBtn) saveBtn.style.display = 'none';
+}
+
+// Restore the live article that was being read before a library article was opened.
+function restoreLiveArticle(overlay, saveBtn, backBtn) {
+  if (!_liveArticleSnapshot) return;
+  const snap = _liveArticleSnapshot;
+  _liveArticleSnapshot = null;
+  _libraryArticleLoaded = false;
+  _libraryArticleUrl = null;
+
+  const titleEl = document.getElementById('ai-reader-title');
+  if (titleEl) titleEl.textContent = snap.title;
+
+  const bylineEl = document.getElementById('ai-reader-byline');
+  if (bylineEl) bylineEl.textContent = snap.bylineText;
+
+  // Remove the source-URL line that was added for the library article.
+  document.getElementById('ai-reader-meta')?.querySelector('.ai-reader-source')?.remove();
+
+  const body = document.getElementById('ai-reader-body');
+  if (body && snap.html) {
+    const articleDoc = new DOMParser().parseFromString(snap.html, 'text/html');
+    articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
+    body.replaceChildren(...Array.from(articleDoc.body.childNodes));
+    _readerBody = body;
+
+    // Re-apply stored translations for the live article URL.
+    const urlState = _readerStates?.[snap.url] || {};
+    if (urlState.translations) {
+      const elements = collectReaderElements(body);
+      elements.forEach((el, idx) => {
+        const saved = urlState.translations[idx];
+        if (!saved) return;
+        restoreTranslation(el, saved.html, saved.showing, (newShowing) => {
+          saveReaderState(state => {
+            if (state.translations?.[idx]) state.translations[idx].showing = newShowing;
+          });
+        });
+      });
+      attachTranslationToggleTracking(elements);
+    }
+
+    SUMMARY_STATE.points   = snap.summaryPoints;
+    // Re-collect elements from the freshly rebuilt body — snap.summaryElements held
+    // refs to the old nodes which are now detached after replaceChildren().
+    SUMMARY_STATE.elements = restoreSummaryElements(
+      _readerStates?.[snap.url]?.summary,
+      collectArticleElements(body)
+    );
+  }
+
+  const scrollEl = overlay._scrollEl || overlay;
+  scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (backBtn) backBtn.style.display = 'none';
+  if (saveBtn) saveBtn.style.display = '';
 }
 
 function toggleReaderMode(triggerBtn) {
@@ -660,16 +769,47 @@ async function openReaderMode(triggerBtn) {
   libraryBtn.title = libraryLabel;
   libraryBtn.setAttribute('aria-label', libraryLabel);
 
-  const libraryPanel = buildLibraryPanel((article) => {
-    loadSavedArticleIntoReader(article, overlay, saveBtn);
+  // The backdrop is kept OUT of the DOM when the library is closed so it cannot
+  // interfere with scroll-event dispatch (Firefox does not always honour
+  // pointer-events:none for wheel/scroll targeting).
+  const libraryBackdrop = document.createElement('div');
+  libraryBackdrop.id = 'ai-reader-library-backdrop';
+
+  function openLibrary() {
+    libraryPanel.before(libraryBackdrop); // insert into DOM just before the panel
+    libraryPanel.classList.add('open');
+    libraryBtn.classList.add('active');
+    _focusableCache = null;
+    libraryPanel._refresh();
+  }
+
+  function closeLibrary() {
+    libraryPanel.classList.remove('open');
     libraryBtn.classList.remove('active');
-  });
+    libraryBackdrop.remove(); // remove from DOM entirely — no residual event interception
+    _focusableCache = null;
+  }
+
+  const backBtn = document.createElement('button');
+  backBtn.id = 'ai-reader-back-btn';
+  backBtn.replaceChildren(_svgParser.parseFromString(BACK_ICON, 'image/svg+xml').documentElement);
+  const backLabel = browser.i18n.getMessage('backToArticle') || 'Back to article';
+  backBtn.title = backLabel;
+  backBtn.setAttribute('aria-label', backLabel);
+  backBtn.style.display = 'none';
+
+  const libraryPanel = buildLibraryPanel((article) => {
+    loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn);
+    closeLibrary();
+  }, closeLibrary);
+
+  libraryBackdrop.addEventListener('click', closeLibrary);
+
+  backBtn.addEventListener('click', () => restoreLiveArticle(overlay, saveBtn, backBtn));
 
   libraryBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    const isOpen = libraryPanel.classList.toggle('open');
-    libraryBtn.classList.toggle('active', isOpen);
-    if (isOpen) libraryPanel._refresh();
+    if (libraryPanel.classList.contains('open')) { closeLibrary(); } else { openLibrary(); }
   });
 
   // created before settingsPanel so we can pass it for width transitions
@@ -723,13 +863,36 @@ async function openReaderMode(triggerBtn) {
   // --- Settings panel (receives content so width clicks can trigger its CSS transition) ---
   const settingsPanel = buildSettingsPanel(overlay, prefs, content);
 
-  // settingsPanel is position:fixed but inside overlay so it inherits CSS theme vars
-  overlay.append(closeBtn, saveBtn, libraryBtn, libraryPanel, settingsPanel, content);
+  // Wrap the article content in a dedicated scroll container so the overlay itself
+  // can be overflow:hidden — this keeps buttons/panels truly above the scroll area
+  // and avoids position:fixed inside overflow:auto interaction bugs.
+  const scrollEl = document.createElement('div');
+  scrollEl.id = 'ai-reader-scroll';
+  scrollEl.tabIndex = -1; // allow Space/PageDown to scroll when focused
+  scrollEl.appendChild(content);
+
+  overlay.append(closeBtn, saveBtn, backBtn, libraryBtn, libraryPanel, settingsPanel, scrollEl);
+
+  // Store the scroll element for use in loadSavedArticleIntoReader / restoreLiveArticle.
+  overlay._scrollEl = scrollEl;
 
   // Save scroll position before locking the page so we can restore it on close.
   const savedScrollY = window.scrollY;
   document.body.appendChild(overlay);
-  document.documentElement.style.overflow = 'hidden';
+  // Use setProperty with 'important' so the lock overrides site CSS that may
+  // declare overflow with !important (e.g. `html, body { overflow: auto !important }`).
+  const _savedHtmlOverflow = [
+    document.documentElement.style.getPropertyValue('overflow'),
+    document.documentElement.style.getPropertyPriority('overflow'),
+  ];
+  const _savedBodyOverflow = [
+    document.body.style.getPropertyValue('overflow'),
+    document.body.style.getPropertyPriority('overflow'),
+  ];
+  document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+  document.body.style.setProperty('overflow', 'hidden', 'important');
+  overlay._savedHtmlOverflow = _savedHtmlOverflow;
+  overlay._savedBodyOverflow = _savedBodyOverflow;
 
   // Swap to reader-mode summary instance before notifying the sidebar.
   _pageSummaryBackup = {
@@ -743,9 +906,9 @@ async function openReaderMode(triggerBtn) {
 
   browser.runtime.sendMessage({ action: 'readerModeChanged', active: true }).catch(() => {});
 
-  // Focus the overlay scroll container so Space/PageDown scroll the article.
+  // Focus the scroll container so Space/PageDown scroll the article.
   // The close button and settings remain reachable via Tab (focus trap below).
-  overlay.focus();
+  scrollEl.focus();
 
   // Restore last reading position (element-index-based, survives font/width changes).
   // Uses getReaderPositionElements — stable regardless of translation state.
@@ -753,9 +916,9 @@ async function openReaderMode(triggerBtn) {
     const target = getReaderPositionElements(body)[urlState.readingIndex];
     if (target) {
       requestAnimationFrame(() => {
-        const overlayRect = overlay.getBoundingClientRect();
+        const scrollRect = scrollEl.getBoundingClientRect();
         const elRect = target.getBoundingClientRect();
-        overlay.scrollTop = elRect.top - overlayRect.top - 16;
+        scrollEl.scrollTop = elRect.top - scrollRect.top - 16;
       });
     }
   }
@@ -763,17 +926,23 @@ async function openReaderMode(triggerBtn) {
   // Collect teardown callbacks — flushed immediately on close, before the fade-out.
   const cleanupFns = [];
 
+  // Prevent wheel events from bubbling to the page's scroll container.
+  // Sites that declare `html { overflow: auto !important }` can otherwise
+  // "steal" wheel events that the reader scroll container should handle.
+  scrollEl.addEventListener('wheel', (e) => { e.stopPropagation(); }, { passive: true });
+
   // Persist reading position on scroll (debounced) so it survives crashes/unloads.
   // Skipped when a saved article is loaded in-place (no URL to persist against).
   let _scrollSaveTimer = null;
-  overlay.addEventListener('scroll', () => {
+  scrollEl.addEventListener('scroll', () => {
     if (_libraryArticleLoaded) return;
     clearTimeout(_scrollSaveTimer);
     _scrollSaveTimer = setTimeout(() => {
-      saveReaderState(state => { state.readingIndex = findReadingIndex(overlay); });
+      saveReaderState(state => { state.readingIndex = findReadingIndex(scrollEl); });
     }, 300);
   }, { passive: true });
   cleanupFns.push(() => clearTimeout(_scrollSaveTimer));
+
 
   // JS boolean is the source of truth for settings panel visibility.
   let settingsOpen = false;
@@ -815,8 +984,7 @@ async function openReaderMode(triggerBtn) {
   // Dismiss library panel or settings on click outside
   overlay.addEventListener('click', (e) => {
     if (libraryPanel.classList.contains('open') && !libraryPanel.contains(e.target) && !libraryBtn.contains(e.target)) {
-      libraryPanel.classList.remove('open');
-      libraryBtn.classList.remove('active');
+      closeLibrary();
     }
     if (settingsOpen && !settingsPanel.contains(e.target)) {
       setSettingsOpen(false);
@@ -829,24 +997,29 @@ async function openReaderMode(triggerBtn) {
   function onKeydown(e) {
     if (e.key === 'Escape') {
       if (libraryPanel.classList.contains('open')) {
-        libraryPanel.classList.remove('open');
-        libraryBtn.classList.remove('active');
+        closeLibrary();
       } else if (settingsOpen) { setSettingsOpen(false); } else { closeReaderMode(); }
       return;
     }
     if (e.key === 'Tab') {
-      // Build (or recall) focusable list. Don't cache when settings is open —
-      // stepper buttons may become disabled (min/max reached) during that session,
-      // which would make a cached list stale.
+      // Build (or recall) focusable list. Don't cache when settings or library is
+      // open — buttons may become disabled or the scope changes.
       let all = _focusableCache;
       if (!all) {
         const sel = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
-        const insideOverlay = Array.from(overlay.querySelectorAll(sel))
-          .filter(el => settingsOpen || !settingsPanel.contains(el));
-        all = (panelReaderBtn?.isConnected && !settingsOpen)
+        const libraryIsOpen = libraryPanel.classList.contains('open');
+        let insideOverlay;
+        if (libraryIsOpen) {
+          // Restrict focus to the library panel only while it is visible.
+          insideOverlay = Array.from(libraryPanel.querySelectorAll(sel));
+        } else {
+          insideOverlay = Array.from(overlay.querySelectorAll(sel))
+            .filter(el => settingsOpen || !settingsPanel.contains(el));
+        }
+        all = (panelReaderBtn?.isConnected && !settingsOpen && !libraryIsOpen)
           ? [...insideOverlay, panelReaderBtn]
           : insideOverlay;
-        if (!settingsOpen) _focusableCache = all;
+        if (!settingsOpen && !libraryIsOpen) _focusableCache = all;
       }
       if (all.length < 2) return;
       const first = all[0];
@@ -879,7 +1052,11 @@ function closeReaderMode() {
   const overlay = document.getElementById(READER_OVERLAY_ID);
   if (!overlay) return;
   // Save reading position before teardown so it's available on next open.
-  saveReaderState(state => { state.readingIndex = findReadingIndex(overlay); });
+  // Skip when a library article is displayed — _readerBody is the library article's
+  // DOM, so findReadingIndex would return an index into the wrong document and corrupt
+  // the live page's stored reading position.
+  const scrollEl = overlay._scrollEl || overlay;
+  if (!_libraryArticleLoaded) saveReaderState(state => { state.readingIndex = findReadingIndex(scrollEl); });
   // Flush cleanup immediately: restores the panel button and removes event listeners.
   // The overlay stays in the DOM briefly for the fade-out animation.
   overlay._cleanupFns?.forEach(fn => fn());
@@ -888,13 +1065,22 @@ function closeReaderMode() {
   _articleHtml = null;
   _articleMeta = null;
   _libraryArticleLoaded = false;
+  _libraryArticleUrl = null;
+  _liveArticleSnapshot = null;
 
   // Restore page-mode summary before notifying the sidebar.
   SUMMARY_STATE.points = _pageSummaryBackup?.points || [];
   SUMMARY_STATE.elements = _pageSummaryBackup?.elements || [];
   _pageSummaryBackup = null;
 
-  document.documentElement.style.overflow = '';
+  // Restore html/body overflow to whatever it was before reader mode.
+  // removeProperty + conditional re-set handles both !important and normal values.
+  const [htmlOv, htmlPri] = overlay._savedHtmlOverflow || ['', ''];
+  document.documentElement.style.removeProperty('overflow');
+  if (htmlOv) document.documentElement.style.setProperty('overflow', htmlOv, htmlPri);
+  const [bodyOv, bodyPri] = overlay._savedBodyOverflow || ['', ''];
+  document.body.style.removeProperty('overflow');
+  if (bodyOv) document.body.style.setProperty('overflow', bodyOv, bodyPri);
   window.scrollTo(0, overlay._savedScrollY ?? 0);
   browser.runtime.sendMessage({ action: 'readerModeChanged', active: false }).catch(() => {});
   // If the float button was hidden (global toggle or site block) while reader

@@ -20,7 +20,7 @@ async function applyI18nOverride() {
           const contentMatch = /^\$(\d+)$/.exec(placeholder.content || '');
           const subIdx = contentMatch ? parseInt(contentMatch[1], 10) - 1 : 0;
           const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          msg = msg.replace(new RegExp('\\$' + escapedName + '\\$', 'gi'), subs[subIdx] ?? '');
+          msg = msg.replace(new RegExp('\\$' + escapedName + '\\$', 'g'), subs[subIdx] ?? '');
         });
       }
       return msg;
