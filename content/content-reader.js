@@ -12,6 +12,88 @@ function getActiveReaderBody() { return _readerBody; }
 // Prevents re-entrant calls while the async parse is in progress.
 let _readerOpening = false;
 
+// Holds the page-mode summary while reader mode is active so the two instances
+// stay independent. Restored when reader mode closes.
+let _pageSummaryBackup = null;
+
+// --- Reader state persistence (scroll position + translations) ---
+// In-memory mirror of chrome.storage readerStates, loaded on open and kept
+// in sync so rapid updates don't race each other on storage reads.
+let _readerStates = null;
+
+function getReaderUrl() {
+  return location.origin + location.pathname;
+}
+
+// Apply updater(urlEntry) to the current URL's state entry and persist.
+function saveReaderState(updater) {
+  if (!_readerStates) return;
+  const url = getReaderUrl();
+  if (!_readerStates[url]) _readerStates[url] = {};
+  updater(_readerStates[url]);
+  // Keep only the 50 most recently written entries to cap storage usage.
+  const keys = Object.keys(_readerStates);
+  if (keys.length > 50) keys.slice(0, keys.length - 50).forEach(k => delete _readerStates[k]);
+  browser.storage.local.set({ [STORAGE_KEYS.READER_STATES]: _readerStates });
+}
+
+// Returns all block content elements in the reader scope regardless of translation
+// state. Used for reading-position tracking — unlike collectReaderElements this list
+// is stable whether or not translations have been applied.
+function getReaderPositionElements(scope) {
+  return Array.from(scope.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, li'));
+}
+
+// Find the index of the first reader element whose bottom edge is at/below a
+// threshold inside the overlay — this is the "reading position" anchor that
+// survives font-size and width changes.
+function findReadingIndex(overlay) {
+  if (!_readerBody) return 0;
+  const elements = getReaderPositionElements(_readerBody);
+  if (!elements.length) return 0;
+  const overlayRect = overlay.getBoundingClientRect();
+  const threshold = overlayRect.top + 80;
+  for (let i = 0; i < elements.length; i++) {
+    if (elements[i].getBoundingClientRect().bottom >= threshold) return i;
+  }
+  return elements.length - 1;
+}
+
+// Called by content-panel.js after translate-all completes in reader mode.
+// elements must be the same array that was passed to runTranslateElements — collected
+// before translation so it isn't empty (filterTranslatableElements skips wrapped nodes).
+function saveCurrentReaderTranslations(elements) {
+  if (!_readerBody || !elements?.length) return;
+  const translations = {};
+  elements.forEach((el, idx) => {
+    if (el.dataset.aiWrapped !== '1') return;
+    const span = el.querySelector('.ai-para-translated');
+    if (span?.innerHTML.trim()) {
+      translations[idx] = { html: span.innerHTML, showing: el.classList.contains('show-translation') };
+    }
+  });
+  if (!Object.keys(translations).length) return;
+  saveReaderState(state => { state.translations = translations; });
+  attachTranslationToggleTracking(elements);
+}
+
+// Attach a secondary click listener to each toggle button that keeps the
+// stored showing state in sync. Idempotent via data-toggle-tracked.
+function attachTranslationToggleTracking(elements) {
+  elements.forEach((el, idx) => {
+    if (!el.dataset.aiWrapped) return;
+    const btn = el.querySelector('.ai-toggle-btn');
+    if (!btn || btn.dataset.toggleTracked) return;
+    btn.dataset.toggleTracked = '1';
+    btn.addEventListener('click', () => {
+      const showing = el.classList.contains('show-translation');
+      saveReaderState(state => {
+        if (state.translations?.[idx]) state.translations[idx].showing = showing;
+      });
+    });
+  });
+}
+
 // READER_ICON is defined in content-core.js
 const CLOSE_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>`;
@@ -295,7 +377,7 @@ async function openReaderMode(triggerBtn) {
     triggerBtn.classList.add('ai-loading-btn');
   }
 
-  let article, prefs;
+  let article, prefs, urlState;
   try {
     const docClone = document.cloneNode(true);
     // Strip translation wrappers so Readability sees original text only.
@@ -310,6 +392,9 @@ async function openReaderMode(triggerBtn) {
     });
     article = new Readability(docClone).parse();
     prefs   = await loadReaderPrefs();
+    const { readerStates } = await browser.storage.local.get(STORAGE_KEYS.READER_STATES);
+    _readerStates = readerStates || {};
+    urlState = _readerStates[getReaderUrl()] || {};
   } catch (err) {
     error('[PageGrep] openReaderMode failed:', err.message);
     _readerOpening = false;
@@ -371,6 +456,24 @@ async function openReaderMode(triggerBtn) {
   body.replaceChildren(...Array.from(articleDoc.body.childNodes));
   _readerBody = body;
 
+  // Restore cached translations (no API call).
+  // Collect elements before any restoreTranslation call — filterTranslatableElements
+  // skips wrapped nodes, so the list must be captured while everything is still unwrapped.
+  if (urlState.translations) {
+    const elements = collectReaderElements(body);
+    elements.forEach((el, idx) => {
+      const saved = urlState.translations[idx];
+      if (!saved) return;
+      restoreTranslation(el, saved.html, saved.showing, (newShowing) => {
+        saveReaderState(state => {
+          if (state.translations?.[idx]) state.translations[idx].showing = newShowing;
+        });
+      });
+    });
+    // Pass the same pre-wrap list; elements are wrapped now but references are valid.
+    attachTranslationToggleTracking(elements);
+  }
+
   content.append(meta, body);
 
   // --- Settings panel (receives content so width clicks can trigger its CSS transition) ---
@@ -383,14 +486,48 @@ async function openReaderMode(triggerBtn) {
   const savedScrollY = window.scrollY;
   document.body.appendChild(overlay);
   document.documentElement.style.overflow = 'hidden';
+
+  // Swap to reader-mode summary instance before notifying the sidebar.
+  _pageSummaryBackup = {
+    points: Array.isArray(SUMMARY_STATE.points) ? SUMMARY_STATE.points.slice() : [],
+    elements: Array.isArray(SUMMARY_STATE.elements) ? SUMMARY_STATE.elements.slice() : []
+  };
+  SUMMARY_STATE.points = urlState.summary?.points || [];
+  // Rebuild live DOM refs for cached reader summaries so sidebar hover/click
+  // can still target the current reader content without re-running summary.
+  SUMMARY_STATE.elements = SUMMARY_STATE.points.length ? collectArticleElements(body) : [];
+
   browser.runtime.sendMessage({ action: 'readerModeChanged', active: true }).catch(() => {});
 
   // Focus the overlay scroll container so Space/PageDown scroll the article.
   // The close button and settings remain reachable via Tab (focus trap below).
   overlay.focus();
 
+  // Restore last reading position (element-index-based, survives font/width changes).
+  // Uses getReaderPositionElements — stable regardless of translation state.
+  if (urlState.readingIndex) {
+    const target = getReaderPositionElements(body)[urlState.readingIndex];
+    if (target) {
+      requestAnimationFrame(() => {
+        const overlayRect = overlay.getBoundingClientRect();
+        const elRect = target.getBoundingClientRect();
+        overlay.scrollTop = elRect.top - overlayRect.top - 16;
+      });
+    }
+  }
+
   // Collect teardown callbacks — flushed immediately on close, before the fade-out.
   const cleanupFns = [];
+
+  // Persist reading position on scroll (debounced) so it survives crashes/unloads.
+  let _scrollSaveTimer = null;
+  overlay.addEventListener('scroll', () => {
+    clearTimeout(_scrollSaveTimer);
+    _scrollSaveTimer = setTimeout(() => {
+      saveReaderState(state => { state.readingIndex = findReadingIndex(overlay); });
+    }, 300);
+  }, { passive: true });
+  cleanupFns.push(() => clearTimeout(_scrollSaveTimer));
 
   // JS boolean is the source of truth for settings panel visibility.
   let settingsOpen = false;
@@ -488,10 +625,19 @@ async function openReaderMode(triggerBtn) {
 function closeReaderMode() {
   const overlay = document.getElementById(READER_OVERLAY_ID);
   if (!overlay) return;
+  // Save reading position before teardown so it's available on next open.
+  saveReaderState(state => { state.readingIndex = findReadingIndex(overlay); });
   // Flush cleanup immediately: restores the panel button and removes event listeners.
   // The overlay stays in the DOM briefly for the fade-out animation.
   overlay._cleanupFns?.forEach(fn => fn());
   _readerBody = null;
+  _readerStates = null;
+
+  // Restore page-mode summary before notifying the sidebar.
+  SUMMARY_STATE.points = _pageSummaryBackup?.points || [];
+  SUMMARY_STATE.elements = _pageSummaryBackup?.elements || [];
+  _pageSummaryBackup = null;
+
   document.documentElement.style.overflow = '';
   window.scrollTo(0, overlay._savedScrollY ?? 0);
   browser.runtime.sendMessage({ action: 'readerModeChanged', active: false }).catch(() => {});
