@@ -32,6 +32,29 @@ async function runTranslateElements(elements, btn, inReaderMode = false) {
 
 // Restore a previously-cached translation without calling the API.
 // onToggle(showing) is called whenever the user flips the paragraph.
+function appendSavedTranslationContent(target, savedHtml) {
+  const doc = new DOMParser().parseFromString(savedHtml || '', 'text/html');
+  Array.from(doc.body.childNodes).forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      target.appendChild(document.createTextNode(node.textContent || ''));
+      return;
+    }
+    if (node.nodeName === 'A') {
+      const href = node.getAttribute('href') || '';
+      if (/^https?:/i.test(href)) {
+        const a = document.createElement('a');
+        a.href = href;
+        a.textContent = node.textContent || href;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        target.appendChild(a);
+        return;
+      }
+    }
+    target.appendChild(document.createTextNode(node.textContent || ''));
+  });
+}
+
 function restoreTranslation(el, savedHtml, showing, onToggle) {
   el.dataset.aiWrapped = '1';
   const pos = window.getComputedStyle(el).position;
@@ -43,7 +66,7 @@ function restoreTranslation(el, savedHtml, showing, onToggle) {
 
   const translatedSpan = document.createElement('span');
   translatedSpan.className = 'ai-para-translated';
-  translatedSpan.innerHTML = savedHtml;
+  appendSavedTranslationContent(translatedSpan, savedHtml);
 
   el.append(originalSpan, translatedSpan);
   el.classList.add('ai-para-wrap');

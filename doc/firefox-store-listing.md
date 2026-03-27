@@ -10,7 +10,7 @@ Reference document for submitting PageGrep to [addons.mozilla.org](https://addon
 |-------|-------|
 | **Name** | PageGrep |
 | **Extension ID** | ai-reader-helper@local *(update to a unique ID before submission, e.g. `pagegrep@yourname`)* |
-| **Version** | 1.4 |
+| **Version** | 1.6 |
 | **Category** | Productivity |
 | **License** | *(choose before submission, e.g. MIT)* |
 
@@ -21,7 +21,7 @@ Reference document for submitting PageGrep to [addons.mozilla.org](https://addon
 > Max 250 characters. Shown in search results and the AMO listing header.
 
 ```
-Reading assistant powered by AI. Translate pages or selected text in-place, highlight content matching your interests, and summarize any page — all without leaving your tab.
+AI reading assistant for Firefox. Open articles in reader mode, translate text in place, highlight what matters to you, and generate structured summaries without leaving the current tab.
 ```
 
 ---
@@ -32,6 +32,9 @@ Reading assistant powered by AI. Translate pages or selected text in-place, high
 
 ```
 PageGrep is a reading assistant that uses the OpenAI API to help you get more out of every web page — in any language.
+
+**Reader mode with saved state**
+Open a clean reading view for article pages and adjust theme, width, font size, and spacing. PageGrep remembers your reader settings, restores your reading position, and can reopen cached translations and summary targets when you return to the same article.
 
 **Translate in place**
 Click the translate button in the floating panel to translate all visible paragraphs directly on the page. Each paragraph gets a hover-revealed toggle so you can switch between the original and translated text at any time. Supports 17+ target languages.
@@ -45,14 +48,14 @@ A second button in the floating panel extracts the page article as clean Markdow
 **Highlight what interests you**
 Describe topics you care about — "AI, climate policy, Formula 1" — and PageGrep uses AI to scan the page and highlight the most relevant elements. A sidebar panel shows why each item was matched with a concrete reason.
 
-**Summarize any page**
-One click generates a structured summary of the page, grouped into sections with bullet points. Click any item in the summary to scroll directly to that part of the page.
+**Summarize the page or the reader article**
+One click generates a structured summary grouped into sections with bullet points. Click any item in the summary to scroll directly to that part of the page. When reader mode is open, summaries and highlights operate on the reader article instead of the page behind the overlay.
 
 **Translate selected text**
 Select any text on a page and a floating toolbar appears above the selection. Click Translate to see the translation in a tooltip — no need to open the panel or leave the page.
 
 **Block the panel on specific sites**
-Right-click the floating panel to hide it on the current site, or use the "Hide on this site" toggle in the sidebar. Blocked domains are listed in Settings and can be removed individually.
+Right-click the floating panel to hide it on the current site, or use the "Hide on this site" toggle in the sidebar. Blocked domains are listed in Settings and can be removed individually. While reader mode is active, panel-removal controls are temporarily locked so the reading settings trigger stays available.
 
 **Designed to stay out of your way**
 The floating action panel is draggable. Drag it anywhere on screen, or drag it to the bottom trash zone to dismiss it on the current site. Your API key and all preferences are stored locally — nothing leaves your browser except the page content you explicitly send to OpenAI.
@@ -76,7 +79,7 @@ PageGrep Privacy Policy
 
 Data stored locally:
 - Your OpenAI API key is stored in your browser's local storage (browser.storage.local). It never leaves your device except to authenticate requests sent directly to the OpenAI API.
-- Your interest descriptions, UI preferences, and panel position are stored locally in browser.storage.local.
+- Your interest descriptions, UI preferences, panel position, page summary cache, reader preferences, and reader state are stored locally in browser.storage.local.
 
 Data sent to third parties:
 - When you trigger a full-page translation, highlight, or summarization action, the visible text content of the current page is sent to the OpenAI API (api.openai.com) along with your API key.
@@ -84,7 +87,7 @@ Data sent to third parties:
 - No data is ever sent to the extension developer or any other third party.
 - No analytics, crash reporting, or telemetry of any kind is collected.
 
-You can clear all stored data at any time from the Settings page (Clear API Key button).
+You can clear all stored data at any time from the Settings page.
 ```
 
 ---
@@ -113,10 +116,11 @@ translation, translate, AI, OpenAI, reading, highlight, summary, productivity, l
 
 > AMO requires at least 1 screenshot (min 1000×640px, max 5120×3500px). Suggested shots:
 
-1. **Floating panel + in-place translation** — A foreign-language article with the floating dark panel visible and translated paragraphs shown with toggle buttons.
-2. **Interest highlighting** — A news/feed page with several yellow-highlighted items and the sidebar showing match reasons.
-3. **Page summary** — The sidebar showing a structured summary with section titles and bullet points.
-4. **Settings page** — The options page showing API key field, model selector, language picker, and theme options.
+1. **Reader mode + settings trigger** — An article opened in reader mode with the floating panel’s reader button changed into the reader settings button.
+2. **Floating panel + in-place translation** — A foreign-language article with the floating panel visible and translated paragraphs shown with toggle buttons.
+3. **Interest highlighting** — A news/feed page with several highlighted items and the sidebar showing match reasons.
+4. **Page summary** — The sidebar showing a structured summary with section titles and bullet points.
+5. **Settings page** — The options page showing API key field, model selector, language picker, and theme options.
 
 ---
 
