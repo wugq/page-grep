@@ -11,4 +11,5 @@ const STORAGE_KEYS = Object.freeze({
   READER_PREFS: 'readerPrefs',
   READER_STATES: 'readerStates',
   PAGE_STATES: 'pageStates',
+  SAVED_ARTICLES: 'savedArticles',
 });

@@ -21,6 +21,11 @@ let _pageSummaryBackup = null;
 // in sync so rapid updates don't race each other on storage reads.
 let _readerStates = null;
 
+// Readability-parsed HTML and metadata for the current live article, used by
+// the save feature. Cleared when reader mode closes.
+let _articleHtml = null;
+let _articleMeta = null;
+
 function getReaderUrl() {
   return location.origin + location.pathname;
 }
@@ -97,6 +102,8 @@ function attachTranslationToggleTracking(elements) {
 // READER_ICON is defined in content-core.js
 const CLOSE_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>`;
+const SAVE_ICON     = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
+const SAVED_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
 
 const FONT_SIZES    = [14, 15, 16, 17, 18, 20, 22, 24, 28]; // index 0–8, default 4 (18px)
 const LINE_SPACINGS = [1.4, 1.6, 1.8, 2.0, 2.2];           // index 0–4, default 2 (1.8)
@@ -358,6 +365,48 @@ function holdRepeat(btn, action) {
   btn.addEventListener('touchcancel', stop);
 }
 
+// --- Save-for-later helpers ---
+
+function updateSaveBtn(btn, saved) {
+  btn.replaceChildren(_svgParser.parseFromString(saved ? SAVED_ICON : SAVE_ICON, 'image/svg+xml').documentElement);
+  const label = browser.i18n.getMessage(saved ? 'unsaveArticle' : 'saveForLater') || (saved ? 'Unsave article' : 'Save article');
+  btn.title = label;
+  btn.setAttribute('aria-label', label);
+  btn.classList.toggle('saved', saved);
+}
+
+async function onSaveBtnClick(btn) {
+  const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
+  const articles = Array.isArray(savedArticles) ? savedArticles : [];
+  const url = getReaderUrl();
+  const existingIdx = articles.findIndex(a => a.url === url);
+
+  if (existingIdx >= 0) {
+    articles.splice(existingIdx, 1);
+    await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
+    updateSaveBtn(btn, false);
+    showToast(browser.i18n.getMessage('articleUnsaved') || 'Removed from saved');
+  } else {
+    if (!_articleHtml) return;
+    const translations = _readerStates?.[url]?.translations || {};
+    const newArticle = {
+      url,
+      title: _articleMeta?.title || document.title,
+      byline: _articleMeta?.byline || null,
+      siteName: _articleMeta?.siteName || null,
+      publishedTime: _articleMeta?.publishedTime || null,
+      savedAt: Date.now(),
+      html: _articleHtml,
+      translations,
+    };
+    articles.unshift(newArticle);
+    if (articles.length > 20) articles.length = 20;
+    await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
+    updateSaveBtn(btn, true);
+    showToast(browser.i18n.getMessage('articleSaved') || 'Article saved');
+  }
+}
+
 function toggleReaderMode(triggerBtn) {
   if (document.getElementById(READER_OVERLAY_ID)) {
     closeReaderMode();
@@ -377,7 +426,7 @@ async function openReaderMode(triggerBtn) {
     triggerBtn.classList.add('ai-loading-btn');
   }
 
-  let article, prefs, urlState;
+  let article, prefs, urlState, isSaved;
   try {
     const docClone = document.cloneNode(true);
     // Strip translation wrappers so Readability sees original text only.
@@ -392,9 +441,13 @@ async function openReaderMode(triggerBtn) {
     });
     article = new Readability(docClone).parse();
     prefs   = await loadReaderPrefs();
-    const { readerStates } = await browser.storage.local.get(STORAGE_KEYS.READER_STATES);
+    const [{ readerStates }, { savedArticles }] = await Promise.all([
+      browser.storage.local.get(STORAGE_KEYS.READER_STATES),
+      browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES),
+    ]);
     _readerStates = readerStates || {};
     urlState = _readerStates[getReaderUrl()] || {};
+    isSaved = Array.isArray(savedArticles) && savedArticles.some(a => a.url === getReaderUrl());
   } catch (err) {
     error('[PageGrep] openReaderMode failed:', err.message);
     _readerOpening = false;
@@ -417,6 +470,15 @@ async function openReaderMode(triggerBtn) {
     return;
   }
 
+  // Store for the save feature.
+  _articleHtml = article.content;
+  _articleMeta = {
+    title: article.title || document.title,
+    byline: article.byline || null,
+    siteName: article.siteName || null,
+    publishedTime: article.publishedTime || null,
+  };
+
   const overlay = document.createElement('div');
   overlay.id = READER_OVERLAY_ID;
   overlay.tabIndex = -1; // focusable but not in tab order; allows Space/PageDown to scroll
@@ -428,6 +490,11 @@ async function openReaderMode(triggerBtn) {
   const exitLabel = browser.i18n.getMessage('exitReader') || 'Exit reader';
   closeBtn.title = exitLabel;
   closeBtn.setAttribute('aria-label', exitLabel);
+
+  const saveBtn = document.createElement('button');
+  saveBtn.id = 'ai-reader-save-btn';
+  updateSaveBtn(saveBtn, isSaved);
+  saveBtn.addEventListener('click', () => onSaveBtnClick(saveBtn));
 
   // created before settingsPanel so we can pass it for width transitions
   const content = document.createElement('div');
@@ -481,7 +548,7 @@ async function openReaderMode(triggerBtn) {
   const settingsPanel = buildSettingsPanel(overlay, prefs, content);
 
   // settingsPanel is position:fixed but inside overlay so it inherits CSS theme vars
-  overlay.append(closeBtn, settingsPanel, content);
+  overlay.append(closeBtn, saveBtn, settingsPanel, content);
 
   // Save scroll position before locking the page so we can restore it on close.
   const savedScrollY = window.scrollY;
@@ -633,6 +700,8 @@ function closeReaderMode() {
   overlay._cleanupFns?.forEach(fn => fn());
   _readerBody = null;
   _readerStates = null;
+  _articleHtml = null;
+  _articleMeta = null;
 
   // Restore page-mode summary before notifying the sidebar.
   SUMMARY_STATE.points = _pageSummaryBackup?.points || [];
@@ -655,4 +724,166 @@ function closeReaderMode() {
   });
   overlay.classList.add('ai-closing');
   overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
+}
+
+// Open a previously saved article in reader mode on the current page.
+// The article HTML and translations are taken from storage — no network call needed.
+async function openSavedArticle(article) {
+  if (_readerOpening || document.getElementById(READER_OVERLAY_ID)) return;
+  _readerOpening = true;
+
+  let prefs;
+  try {
+    prefs = await loadReaderPrefs();
+  } catch (err) {
+    _readerOpening = false;
+    showToast(browser.i18n.getMessage('operationFailed') || 'Failed to open article');
+    return;
+  }
+
+  _readerOpening = false;
+
+  const overlay = document.createElement('div');
+  overlay.id = READER_OVERLAY_ID;
+  overlay.tabIndex = -1;
+  applyPrefs(overlay, prefs);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.id = 'ai-reader-close-btn';
+  closeBtn.replaceChildren(_svgParser.parseFromString(CLOSE_ICON, 'image/svg+xml').documentElement);
+  const exitLabel = browser.i18n.getMessage('exitReader') || 'Exit reader';
+  closeBtn.title = exitLabel;
+  closeBtn.setAttribute('aria-label', exitLabel);
+
+  const content = document.createElement('div');
+  content.id = 'ai-reader-content';
+
+  const meta = document.createElement('div');
+  meta.id = 'ai-reader-meta';
+
+  const titleEl = document.createElement('h1');
+  titleEl.id = 'ai-reader-title';
+  titleEl.textContent = article.title || '';
+  meta.appendChild(titleEl);
+
+  const bylineParts = [article.byline, article.siteName, article.publishedTime].filter(Boolean);
+  if (bylineParts.length > 0) {
+    const bylineEl = document.createElement('div');
+    bylineEl.id = 'ai-reader-byline';
+    bylineEl.textContent = bylineParts.join(' · ');
+    meta.appendChild(bylineEl);
+  }
+
+  const sourceEl = document.createElement('div');
+  sourceEl.className = 'ai-reader-source';
+  const sourceLabel = document.createElement('span');
+  sourceLabel.textContent = (browser.i18n.getMessage('savedArticleSource') || 'Source') + ': ';
+  const sourceLink = document.createElement('a');
+  sourceLink.href = article.url;
+  sourceLink.target = '_blank';
+  sourceLink.rel = 'noopener noreferrer';
+  sourceLink.textContent = article.url;
+  sourceEl.append(sourceLabel, sourceLink);
+  meta.appendChild(sourceEl);
+
+  const body = document.createElement('div');
+  body.id = 'ai-reader-body';
+  const articleDoc = new DOMParser().parseFromString(article.html || '', 'text/html');
+  articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
+  body.replaceChildren(...Array.from(articleDoc.body.childNodes));
+  _readerBody = body;
+  const summaryElements = collectArticleElements(body);
+
+  if (article.translations && Object.keys(article.translations).length) {
+    const elements = collectReaderElements(body);
+    elements.forEach((el, idx) => {
+      const saved = article.translations[idx];
+      if (!saved) return;
+      restoreTranslation(el, saved.html, saved.showing, () => {});
+    });
+    attachTranslationToggleTracking(elements);
+  }
+
+  content.append(meta, body);
+
+  const settingsBtn = document.createElement('button');
+  settingsBtn.id = 'ai-reader-settings-btn';
+  settingsBtn.replaceChildren(_svgParser.parseFromString(SETTINGS_ICON, 'image/svg+xml').documentElement);
+  const settingsLabel = browser.i18n.getMessage('readerSettings') || 'Reading settings';
+  settingsBtn.title = settingsLabel;
+  settingsBtn.setAttribute('aria-label', settingsLabel);
+
+  const settingsPanel = buildSettingsPanel(overlay, prefs, content);
+  overlay.append(closeBtn, settingsBtn, settingsPanel, content);
+
+  const savedScrollY = window.scrollY;
+  document.body.appendChild(overlay);
+  document.documentElement.style.overflow = 'hidden';
+
+  _pageSummaryBackup = {
+    points: Array.isArray(SUMMARY_STATE.points) ? SUMMARY_STATE.points.slice() : [],
+    elements: Array.isArray(SUMMARY_STATE.elements) ? SUMMARY_STATE.elements.slice() : []
+  };
+  SUMMARY_STATE.points = [];
+  SUMMARY_STATE.elements = restoreSummaryElements(null, summaryElements);
+
+  browser.runtime.sendMessage({ action: 'readerModeChanged', active: true }).catch(() => {});
+  overlay.focus();
+
+  const cleanupFns = [];
+
+  let settingsOpen = false;
+  let _focusableCache = null;
+  function setSettingsOpen(open) {
+    settingsOpen = open;
+    _focusableCache = null;
+    if (open) positionSettingsPopup(settingsPanel, settingsBtn);
+    settingsPanel.classList.toggle('open', open);
+    settingsBtn.classList.toggle('active', open);
+  }
+
+  settingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setSettingsOpen(!settingsOpen);
+  });
+
+  overlay.addEventListener('click', (e) => {
+    if (settingsOpen && !settingsPanel.contains(e.target)) setSettingsOpen(false);
+  });
+
+  function onKeydown(e) {
+    if (e.key === 'Escape') {
+      if (settingsOpen) { setSettingsOpen(false); } else { closeReaderMode(); }
+      return;
+    }
+    if (e.key === 'Tab') {
+      let all = _focusableCache;
+      if (!all) {
+        const sel = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        all = Array.from(overlay.querySelectorAll(sel)).filter(el => settingsOpen || !settingsPanel.contains(el));
+        if (!settingsOpen) _focusableCache = all;
+      }
+      if (all.length < 2) return;
+      const first = all[0];
+      const last  = all[all.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    }
+  }
+  document.addEventListener('keydown', onKeydown);
+  cleanupFns.push(() => document.removeEventListener('keydown', onKeydown));
+
+  function onResize() {
+    if (settingsOpen) positionSettingsPopup(settingsPanel, settingsBtn);
+  }
+  window.addEventListener('resize', onResize);
+  cleanupFns.push(() => window.removeEventListener('resize', onResize));
+
+  overlay._cleanupFns   = cleanupFns;
+  overlay._savedScrollY = savedScrollY;
+
+  closeBtn.addEventListener('click', closeReaderMode);
 }

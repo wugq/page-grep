@@ -320,5 +320,32 @@
   },
   "readerWidthWide": {
     "message": "Wide"
+  },
+  "savedTab": {
+    "message": "Saved"
+  },
+  "saveForLater": {
+    "message": "Save article"
+  },
+  "unsaveArticle": {
+    "message": "Unsave article"
+  },
+  "savedArticlesEmpty": {
+    "message": "No saved articles yet"
+  },
+  "articleSaved": {
+    "message": "Article saved"
+  },
+  "articleUnsaved": {
+    "message": "Removed from saved"
+  },
+  "openSavedArticle": {
+    "message": "Open"
+  },
+  "deleteSavedArticle": {
+    "message": "Delete"
+  },
+  "savedArticleSource": {
+    "message": "Source"
   }
 }

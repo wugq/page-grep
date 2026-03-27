@@ -14,6 +14,11 @@ browser.runtime.onMessage.addListener((message) => {
     return Promise.resolve({ active: !!getActiveReaderBody() });
   }
 
+  if (message.action === 'openSavedArticle') {
+    openSavedArticle(message.article);
+    return;
+  }
+
   if (message.action === 'summaryHover') {
     const target = SUMMARY_STATE.elements?.[message.index]?.el;
     if (target?.isConnected) {

@@ -37,9 +37,68 @@ tabBtns.forEach(btn => {
   });
 });
 
+function renderSavedArticles(articles) {
+  const listEl = document.getElementById('saved-list');
+  const emptyEl = document.getElementById('saved-empty');
+  listEl.innerHTML = '';
+
+  if (!articles || articles.length === 0) {
+    emptyEl.classList.remove('hidden');
+    return;
+  }
+  emptyEl.classList.add('hidden');
+
+  articles.forEach((article) => {
+    const item = document.createElement('div');
+    item.className = 'saved-item';
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'saved-item-title';
+    titleEl.textContent = article.title || article.url;
+    item.appendChild(titleEl);
+
+    const metaParts = [
+      article.siteName,
+      article.savedAt ? new Date(article.savedAt).toLocaleDateString() : null,
+    ].filter(Boolean);
+    if (metaParts.length) {
+      const metaEl = document.createElement('div');
+      metaEl.className = 'saved-item-meta';
+      metaEl.textContent = metaParts.join(' · ');
+      item.appendChild(metaEl);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'saved-item-actions';
+
+    const openBtn = document.createElement('button');
+    openBtn.className = 'saved-item-open-btn';
+    openBtn.textContent = browser.i18n.getMessage('openSavedArticle') || 'Open';
+    openBtn.addEventListener('click', async () => {
+      const tabId = await getActiveTabId();
+      if (!tabId) return;
+      browser.tabs.sendMessage(tabId, { action: 'openSavedArticle', article }).catch(() => {});
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'saved-item-delete-btn';
+    deleteBtn.textContent = browser.i18n.getMessage('deleteSavedArticle') || 'Delete';
+    deleteBtn.addEventListener('click', async () => {
+      const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
+      const current = Array.isArray(savedArticles) ? savedArticles : [];
+      const updated = current.filter(a => !(a.url === article.url && a.savedAt === article.savedAt));
+      await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: updated });
+    });
+
+    actions.append(openBtn, deleteBtn);
+    item.appendChild(actions);
+    listEl.appendChild(item);
+  });
+}
+
 async function init() {
-  const { showFloatBtn, userInterests, theme } = await browser.storage.local.get([
-    STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.USER_INTERESTS, STORAGE_KEYS.THEME
+  const { showFloatBtn, userInterests, theme, savedArticles } = await browser.storage.local.get([
+    STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.USER_INTERESTS, STORAGE_KEYS.THEME, STORAGE_KEYS.SAVED_ARTICLES,
   ]);
 
   const themeToggle = document.getElementById('theme-toggle');
@@ -151,6 +210,7 @@ async function init() {
     }
   });
 
+  renderSavedArticles(Array.isArray(savedArticles) ? savedArticles : []);
   loadFromActiveTab();
   updateHideOnSiteToggle();
 }
@@ -418,6 +478,10 @@ browser.storage.onChanged.addListener((changes) => {
   if (STORAGE_KEYS.THEME in changes) {
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) themeToggle.checked = isThemeDark(changes[STORAGE_KEYS.THEME].newValue);
+  }
+  if (STORAGE_KEYS.SAVED_ARTICLES in changes) {
+    renderSavedArticles(Array.isArray(changes[STORAGE_KEYS.SAVED_ARTICLES].newValue)
+      ? changes[STORAGE_KEYS.SAVED_ARTICLES].newValue : []);
   }
 });
 
