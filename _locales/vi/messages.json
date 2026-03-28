@@ -65,6 +65,15 @@
   "settingsSubtitle": {
     "message": "Quản lý khóa API và tùy chọn của bạn"
   },
+  "tabSettings": {
+    "message": "Cài đặt"
+  },
+  "tabAbout": {
+    "message": "Giới thiệu"
+  },
+  "tabLibrary": {
+    "message": "Thư viện"
+  },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +255,21 @@
   "removeDomain": {
     "message": "Xóa"
   },
+  "clearTranslationsLabel": {
+    "message": "Bộ nhớ đệm dịch thuật"
+  },
+  "clearTranslationsInfo": {
+    "message": "Xóa tất cả bản dịch đã lưu vào bộ nhớ đệm. Hữu ích khi bản dịch xuất hiện trên trang sai hoặc trông không chính xác. Các bài viết đã lưu và cài đặt không bị ảnh hưởng."
+  },
+  "clearTranslationsBtn": {
+    "message": "Xóa bộ nhớ đệm dịch thuật"
+  },
+  "confirmClearTranslations": {
+    "message": "Xóa tất cả bản dịch đã lưu vào bộ nhớ đệm? Các bài viết đã lưu và cài đặt sẽ không bị ảnh hưởng."
+  },
+  "translationsClearedStatus": {
+    "message": "Đã xóa bộ nhớ đệm dịch thuật."
+  },
   "hideOnThisSite": {
     "message": "Ẩn trên trang này"
   },
@@ -342,6 +366,9 @@
   "savedArticlesEmpty": {
     "message": "Chưa có bài viết đã lưu"
   },
+  "syncedArticle": {
+    "message": "Đã lưu vào bộ nhớ đệm trên thiết bị khác — mở lại trang để đọc. Các bản dịch sẽ cần thực hiện lại."
+  },
   "savedTab": {
     "message": "Đã lưu"
   },
@@ -356,5 +383,31 @@
   },
   "currentPageBadge": {
     "message": "Trang này"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "Tiêu đề (tùy chọn)"
+  },
+  "libClearAll": {
+    "message": "Xóa tất cả"
+  },
+  "libArticleCountOne": {
+    "message": "1 bài viết"
+  },
+  "libArticleCountMany": {
+    "message": "$count$ bài viết",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "libBadgeOtherDevice": {
+    "message": "Thiết bị khác"
+  },
+  "libBadgeSynced": {
+    "message": "Đã đồng bộ"
+  },
+  "libClearAllConfirm": {
+    "message": "Xóa tất cả bài viết đã lưu? Thao tác này không thể hoàn tác."
   }
 }

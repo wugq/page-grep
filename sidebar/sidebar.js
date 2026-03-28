@@ -73,7 +73,7 @@ async function init() {
         ? [...new Set([...list, hostname])]
         : list.filter(d => d !== hostname);
       await browser.storage.local.set({ [STORAGE_KEYS.BLOCKED_DOMAINS]: updated });
-    });
+    }).catch(() => {}); // prevent a storage failure from permanently breaking the mutex
   });
 
   const pillsContainer = document.getElementById('pills-container');

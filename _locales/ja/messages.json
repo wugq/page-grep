@@ -65,6 +65,15 @@
   "settingsSubtitle": {
     "message": "API キーと設定を管理する"
   },
+  "tabSettings": {
+    "message": "設定"
+  },
+  "tabAbout": {
+    "message": "このアプリについて"
+  },
+  "tabLibrary": {
+    "message": "ライブラリ"
+  },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +255,21 @@
   "removeDomain": {
     "message": "削除"
   },
+  "clearTranslationsLabel": {
+    "message": "翻訳キャッシュ"
+  },
+  "clearTranslationsInfo": {
+    "message": "キャッシュされた翻訳をすべて消去します。翻訳が間違ったページに表示されたり、内容がおかしい場合に役立ちます。保存済みの記事と設定には影響しません。"
+  },
+  "clearTranslationsBtn": {
+    "message": "翻訳キャッシュを消去"
+  },
+  "confirmClearTranslations": {
+    "message": "キャッシュされた翻訳をすべて消去しますか？保存済みの記事と設定には影響しません。"
+  },
+  "translationsClearedStatus": {
+    "message": "翻訳キャッシュを消去しました。"
+  },
   "hideOnThisSite": {
     "message": "このサイトで非表示"
   },
@@ -342,6 +366,9 @@
   "savedArticlesEmpty": {
     "message": "保存した記事はありません"
   },
+  "syncedArticle": {
+    "message": "別のデバイスにキャッシュ済み — ページを再度開いてお読みください。翻訳はやり直す必要があります。"
+  },
   "savedTab": {
     "message": "保存済み"
   },
@@ -356,5 +383,31 @@
   },
   "currentPageBadge": {
     "message": "このページ"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "タイトル（任意）"
+  },
+  "libClearAll": {
+    "message": "すべて削除"
+  },
+  "libArticleCountOne": {
+    "message": "1件の記事"
+  },
+  "libArticleCountMany": {
+    "message": "$count$件の記事",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "libBadgeOtherDevice": {
+    "message": "他のデバイス"
+  },
+  "libBadgeSynced": {
+    "message": "同期済み"
+  },
+  "libClearAllConfirm": {
+    "message": "保存したすべての記事を削除しますか？この操作は元に戻せません。"
   }
 }

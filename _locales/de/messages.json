@@ -65,6 +65,9 @@
   "settingsSubtitle": {
     "message": "API-Schlüssel und Einstellungen verwalten"
   },
+  "tabSettings": { "message": "Einstellungen" },
+  "tabAbout": { "message": "Über" },
+  "tabLibrary": { "message": "Bibliothek" },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +249,11 @@
   "removeDomain": {
     "message": "Entfernen"
   },
+  "clearTranslationsLabel": { "message": "Übersetzungs-Cache" },
+  "clearTranslationsInfo": { "message": "Löscht alle zwischengespeicherten Übersetzungen. Hilfreich, wenn Übersetzungen auf der falschen Seite erscheinen oder fehlerhaft aussehen. Gespeicherte Artikel und Einstellungen werden nicht beeinflusst." },
+  "clearTranslationsBtn": { "message": "Übersetzungs-Cache leeren" },
+  "confirmClearTranslations": { "message": "Alle zwischengespeicherten Übersetzungen löschen? Gespeicherte Artikel und Einstellungen bleiben unberührt." },
+  "translationsClearedStatus": { "message": "Übersetzungs-Cache wurde geleert." },
   "hideOnThisSite": {
     "message": "Auf dieser Seite ausblenden"
   },
@@ -342,6 +350,9 @@
   "savedArticlesEmpty": {
     "message": "Keine gespeicherten Artikel"
   },
+  "syncedArticle": {
+    "message": "Auf einem anderen Gerät zwischengespeichert — öffne die Seite erneut zum Lesen. Übersetzungen müssen neu erstellt werden."
+  },
   "savedTab": {
     "message": "Gespeichert"
   },
@@ -356,5 +367,27 @@
   },
   "currentPageBadge": {
     "message": "Diese Seite"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "Titel (optional)"
+  },
+  "libClearAll": {
+    "message": "Alle löschen"
+  },
+  "libArticleCountOne": {
+    "message": "1 Artikel"
+  },
+  "libArticleCountMany": {
+    "message": "$count$ Artikel",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "libBadgeOtherDevice": {
+    "message": "Anderes Gerät"
+  },
+  "libBadgeSynced": {
+    "message": "Synchronisiert"
+  },
+  "libClearAllConfirm": {
+    "message": "Alle gespeicherten Artikel löschen? Dies kann nicht rückgängig gemacht werden."
   }
 }

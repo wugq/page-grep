@@ -65,6 +65,15 @@
   "settingsSubtitle": {
     "message": "Administra tu clave API y preferencias"
   },
+  "tabSettings": {
+    "message": "Configuración"
+  },
+  "tabAbout": {
+    "message": "Acerca de"
+  },
+  "tabLibrary": {
+    "message": "Biblioteca"
+  },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +255,21 @@
   "removeDomain": {
     "message": "Eliminar"
   },
+  "clearTranslationsLabel": {
+    "message": "Caché de traducciones"
+  },
+  "clearTranslationsInfo": {
+    "message": "Elimina todas las traducciones en caché. Útil si las traducciones aparecen en la página incorrecta o se ven mal. No afecta a los artículos guardados ni a la configuración."
+  },
+  "clearTranslationsBtn": {
+    "message": "Limpiar caché de traducciones"
+  },
+  "confirmClearTranslations": {
+    "message": "¿Eliminar todas las traducciones en caché? Los artículos guardados y la configuración no se verán afectados."
+  },
+  "translationsClearedStatus": {
+    "message": "Caché de traducciones eliminada."
+  },
   "hideOnThisSite": {
     "message": "Ocultar en este sitio"
   },
@@ -342,6 +366,9 @@
   "savedArticlesEmpty": {
     "message": "No hay artículos guardados"
   },
+  "syncedArticle": {
+    "message": "Guardado en otro dispositivo — vuelve a abrir la página para leer. Las traducciones deberán rehacerse."
+  },
   "savedTab": {
     "message": "Guardados"
   },
@@ -356,5 +383,31 @@
   },
   "currentPageBadge": {
     "message": "Esta página"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "Título (opcional)"
+  },
+  "libClearAll": {
+    "message": "Borrar todo"
+  },
+  "libArticleCountOne": {
+    "message": "1 artículo"
+  },
+  "libArticleCountMany": {
+    "message": "$count$ artículos",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "libBadgeOtherDevice": {
+    "message": "Otro dispositivo"
+  },
+  "libBadgeSynced": {
+    "message": "Sincronizado"
+  },
+  "libClearAllConfirm": {
+    "message": "¿Eliminar todos los artículos guardados? Esta acción no se puede deshacer."
   }
 }

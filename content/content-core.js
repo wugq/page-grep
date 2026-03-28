@@ -103,7 +103,8 @@ const PANEL_SHADOW_CSS = `
 }
 `;
 
-const _svgParser = new DOMParser();
+const _svgParser  = new DOMParser();
+const _htmlParser = new DOMParser();
 function setTranslateIcon(el) {
   const doc = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml');
   el.replaceChildren(doc.documentElement);

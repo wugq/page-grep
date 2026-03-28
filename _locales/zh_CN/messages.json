@@ -65,6 +65,9 @@
   "settingsSubtitle": {
     "message": "管理您的 API 密钥与偏好设置"
   },
+  "tabSettings": { "message": "设置" },
+  "tabAbout": { "message": "关于" },
+  "tabLibrary": { "message": "文章库" },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +249,11 @@
   "removeDomain": {
     "message": "移除"
   },
+  "clearTranslationsLabel": { "message": "翻译缓存" },
+  "clearTranslationsInfo": { "message": "清除所有已缓存的翻译内容。如果翻译显示在错误页面或内容不正确时很有用。不会影响已保存的文章和设置。" },
+  "clearTranslationsBtn": { "message": "清除翻译缓存" },
+  "confirmClearTranslations": { "message": "确定要清除所有翻译缓存吗？已保存的文章和设置不会受到影响。" },
+  "translationsClearedStatus": { "message": "翻译缓存已清除。" },
   "hideOnThisSite": {
     "message": "在此网站上隐藏"
   },
@@ -342,6 +350,9 @@
   "savedArticlesEmpty": {
     "message": "暂无收藏文章"
   },
+  "syncedArticle": {
+    "message": "已缓存在其他设备 — 重新打开页面即可阅读。翻译需要重新进行。"
+  },
   "savedTab": {
     "message": "收藏"
   },
@@ -356,5 +367,27 @@
   },
   "currentPageBadge": {
     "message": "本页"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "标题（可选）"
+  },
+  "libClearAll": {
+    "message": "全部删除"
+  },
+  "libArticleCountOne": {
+    "message": "1篇文章"
+  },
+  "libArticleCountMany": {
+    "message": "$count$篇文章",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "libBadgeOtherDevice": {
+    "message": "其他设备"
+  },
+  "libBadgeSynced": {
+    "message": "已同步"
+  },
+  "libClearAllConfirm": {
+    "message": "删除所有保存的文章？此操作无法撤消。"
   }
 }

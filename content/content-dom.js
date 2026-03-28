@@ -1,10 +1,13 @@
 // content-dom.js — DOM analysis: content scope detection, article/element collection
 // Depends on: content-core.js (CHROME_SELECTOR, threshold constants)
 
-const MAX_ARTICLE_LINES    = 200;
-const MAX_ARTICLE_ELEMENTS = 180;
-const MAX_LIST_ELEMENTS    = 140;
-const MAX_HN_ELEMENTS      = 160;
+// Upper bounds on how many content units are sent to the AI.
+// Keeps prompt size under ~8 KB for typical prose while still covering long articles.
+// Separate caps for lists/HN threads reflect their denser-per-element content.
+const MAX_ARTICLE_LINES    = 200; // text lines from Readability output (collectArticle)
+const MAX_ARTICLE_ELEMENTS = 180; // DOM elements for page-mode summarisation
+const MAX_LIST_ELEMENTS    = 140; // reduced cap for list-heavy pages (Reddit, HN comment threads)
+const MAX_HN_ELEMENTS      = 160; // HN-specific cap: comments are short but numerous
 
 function findMainContentScope() {
   const mainSelectors = [
@@ -48,7 +51,7 @@ function collectArticle() {
   const title = (article && article.title) ? article.title : document.title;
   if (!article || !article.content) return { title, lines: [] };
 
-  const dom = new DOMParser().parseFromString(article.content, 'text/html');
+  const dom = _htmlParser.parseFromString(article.content, 'text/html');
   const HEADING_PREFIX = { H1: '# ', H2: '## ', H3: '### ', H4: '#### ', H5: '##### ', H6: '###### ' };
   const seen = new Set();
   const lines = [];

@@ -13,128 +13,165 @@
 </head>
 <body style="visibility:hidden">
   <div id="app">
-    <header>
-      <img src="../icons/icon-48.svg" alt="icon" width="32" height="32">
-      <div>
-        <h1>PageGrep</h1>
-        <p data-i18n="settingsSubtitle">Manage your API key and preferences</p>
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="header-icon">
+          <img src="../icons/icon-48.svg" alt="icon" width="36" height="36">
+        </div>
+        <div>
+          <h1>PageGrep</h1>
+          <p data-i18n="settingsSubtitle">Manage your API key and preferences</p>
+        </div>
       </div>
+      <nav class="tab-bar">
+        <button class="tab-btn active" data-tab="settings" data-i18n="tabSettings">Settings</button>
+        <button class="tab-btn" data-tab="library" data-i18n="tabLibrary">Library</button>
+        <button class="tab-btn" data-tab="about" data-i18n="tabAbout">About</button>
+      </nav>
     </header>
 
     <main>
-      <form id="settings-form">
-        <div class="form-group">
-          <label for="api-key" data-i18n="apiKeyLabel">OpenAI API Key</label>
-          <div class="input-row">
-            <input
-              type="password"
-              id="api-key"
-              placeholder="sk-..."
-              autocomplete="off"
-              spellcheck="false"
-            >
-            <button type="button" id="toggle-visibility" data-i18n-title="showHide" title="显示/隐藏">👁</button>
+      <!-- Settings tab -->
+      <div class="tab-panel active" id="tab-settings">
+        <form id="settings-form">
+          <div class="form-group">
+            <label for="api-key" data-i18n="apiKeyLabel">OpenAI API Key</label>
+            <div class="input-row">
+              <input
+                type="password"
+                id="api-key"
+                placeholder="sk-..."
+                autocomplete="off"
+                spellcheck="false"
+              >
+              <button type="button" id="toggle-visibility" data-i18n-title="showHide">👁</button>
+            </div>
+            <small data-i18n="apiKeyPrivacy">您的 API Key 仅存储在本地浏览器中，不会发送到任何第三方服务器。</small>
           </div>
-          <small data-i18n="apiKeyPrivacy">您的 API Key 仅存储在本地浏览器中，不会发送到任何第三方服务器。</small>
+
+          <div class="form-group">
+            <label for="model-select" data-i18n="modelLabel">AI 模型</label>
+            <select id="model-select">
+              <option value="gpt-4.1-nano" data-i18n="model41Nano">gpt-4.1-nano (ultra low cost, $0.10/M tokens)</option>
+              <option value="gpt-4o-mini" data-i18n="modelMini">gpt-4o-mini（推荐，低成本）</option>
+              <option value="gpt-4.1-mini" data-i18n="model41Mini">gpt-4.1-mini (low cost, $0.40/M tokens)</option>
+              <option value="o3-mini" data-i18n="modelO3Mini">o3-mini (reasoning, $1.10/M tokens)</option>
+              <option value="gpt-4.1" data-i18n="model41">gpt-4.1 (high quality, $2.00/M tokens)</option>
+              <option value="o3" data-i18n="modelO3">o3 (reasoning, $2.00/M tokens)</option>
+              <option value="gpt-4o" data-i18n="modelFull">gpt-4o（更高质量）</option>
+            </select>
+            <small data-i18n="modelInfo">gpt-4o-mini 适合日常使用，成本约为 $0.15/百万输入tokens。</small>
+          </div>
+
+          <div class="form-group">
+            <label for="language-select" data-i18n="languageLabel">界面语言</label>
+            <select id="language-select">
+              <option value="" data-i18n="languageAuto">跟随浏览器</option>
+              <option value="zh_CN">中文 (简体)</option>
+              <option value="zh_TW">中文 (繁體)</option>
+              <option value="en">English</option>
+              <option value="ja">日本語</option>
+              <option value="ko">한국어</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="pt_BR">Português (Brasil)</option>
+              <option value="ru">Русский</option>
+              <option value="it">Italiano</option>
+              <option value="tr">Türkçe</option>
+              <option value="vi">Tiếng Việt</option>
+            </select>
+            <small data-i18n="languageInfo">选择插件界面的显示语言，保存后自动生效。</small>
+          </div>
+
+          <div class="form-group">
+            <label for="translate-lang-select" data-i18n="translateLangLabel">翻译目标语言</label>
+            <select id="translate-lang-select">
+              <option value="zh-CN">中文（简体）</option>
+              <option value="zh-TW">中文（繁體）</option>
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="ja">日本語</option>
+              <option value="ko">한국어</option>
+              <option value="pt">Português</option>
+              <option value="ru">Русский</option>
+              <option value="ar">العربية</option>
+              <option value="hi">हिन्दी</option>
+              <option value="it">Italiano</option>
+              <option value="nl">Nederlands</option>
+              <option value="tr">Türkçe</option>
+              <option value="vi">Tiếng Việt</option>
+              <option value="th">ภาษาไทย</option>
+            </select>
+            <small data-i18n="translateLangInfo">使用悬浮按钮翻译网页时，段落将被翻译为此语言。</small>
+          </div>
+
+          <div class="form-group">
+            <label for="theme-select" data-i18n="themeLabel">外观主题</label>
+            <select id="theme-select">
+              <option value="light" data-i18n="themeLight">浅色</option>
+              <option value="dark" data-i18n="themeDark">深色</option>
+            </select>
+            <small data-i18n="themeInfo">选择您偏好的界面主题。</small>
+          </div>
+
+          <div class="form-group">
+            <label class="toggle-row">
+              <input type="checkbox" id="show-float-btn">
+              <span data-i18n="showFloatBtn">显示悬浮按钮</span>
+            </label>
+            <small data-i18n="floatBtnInfo">在网页右下角显示翻译和高亮快捷按钮。</small>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="save-btn" class="btn-primary" data-i18n="saveSettings">保存设置</button>
+            <button type="button" id="clear-btn" class="btn-danger" data-i18n="resetAllSettings">重置所有设置</button>
+            <div id="save-status" class="hidden"></div>
+          </div>
+        </form>
+
+        <div class="form-group" id="blocked-domains-group">
+          <label data-i18n="blockedDomainsLabel">Blocked Domains</label>
+          <small data-i18n="blockedDomainsInfo">The float button is hidden on these domains. Right-click the float button on any page to add it.</small>
+          <div id="blocked-domains-list"></div>
         </div>
 
         <div class="form-group">
-          <label for="model-select" data-i18n="modelLabel">AI 模型</label>
-          <select id="model-select">
-            <option value="gpt-4.1-nano" data-i18n="model41Nano">gpt-4.1-nano (ultra low cost, $0.10/M tokens)</option>
-            <option value="gpt-4o-mini" data-i18n="modelMini">gpt-4o-mini（推荐，低成本）</option>
-            <option value="gpt-4.1-mini" data-i18n="model41Mini">gpt-4.1-mini (low cost, $0.40/M tokens)</option>
-            <option value="o3-mini" data-i18n="modelO3Mini">o3-mini (reasoning, $1.10/M tokens)</option>
-            <option value="gpt-4.1" data-i18n="model41">gpt-4.1 (high quality, $2.00/M tokens)</option>
-            <option value="o3" data-i18n="modelO3">o3 (reasoning, $2.00/M tokens)</option>
-            <option value="gpt-4o" data-i18n="modelFull">gpt-4o（更高质量）</option>
-          </select>
-          <small data-i18n="modelInfo">gpt-4o-mini 适合日常使用，成本约为 $0.15/百万输入tokens。</small>
+          <label data-i18n="clearTranslationsLabel">Translation Cache</label>
+          <small data-i18n="clearTranslationsInfo">Clear all cached translations. Useful if translations appear on the wrong page or look incorrect. Your saved articles and settings are not affected.</small>
+          <div>
+            <button type="button" id="clear-translations-btn" class="btn-danger" data-i18n="clearTranslationsBtn">Clear translation cache</button>
+          </div>
         </div>
-
-        <div class="form-group">
-          <label for="language-select" data-i18n="languageLabel">界面语言</label>
-          <select id="language-select">
-            <option value="" data-i18n="languageAuto">跟随浏览器</option>
-            <option value="zh_CN">中文 (简体)</option>
-            <option value="zh_TW">中文 (繁體)</option>
-            <option value="en">English</option>
-            <option value="ja">日本語</option>
-            <option value="ko">한국어</option>
-            <option value="es">Español</option>
-            <option value="fr">Français</option>
-            <option value="de">Deutsch</option>
-            <option value="pt_BR">Português (Brasil)</option>
-            <option value="ru">Русский</option>
-            <option value="it">Italiano</option>
-            <option value="tr">Türkçe</option>
-            <option value="vi">Tiếng Việt</option>
-          </select>
-          <small data-i18n="languageInfo">选择插件界面的显示语言，保存后自动生效。</small>
-        </div>
-
-        <div class="form-group">
-          <label for="translate-lang-select" data-i18n="translateLangLabel">翻译目标语言</label>
-          <select id="translate-lang-select">
-            <option value="zh-CN">中文（简体）</option>
-            <option value="zh-TW">中文（繁體）</option>
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="fr">Français</option>
-            <option value="de">Deutsch</option>
-            <option value="ja">日本語</option>
-            <option value="ko">한국어</option>
-            <option value="pt">Português</option>
-            <option value="ru">Русский</option>
-            <option value="ar">العربية</option>
-            <option value="hi">हिन्दी</option>
-            <option value="it">Italiano</option>
-            <option value="nl">Nederlands</option>
-            <option value="tr">Türkçe</option>
-            <option value="vi">Tiếng Việt</option>
-            <option value="th">ภาษาไทย</option>
-          </select>
-          <small data-i18n="translateLangInfo">使用悬浮按钮翻译网页时，段落将被翻译为此语言。</small>
-        </div>
-
-        <div class="form-group">
-          <label for="theme-select" data-i18n="themeLabel">外观主题</label>
-          <select id="theme-select">
-            <option value="light" data-i18n="themeLight">浅色</option>
-            <option value="dark" data-i18n="themeDark">深色</option>
-          </select>
-          <small data-i18n="themeInfo">选择您偏好的界面主题。</small>
-        </div>
-
-        <div class="form-group">
-          <label class="toggle-row">
-            <input type="checkbox" id="show-float-btn">
-            <span data-i18n="showFloatBtn">显示悬浮按钮</span>
-          </label>
-          <small data-i18n="floatBtnInfo">在网页右下角显示翻译和高亮快捷按钮。</small>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" id="save-btn" class="btn-primary" data-i18n="saveSettings">保存设置</button>
-          <button type="button" id="clear-btn" class="btn-danger" data-i18n="resetAllSettings">重置所有设置</button>
-        </div>
-        <div id="save-status" class="hidden"></div>
-      </form>
-
-      <div class="form-group" id="blocked-domains-group">
-        <label data-i18n="blockedDomainsLabel">Blocked Domains</label>
-        <small data-i18n="blockedDomainsInfo">The float button is hidden on these domains. Right-click the float button on any page to add it.</small>
-        <div id="blocked-domains-list"></div>
       </div>
 
-      <div class="info-box">
-        <h3 data-i18n="instructions">使用说明</h3>
-        <ol>
-          <li data-i18n-html="instructionStep1">在 <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI 平台</a> 获取 API Key</li>
-          <li data-i18n="instructionStep2">将 API Key 粘贴到上方输入框并保存</li>
-          <li data-i18n="instructionStep3">访问任意网页，点击扩展图标开启悬浮按钮</li>
-          <li data-i18n="instructionStep4">使用页面右下角的悬浮按钮翻译或高亮感兴趣的内容</li>
-        </ol>
+      <!-- Library tab -->
+      <div class="tab-panel" id="tab-library">
+        <form id="lib-add-form" class="lib-add-form" novalidate>
+          <input id="lib-add-url" type="url" placeholder="https://example.com/article" spellcheck="false" required>
+          <input id="lib-add-title" type="text" data-i18n-placeholder="libAddTitlePlaceholder" placeholder="Title (optional)">
+          <button type="submit" class="btn-primary" data-i18n="saveForLater">Save article</button>
+        </form>
+        <div class="lib-toolbar">
+          <span id="lib-count" class="lib-count"></span>
+          <button type="button" id="lib-clear-all" class="btn-danger-sm" data-i18n="libClearAll">Clear all</button>
+        </div>
+        <div id="lib-list" class="lib-list"></div>
+      </div>
+
+      <!-- About tab -->
+      <div class="tab-panel" id="tab-about">
+        <div class="info-box">
+          <h3 data-i18n="instructions">使用说明</h3>
+          <ol>
+            <li data-i18n-html="instructionStep1">在 <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI 平台</a> 获取 API Key</li>
+            <li data-i18n="instructionStep2">将 API Key 粘贴到上方输入框并保存</li>
+            <li data-i18n="instructionStep3">访问任意网页，点击扩展图标开启悬浮按钮</li>
+            <li data-i18n="instructionStep4">使用页面右下角的悬浮按钮翻译或高亮感兴趣的内容</li>
+          </ol>
+        </div>
       </div>
     </main>
   </div>

@@ -65,6 +65,15 @@
   "settingsSubtitle": {
     "message": "Gestisci la tua chiave API e le preferenze"
   },
+  "tabSettings": {
+    "message": "Impostazioni"
+  },
+  "tabAbout": {
+    "message": "Informazioni"
+  },
+  "tabLibrary": {
+    "message": "Libreria"
+  },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +255,21 @@
   "removeDomain": {
     "message": "Rimuovi"
   },
+  "clearTranslationsLabel": {
+    "message": "Cache traduzioni"
+  },
+  "clearTranslationsInfo": {
+    "message": "Cancella tutte le traduzioni nella cache. Utile se le traduzioni appaiono nella pagina sbagliata o sembrano errate. Gli articoli salvati e le impostazioni non vengono influenzati."
+  },
+  "clearTranslationsBtn": {
+    "message": "Svuota cache traduzioni"
+  },
+  "confirmClearTranslations": {
+    "message": "Cancellare tutte le traduzioni nella cache? Gli articoli salvati e le impostazioni non saranno influenzati."
+  },
+  "translationsClearedStatus": {
+    "message": "Cache traduzioni svuotata."
+  },
   "hideOnThisSite": {
     "message": "Nascondi su questo sito"
   },
@@ -342,6 +366,9 @@
   "savedArticlesEmpty": {
     "message": "Nessun articolo salvato"
   },
+  "syncedArticle": {
+    "message": "Memorizzato nella cache su un altro dispositivo — riapri la pagina per leggere. Le traduzioni dovranno essere rifatte."
+  },
   "savedTab": {
     "message": "Salvati"
   },
@@ -356,5 +383,31 @@
   },
   "currentPageBadge": {
     "message": "Questa pagina"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "Titolo (opzionale)"
+  },
+  "libClearAll": {
+    "message": "Cancella tutto"
+  },
+  "libArticleCountOne": {
+    "message": "1 articolo"
+  },
+  "libArticleCountMany": {
+    "message": "$count$ articoli",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "libBadgeOtherDevice": {
+    "message": "Altro dispositivo"
+  },
+  "libBadgeSynced": {
+    "message": "Sincronizzato"
+  },
+  "libClearAllConfirm": {
+    "message": "Rimuovere tutti gli articoli salvati? Questa azione non può essere annullata."
   }
 }

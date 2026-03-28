@@ -65,6 +65,15 @@
   "settingsSubtitle": {
     "message": "API 키와 환경설정을 관리하세요"
   },
+  "tabSettings": {
+    "message": "설정"
+  },
+  "tabAbout": {
+    "message": "정보"
+  },
+  "tabLibrary": {
+    "message": "라이브러리"
+  },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +255,21 @@
   "removeDomain": {
     "message": "제거"
   },
+  "clearTranslationsLabel": {
+    "message": "번역 캐시"
+  },
+  "clearTranslationsInfo": {
+    "message": "캐시된 번역을 모두 지웁니다. 번역이 잘못된 페이지에 표시되거나 내용이 올바르지 않을 때 유용합니다. 저장된 기사와 설정에는 영향을 주지 않습니다."
+  },
+  "clearTranslationsBtn": {
+    "message": "번역 캐시 지우기"
+  },
+  "confirmClearTranslations": {
+    "message": "캐시된 번역을 모두 지울까요? 저장된 기사와 설정에는 영향을 주지 않습니다."
+  },
+  "translationsClearedStatus": {
+    "message": "번역 캐시가 지워졌습니다."
+  },
   "hideOnThisSite": {
     "message": "이 사이트에서 숨기기"
   },
@@ -342,6 +366,9 @@
   "savedArticlesEmpty": {
     "message": "저장된 기사가 없습니다"
   },
+  "syncedArticle": {
+    "message": "다른 기기에 캐시됨 — 페이지를 다시 열어 읽으세요. 번역은 다시 해야 합니다."
+  },
   "savedTab": {
     "message": "저장됨"
   },
@@ -356,5 +383,31 @@
   },
   "currentPageBadge": {
     "message": "현재 페이지"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "제목 (선택사항)"
+  },
+  "libClearAll": {
+    "message": "모두 지우기"
+  },
+  "libArticleCountOne": {
+    "message": "기사 1개"
+  },
+  "libArticleCountMany": {
+    "message": "기사 $count$개",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "libBadgeOtherDevice": {
+    "message": "다른 기기"
+  },
+  "libBadgeSynced": {
+    "message": "동기화됨"
+  },
+  "libClearAllConfirm": {
+    "message": "저장된 모든 기사를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
   }
 }

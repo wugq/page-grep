@@ -65,6 +65,15 @@
   "settingsSubtitle": {
     "message": "Управляйте API-ключом и настройками"
   },
+  "tabSettings": {
+    "message": "Настройки"
+  },
+  "tabAbout": {
+    "message": "О программе"
+  },
+  "tabLibrary": {
+    "message": "Библиотека"
+  },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +255,21 @@
   "removeDomain": {
     "message": "Удалить"
   },
+  "clearTranslationsLabel": {
+    "message": "Кэш переводов"
+  },
+  "clearTranslationsInfo": {
+    "message": "Очищает все кэшированные переводы. Полезно, если переводы отображаются на неправильной странице или выглядят некорректно. Сохранённые статьи и настройки не затрагиваются."
+  },
+  "clearTranslationsBtn": {
+    "message": "Очистить кэш переводов"
+  },
+  "confirmClearTranslations": {
+    "message": "Очистить все кэшированные переводы? Сохранённые статьи и настройки не будут затронуты."
+  },
+  "translationsClearedStatus": {
+    "message": "Кэш переводов очищен."
+  },
   "hideOnThisSite": {
     "message": "Скрыть на этом сайте"
   },
@@ -342,6 +366,9 @@
   "savedArticlesEmpty": {
     "message": "Нет сохранённых статей"
   },
+  "syncedArticle": {
+    "message": "Кэшировано на другом устройстве — снова откройте страницу для чтения. Переводы нужно будет сделать заново."
+  },
   "savedTab": {
     "message": "Сохранённые"
   },
@@ -356,5 +383,31 @@
   },
   "currentPageBadge": {
     "message": "Эта страница"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "Заголовок (необязательно)"
+  },
+  "libClearAll": {
+    "message": "Очистить всё"
+  },
+  "libArticleCountOne": {
+    "message": "1 статья"
+  },
+  "libArticleCountMany": {
+    "message": "$count$ статей",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "libBadgeOtherDevice": {
+    "message": "Другое устройство"
+  },
+  "libBadgeSynced": {
+    "message": "Синхронизировано"
+  },
+  "libClearAllConfirm": {
+    "message": "Удалить все сохранённые статьи? Это действие нельзя отменить."
   }
 }

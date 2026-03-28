@@ -65,6 +65,15 @@
   "settingsSubtitle": {
     "message": "API anahtarınızı ve tercihlerinizi yönetin"
   },
+  "tabSettings": {
+    "message": "Ayarlar"
+  },
+  "tabAbout": {
+    "message": "Hakkında"
+  },
+  "tabLibrary": {
+    "message": "Kütüphane"
+  },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +255,21 @@
   "removeDomain": {
     "message": "Kaldır"
   },
+  "clearTranslationsLabel": {
+    "message": "Çeviri Önbelleği"
+  },
+  "clearTranslationsInfo": {
+    "message": "Önbelleğe alınmış tüm çevirileri siler. Çeviriler yanlış sayfada görünüyorsa veya hatalı görünüyorsa kullanışlıdır. Kaydedilen makaleler ve ayarlar etkilenmez."
+  },
+  "clearTranslationsBtn": {
+    "message": "Çeviri önbelleğini temizle"
+  },
+  "confirmClearTranslations": {
+    "message": "Önbelleğe alınmış tüm çeviriler silinsin mi? Kaydedilen makaleler ve ayarlar etkilenmeyecektir."
+  },
+  "translationsClearedStatus": {
+    "message": "Çeviri önbelleği temizlendi."
+  },
   "hideOnThisSite": {
     "message": "Bu sitede gizle"
   },
@@ -342,6 +366,9 @@
   "savedArticlesEmpty": {
     "message": "Kayıtlı makale yok"
   },
+  "syncedArticle": {
+    "message": "Başka bir cihazda önbelleğe alındı — okumak için sayfayı yeniden açın. Çevirilerin yeniden yapılması gerekecek."
+  },
   "savedTab": {
     "message": "Kaydedilenler"
   },
@@ -356,5 +383,31 @@
   },
   "currentPageBadge": {
     "message": "Bu sayfa"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "Başlık (isteğe bağlı)"
+  },
+  "libClearAll": {
+    "message": "Tümünü temizle"
+  },
+  "libArticleCountOne": {
+    "message": "1 makale"
+  },
+  "libArticleCountMany": {
+    "message": "$count$ makale",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "libBadgeOtherDevice": {
+    "message": "Diğer cihaz"
+  },
+  "libBadgeSynced": {
+    "message": "Senkronize edildi"
+  },
+  "libClearAllConfirm": {
+    "message": "Kaydedilen tüm makaleler kaldırılsın mı? Bu işlem geri alınamaz."
   }
 }

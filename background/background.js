@@ -27,7 +27,8 @@ browser.browserAction.onClicked.addListener(() => {
   browser.sidebarAction.toggle();
 });
 
-const API_TIMEOUT_MS = 30000;
+const API_TIMEOUT_MS      = 30000;
+const MAX_TRANSLATE_CHARS = 8000;  // ~2k tokens; a normal paragraph is well under this
 
 async function callAI(systemPrompt, userContent, apiKey, model, jsonMode = false, temperature = 0) {
   const body = {
@@ -102,23 +103,29 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: false, error: 'Missing text' });
       return;
     }
-    Promise.all([
-      getApiSettings(),
-      browser.storage.local.get(STORAGE_KEYS.TRANSLATE_LANG)
-    ])
-      .then(([{ apiKey, model }, { translateLang }]) => {
+    (async () => {
+      try {
+        const text = message.text.length > MAX_TRANSLATE_CHARS
+          ? message.text.slice(0, MAX_TRANSLATE_CHARS)
+          : message.text;
+        const [{ apiKey, model }, { translateLang }] = await Promise.all([
+          getApiSettings(),
+          browser.storage.local.get(STORAGE_KEYS.TRANSLATE_LANG),
+        ]);
         const targetLang = TRANSLATE_LANG_NAMES[translateLang] || 'Simplified Chinese';
-        return callAI(
+        const result = await callAI(
           `You are a professional translator. Translate the following text to ${targetLang}. Output only the translation, no explanation.${message.hasLinks ? ' The text contains markers like [LINK0_START]...[LINK0_END] using ASCII square brackets. Preserve these markers character-for-character — do not translate, reformat, or convert the brackets to full-width 【】 or any other style. Only translate the text between them.' : ''}`,
-          message.text,
+          text,
           apiKey,
           model,
           false,
           0.3
         );
-      })
-      .then(result => sendResponse({ success: true, result }))
-      .catch(err => sendResponse({ success: false, error: err.message, code: err.code }));
+        sendResponse({ success: true, result });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message, code: err.code });
+      }
+    })();
     return true;
   }
 
@@ -127,25 +134,26 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: false, error: 'Missing elements' });
       return;
     }
-    getApiSettings()
-      .then(({ apiKey, model }) => {
+    (async () => {
+      try {
+        const { apiKey, model } = await getApiSettings();
         const elementList = message.elements.map((t, i) => `${i}: ${t}`).join('\n');
         const lang = message.pageLanguage || 'English';
-        return callAI(
+        const result = await callAI(
           `I'm on a ${lang} page. Please summarize the selection using precise and concise language. Use headers and bulleted lists in the summary, to make it scannable. Maintain the meaning and factual accuracy. Respond entirely in ${lang}.\n\nOutput format: Return ONLY valid JSON - an object with a "sections" array of 2-5 section objects, each with keys:\n- "title": a short header, max 8 words\n- "items": an array of 2-5 objects with keys "text" (one bullet line, no prefix) and "index" (integer index of the most relevant source element)\n\nIf the elements include bracketed tags (e.g. [story][score=...][comments=...][tags=ai]), use them to group related items into sections. Do not output raw navigation menus or just repeat titles.`,
           `Page elements:\n${elementList}`,
           apiKey,
           model,
           true
         );
-      })
-      .then(result => {
         let data;
         try { data = JSON.parse(result); } catch (_) { data = {}; }
         const points = Array.isArray(data.sections) ? data.sections : [];
         sendResponse({ success: true, points });
-      })
-      .catch(err => sendResponse({ success: false, error: err.message, code: err.code }));
+      } catch (err) {
+        sendResponse({ success: false, error: err.message, code: err.code });
+      }
+    })();
     return true;
   }
 
@@ -158,25 +166,26 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: false, error: 'Missing elements' });
       return;
     }
-    getApiSettings()
-      .then(({ apiKey, model }) => {
+    (async () => {
+      try {
+        const { apiKey, model } = await getApiSettings();
         const interests = message.interests.split(',').map(s => s.trim()).filter(Boolean);
         const elementList = message.elements.map((t, i) => `${i}: ${t}`).join('\n');
         const systemPrompt = 'You are a content relevance filter. Given numbered page elements and a single interest topic, return all elements whose subject matter is directly about that topic — not just in the same field, but actually about it.\n\nTreat the interest as an umbrella term: match the topic itself and any well-known variants or subtypes.\n\nReturn ONLY valid JSON: {"matches": [{"index": <integer>, "reason": "<topic>: <why in ≤8 words>"}]}\nIf nothing matches, return {"matches": []}.';
-        const calls = interests.map(interest =>
-          callAI(
-            systemPrompt,
-            `Interest: ${interest}\n\nPage elements:\n${elementList}`,
-            apiKey,
-            model,
-            true
-          ).then(result => {
-            try { return JSON.parse(result).matches || []; } catch (_) { return []; }
-          }).catch(() => [])
-        );
-        return Promise.all(calls);
-      })
-      .then(resultsPerInterest => {
+        const resultsPerInterest = await Promise.all(interests.map(async interest => {
+          try {
+            const result = await callAI(
+              systemPrompt,
+              `Interest: ${interest}\n\nPage elements:\n${elementList}`,
+              apiKey,
+              model,
+              true
+            );
+            return JSON.parse(result).matches || [];
+          } catch (_) {
+            return [];
+          }
+        }));
         const seen = new Set();
         const items = [];
         for (const matches of resultsPerInterest) {
@@ -188,8 +197,10 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
         }
         sendResponse({ success: true, items });
-      })
-      .catch(err => sendResponse({ success: false, error: err.message, code: err.code }));
+      } catch (err) {
+        sendResponse({ success: false, error: err.message, code: err.code });
+      }
+    })();
     return true;
   }
 });

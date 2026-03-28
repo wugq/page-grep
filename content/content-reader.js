@@ -326,6 +326,9 @@ const READER_SHADOW_CSS = `
 .ai-lib-item--current { border-color: var(--rd-accent); }
 /* Currently displayed in reader: accent border + subtle background */
 .ai-lib-item--reading { border-color: var(--rd-accent); background: var(--rd-ctrl-bg); }
+/* Synced from another device: dashed border signals read-only, cloud hint text below meta */
+.ai-lib-item--synced { opacity: 0.8; border-style: dashed; }
+.ai-lib-sync-hint { font-size: 11px; color: var(--rd-muted); margin-top: 4px; font-style: italic; }
 .ai-lib-item-top { display: flex; align-items: flex-start; gap: 6px; }
 .ai-lib-title {
   flex: 1; font-size: 13px; font-weight: 600; color: var(--rd-text);
@@ -645,11 +648,14 @@ function buildSettingsPanel(overlay, prefs, contentEl) {
 }
 
 function positionSettingsPopup(popup, anchorEl) {
-  const POPUP_W = 220;
-  const GAP     = 24; // box-shadow blur is 32px; 24px gives ~8px clear visual gap after shadow
-  const MARGIN  = 8;
+  const POPUP_W              = 220;
+  const GAP                  = 24;  // box-shadow blur is 32px; 24px gives ~8px clear visual gap after shadow
+  const MARGIN               = 8;
+  const SETTINGS_MAX_H_FALLBACK = 280; // matches --reader-settings-max-h in reader CSS
   // Read max-height from the CSS custom property so JS and CSS stay in sync automatically.
-  const SETTINGS_MAX_H = parseInt(getComputedStyle(popup).getPropertyValue('--reader-settings-max-h')) || 280;
+  // Fall back to the constant above if the property is unavailable (e.g. popup not yet in DOM).
+  const rawMaxH = parseInt(getComputedStyle(popup).getPropertyValue('--reader-settings-max-h'));
+  const SETTINGS_MAX_H = Number.isFinite(rawMaxH) ? rawMaxH : SETTINGS_MAX_H_FALLBACK;
 
   let anchorTop, anchorLeft, anchorRight;
   if (anchorEl) {
@@ -740,7 +746,29 @@ function holdRepeat(btn, action) {
 
 // --- Save-for-later helpers ---
 
+
+async function syncAddBookmark(meta) {
+  try {
+    // Single atomic set — no read-modify-write, safe for concurrent devices.
+    await browser.storage.sync.set({ [urlToSyncKey(meta.url)]: meta });
+    // Best-effort: if we're over 40, drop the oldest entry.
+    const all = await getSyncBookmarks();
+    if (all.length > 40) {
+      all.sort((a, b) => (a.savedAt || 0) - (b.savedAt || 0));
+      await browser.storage.sync.remove(urlToSyncKey(all[0].url));
+    }
+  } catch (_) { /* sync unavailable or quota exceeded — fail silently */ }
+}
+
+async function syncRemoveBookmark(url) {
+  try {
+    // Single atomic remove — no read-modify-write, safe for concurrent devices.
+    await browser.storage.sync.remove(urlToSyncKey(url));
+  } catch (_) { /* sync unavailable — fail silently */ }
+}
+
 let _savingInProgress = false;
+let _promoteSuppressed = false;
 
 function updateSaveBtn(btn, saved) {
   btn.replaceChildren(_svgParser.parseFromString(saved ? SAVED_ICON : SAVE_ICON, 'image/svg+xml').documentElement);
@@ -754,27 +782,37 @@ async function onSaveBtnClick(btn) {
   if (_savingInProgress) return;
   _savingInProgress = true;
   try {
-    const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
-    const articles = Array.isArray(savedArticles) ? savedArticles : [];
     // When a library article is loaded use its URL, otherwise use the live page URL.
     const url = _libraryArticleUrl || getReaderUrl();
+    const syncKey = urlToSyncKey(url);
+    const [{ savedArticles }, syncResult] = await Promise.all([
+      browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES),
+      browser.storage.sync.get(syncKey).catch(() => ({})),
+    ]);
+    const articles = Array.isArray(savedArticles) ? savedArticles : [];
     const existingIdx = articles.findIndex(a => a.url === url);
+    const inSync = !!syncResult[syncKey];
 
-    if (existingIdx >= 0) {
-      articles.splice(existingIdx, 1);
-      await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
+    if (existingIdx >= 0 || inSync) {
+      _promoteSuppressed = true; // cancel any in-flight promoteFromSync for this URL
+      if (existingIdx >= 0) {
+        articles.splice(existingIdx, 1);
+        await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
+      }
+      await syncRemoveBookmark(url);
       updateSaveBtn(btn, false);
       showToast(browser.i18n.getMessage('articleUnsaved') || 'Removed from saved');
     } else {
       if (!_articleHtml) return;
       const translations = _readerStates?.[url]?.translations || {};
+      const savedAt = Date.now();
       const newArticle = {
         url,
         title: _articleMeta?.title || document.title,
         byline: _articleMeta?.byline || null,
         siteName: _articleMeta?.siteName || null,
         publishedTime: _articleMeta?.publishedTime || null,
-        savedAt: Date.now(),
+        savedAt,
         html: _articleHtml,
         translations,
       };
@@ -786,6 +824,7 @@ async function onSaveBtnClick(btn) {
         showToast(browser.i18n.getMessage('articleSaved') || 'Article saved');
       }
       await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
+      await syncAddBookmark({ url, title: newArticle.title, byline: newArticle.byline, siteName: newArticle.siteName, savedAt });
       updateSaveBtn(btn, true);
     }
   } catch (err) {
@@ -826,8 +865,20 @@ function buildLibraryPanel(onOpen, onClose, onDelete) {
 
     let articles;
     try {
-      const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
-      articles = Array.isArray(savedArticles) ? savedArticles : [];
+      const [{ savedArticles }, syncBookmarks] = await Promise.all([
+        browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES),
+        getSyncBookmarks(),
+      ]);
+      // Deduplicate by URL, keeping the most recently saved entry.
+      const seen = new Set();
+      const localArticles = (Array.isArray(savedArticles) ? savedArticles : [])
+        .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))
+        .filter(a => { if (seen.has(a.url)) return false; seen.add(a.url); return true; });
+      const localUrls = new Set(localArticles.map(a => a.url));
+      const syncOnly = syncBookmarks
+        .filter(b => !localUrls.has(b.url))
+        .map(b => ({ ...b, _syncOnly: true }));
+      articles = [...localArticles, ...syncOnly].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
     } catch (err) {
       listEl.replaceChildren();
       const errorEl = document.createElement('div');
@@ -852,16 +903,23 @@ function buildLibraryPanel(onOpen, onClose, onDelete) {
     articles.forEach((article) => {
       const isCurrentPage = article.url === currentPageUrl;
       const isReading     = article.url === _libraryArticleUrl;
+      const isSyncOnly    = !!article._syncOnly;
 
       const item = document.createElement('div');
       item.className = 'ai-lib-item';
       if (isCurrentPage) item.classList.add('ai-lib-item--current');
       if (isReading)     item.classList.add('ai-lib-item--reading');
+      if (isSyncOnly)    item.classList.add('ai-lib-item--synced');
 
-      // Clicking anywhere on the item opens it (except the delete button)
+      // Clicking anywhere on the item opens it (except the delete button).
+      // Sync-only items navigate to the URL; local items open in reader.
       item.addEventListener('click', (e) => {
         if (e.target.closest('.ai-lib-delete-btn')) return;
-        onOpen(article);
+        if (isSyncOnly) {
+          window.open(article.url, '_blank', 'noopener');
+        } else {
+          onOpen(article);
+        }
       });
 
       const itemTop = document.createElement('div');
@@ -877,10 +935,15 @@ function buildLibraryPanel(onOpen, onClose, onDelete) {
       deleteBtn.setAttribute('aria-label', browser.i18n.getMessage('deleteSavedArticle') || 'Remove article');
       deleteBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const { savedArticles: current } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
-        const updated = (Array.isArray(current) ? current : [])
-          .filter(a => !(a.url === article.url && a.savedAt === article.savedAt));
-        await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: updated });
+        if (article._syncOnly) {
+          await syncRemoveBookmark(article.url);
+        } else {
+          const { savedArticles: current } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
+          const updated = (Array.isArray(current) ? current : [])
+            .filter(a => !(a.url === article.url && a.savedAt === article.savedAt));
+          await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: updated });
+          await syncRemoveBookmark(article.url);
+        }
         if (onDelete) onDelete(article);
         refresh();
       });
@@ -902,6 +965,13 @@ function buildLibraryPanel(onOpen, onClose, onDelete) {
         metaEl.appendChild(badge);
       }
       if (metaEl.childNodes.length) item.appendChild(metaEl);
+
+      if (isSyncOnly) {
+        const syncHint = document.createElement('div');
+        syncHint.className = 'ai-lib-sync-hint';
+        syncHint.textContent = browser.i18n.getMessage('syncedArticle') || 'Cached on another device — re-open the page to read. Translations will need to be redone.';
+        item.appendChild(syncHint);
+      }
 
       listEl.appendChild(item);
     });
@@ -968,7 +1038,7 @@ function loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn) {
   // Body
   const body = readerGetById('ai-reader-body');
   if (body) {
-    const articleDoc = new DOMParser().parseFromString(article.html || '', 'text/html');
+    const articleDoc = _htmlParser.parseFromString(article.html || '', 'text/html');
     articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
     body.replaceChildren(...Array.from(articleDoc.body.childNodes));
     _readerBody = body;
@@ -1022,7 +1092,7 @@ function restoreLiveArticle(overlay, saveBtn, backBtn) {
 
   const body = readerGetById('ai-reader-body');
   if (body && snap.html) {
-    const articleDoc = new DOMParser().parseFromString(snap.html, 'text/html');
+    const articleDoc = _htmlParser.parseFromString(snap.html, 'text/html');
     articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
     body.replaceChildren(...Array.from(articleDoc.body.childNodes));
     _readerBody = body;
@@ -1059,9 +1129,14 @@ function restoreLiveArticle(overlay, saveBtn, backBtn) {
   if (saveBtn) {
     saveBtn.style.display = '';
     // Re-check saved state — user may have unsaved the live article while browsing library.
-    browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES).then(({ savedArticles }) => {
-      const stillSaved = Array.isArray(savedArticles) && savedArticles.some(a => a.url === snap.url);
-      updateSaveBtn(saveBtn, stillSaved);
+    const snapSyncKey = urlToSyncKey(snap.url);
+    Promise.all([
+      browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES),
+      browser.storage.sync.get(snapSyncKey).catch(() => ({})),
+    ]).then(([{ savedArticles }, syncResult]) => {
+      const inLocal = Array.isArray(savedArticles) && savedArticles.some(a => a.url === snap.url);
+      const inSync  = !!syncResult[snapSyncKey];
+      updateSaveBtn(saveBtn, inLocal || inSync);
     });
   }
 }
@@ -1085,7 +1160,7 @@ async function openReaderMode(triggerBtn) {
     triggerBtn.classList.add('ai-loading-btn');
   }
 
-  let article, prefs, urlState, isSaved;
+  let article, prefs, urlState, isSaved, promoteFromSync;
   try {
     const docClone = document.cloneNode(true);
     // Strip translation wrappers so Readability sees original text only.
@@ -1100,13 +1175,18 @@ async function openReaderMode(triggerBtn) {
     });
     article = new Readability(docClone).parse();
     prefs   = await loadReaderPrefs();
-    const [{ readerStates }, { savedArticles }] = await Promise.all([
+    const readerSyncKey = urlToSyncKey(getReaderUrl());
+    const [{ readerStates }, { savedArticles }, syncResult] = await Promise.all([
       browser.storage.local.get(STORAGE_KEYS.READER_STATES),
       browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES),
+      browser.storage.sync.get(readerSyncKey).catch(() => ({})),
     ]);
     _readerStates = readerStates || {};
     urlState = _readerStates[getReaderUrl()] || {};
-    isSaved = Array.isArray(savedArticles) && savedArticles.some(a => a.url === getReaderUrl());
+    const isLocalSaved = Array.isArray(savedArticles) && savedArticles.some(a => a.url === getReaderUrl());
+    const isSyncSaved  = !!syncResult[readerSyncKey];
+    isSaved = isLocalSaved || isSyncSaved;
+    promoteFromSync = isSyncSaved && !isLocalSaved;
   } catch (err) {
     error('[PageGrep] openReaderMode failed:', err.message);
     _readerOpening = false;
@@ -1137,6 +1217,35 @@ async function openReaderMode(triggerBtn) {
     siteName: article.siteName || null,
     publishedTime: article.publishedTime || null,
   };
+
+  // Promote a sync-only bookmark to a full local article now that we have the content.
+  // _promoteSuppressed is set to true if the user unsaves the article before this completes.
+  if (promoteFromSync) {
+    _promoteSuppressed = false;
+    (async () => {
+      try {
+        const url = getReaderUrl();
+        const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
+        if (_promoteSuppressed) return;
+        const articles = Array.isArray(savedArticles) ? savedArticles : [];
+        if (!articles.some(a => a.url === url)) {
+          articles.unshift({
+            url,
+            title: _articleMeta.title,
+            byline: _articleMeta.byline,
+            siteName: _articleMeta.siteName,
+            publishedTime: _articleMeta.publishedTime,
+            savedAt: Date.now(),
+            html: _articleHtml,
+            translations: {},
+          });
+          if (articles.length > 20) articles.length = 20;
+          await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
+          await syncRemoveBookmark(url);
+        }
+      } catch (_) { /* non-critical */ }
+    })();
+  }
 
   // Shadow host lives in the page DOM (carries the ID + CSS vars for shadow inheritance).
   const shadowHost = document.createElement('div');
@@ -1256,7 +1365,7 @@ async function openReaderMode(triggerBtn) {
 
   const body = document.createElement('div');
   body.id = 'ai-reader-body';
-  const articleDoc = new DOMParser().parseFromString(article.content, 'text/html');
+  const articleDoc = _htmlParser.parseFromString(article.content, 'text/html');
   articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
   body.replaceChildren(...Array.from(articleDoc.body.childNodes));
   _readerBody = body;

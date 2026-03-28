@@ -65,6 +65,15 @@
   "settingsSubtitle": {
     "message": "Gerencie sua chave de API e preferências"
   },
+  "tabSettings": {
+    "message": "Configurações"
+  },
+  "tabAbout": {
+    "message": "Sobre"
+  },
+  "tabLibrary": {
+    "message": "Biblioteca"
+  },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +255,21 @@
   "removeDomain": {
     "message": "Remover"
   },
+  "clearTranslationsLabel": {
+    "message": "Cache de traduções"
+  },
+  "clearTranslationsInfo": {
+    "message": "Limpa todas as traduções em cache. Útil se as traduções aparecerem na página errada ou estiverem incorretas. Seus artigos salvos e configurações não serão afetados."
+  },
+  "clearTranslationsBtn": {
+    "message": "Limpar cache de traduções"
+  },
+  "confirmClearTranslations": {
+    "message": "Limpar todas as traduções em cache? Seus artigos salvos e configurações não serão afetados."
+  },
+  "translationsClearedStatus": {
+    "message": "Cache de traduções limpo."
+  },
   "hideOnThisSite": {
     "message": "Ocultar neste site"
   },
@@ -342,6 +366,9 @@
   "savedArticlesEmpty": {
     "message": "Nenhum artigo salvo"
   },
+  "syncedArticle": {
+    "message": "Em cache em outro dispositivo — reabra a página para ler. As traduções precisarão ser refeitas."
+  },
   "savedTab": {
     "message": "Salvos"
   },
@@ -356,5 +383,31 @@
   },
   "currentPageBadge": {
     "message": "Esta página"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "Título (opcional)"
+  },
+  "libClearAll": {
+    "message": "Limpar tudo"
+  },
+  "libArticleCountOne": {
+    "message": "1 artigo"
+  },
+  "libArticleCountMany": {
+    "message": "$count$ artigos",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "libBadgeOtherDevice": {
+    "message": "Outro dispositivo"
+  },
+  "libBadgeSynced": {
+    "message": "Sincronizado"
+  },
+  "libClearAllConfirm": {
+    "message": "Remover todos os artigos salvos? Esta ação não pode ser desfeita."
   }
 }

@@ -1,8 +1,8 @@
 // content-translation.js — paragraph translation and page-level translate orchestration
 // Depends on: content-core.js, content-dom.js (findVisibleParagraphs)
 
-// Pre-compiled regexes for translated text link-marker processing
-const LINK_MATCH_RE = /[\[【]LINK(\d+)_START[\]】]([\s\S]*?)[\[【]LINK\d+_END[\]】]/g;
+// Pre-compiled regex for stripping link markers (no state — safe to share).
+// LINK_MATCH_RE is intentionally created per-call (see usage) to avoid shared /g state.
 const LINK_STRIP_RE = /[\[【]LINK\d+_(?:START|END)[\]】]/g;
 
 // Shared core: translates an array of elements, updating btn state throughout.
@@ -33,7 +33,7 @@ async function runTranslateElements(elements, btn, inReaderMode = false) {
 // Restore a previously-cached translation without calling the API.
 // onToggle(showing) is called whenever the user flips the paragraph.
 function appendSavedTranslationContent(target, savedHtml) {
-  const doc = new DOMParser().parseFromString(savedHtml || '', 'text/html');
+  const doc = _htmlParser.parseFromString(savedHtml || '', 'text/html');
   Array.from(doc.body.childNodes).forEach((node) => {
     if (node.nodeType === Node.TEXT_NODE) {
       target.appendChild(document.createTextNode(node.textContent || ''));
@@ -136,10 +136,10 @@ async function wrapAndTranslate(el) {
     if (!response.success) throwFromResponse(response);
     log('[PageGrep] paragraph translated:', { original: text.slice(0, 60), result: response.result.slice(0, 60) });
     if (links.length > 0) {
-      LINK_MATCH_RE.lastIndex = 0; // reset before reuse of module-level regex
+      const linkMatchRe = /[\[【]LINK(\d+)_START[\]】]([\s\S]*?)[\[【]LINK\d+_END[\]】]/g;
       let lastIndex = 0;
       let match;
-      while ((match = LINK_MATCH_RE.exec(response.result)) !== null) {
+      while ((match = linkMatchRe.exec(response.result)) !== null) {
         if (match.index > lastIndex) {
           const t = response.result.slice(lastIndex, match.index).replace(LINK_STRIP_RE, '');
           if (t) translatedSpan.appendChild(document.createTextNode(t));
@@ -155,7 +155,7 @@ async function wrapAndTranslate(el) {
         } else {
           translatedSpan.appendChild(document.createTextNode(match[2]));
         }
-        lastIndex = LINK_MATCH_RE.lastIndex;
+        lastIndex = linkMatchRe.lastIndex;
       }
       if (lastIndex < response.result.length) {
         const t = response.result.slice(lastIndex).replace(LINK_STRIP_RE, '');

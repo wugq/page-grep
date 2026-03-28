@@ -65,6 +65,15 @@
   "settingsSubtitle": {
     "message": "管理您的 API 金鑰與偏好設定"
   },
+  "tabSettings": {
+    "message": "設定"
+  },
+  "tabAbout": {
+    "message": "關於"
+  },
+  "tabLibrary": {
+    "message": "文章庫"
+  },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +255,21 @@
   "removeDomain": {
     "message": "移除"
   },
+  "clearTranslationsLabel": {
+    "message": "翻譯快取"
+  },
+  "clearTranslationsInfo": {
+    "message": "清除所有已快取的翻譯內容。若翻譯顯示在錯誤頁面或內容不正確時很有用。不會影響已儲存的文章和設定。"
+  },
+  "clearTranslationsBtn": {
+    "message": "清除翻譯快取"
+  },
+  "confirmClearTranslations": {
+    "message": "確定要清除所有翻譯快取嗎？已儲存的文章和設定不會受到影響。"
+  },
+  "translationsClearedStatus": {
+    "message": "翻譯快取已清除。"
+  },
   "hideOnThisSite": {
     "message": "在此網站上隱藏"
   },
@@ -342,6 +366,9 @@
   "savedArticlesEmpty": {
     "message": "尚無收藏文章"
   },
+  "syncedArticle": {
+    "message": "已快取於其他裝置 — 重新開啟頁面即可閱讀。翻譯需要重新進行。"
+  },
   "savedTab": {
     "message": "收藏"
   },
@@ -356,5 +383,31 @@
   },
   "currentPageBadge": {
     "message": "本頁"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "標題（可選）"
+  },
+  "libClearAll": {
+    "message": "全部刪除"
+  },
+  "libArticleCountOne": {
+    "message": "1篇文章"
+  },
+  "libArticleCountMany": {
+    "message": "$count$篇文章",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "libBadgeOtherDevice": {
+    "message": "其他裝置"
+  },
+  "libBadgeSynced": {
+    "message": "已同步"
+  },
+  "libClearAllConfirm": {
+    "message": "刪除所有已儲存的文章？此操作無法復原。"
   }
 }

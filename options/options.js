@@ -1,3 +1,4 @@
+
 function renderBlockedDomains(domains) {
   const list = document.getElementById('blocked-domains-list');
   if (!list) return;
@@ -115,6 +116,25 @@ document.getElementById('clear-btn').addEventListener('click', async () => {
   showStatus(browser.i18n.getMessage('settingsCleared'), 'success');
 });
 
+document.getElementById('clear-translations-btn').addEventListener('click', async () => {
+  if (!confirm(browser.i18n.getMessage('confirmClearTranslations') || 'Clear all cached translations? Your saved articles and settings will not be affected.')) return;
+  // Strip translations from READER_STATES, preserving scroll/summary
+  const { readerStates } = await browser.storage.local.get(STORAGE_KEYS.READER_STATES);
+  if (readerStates && typeof readerStates === 'object') {
+    for (const url of Object.keys(readerStates)) {
+      delete readerStates[url].translations;
+    }
+    await browser.storage.local.set({ [STORAGE_KEYS.READER_STATES]: readerStates });
+  }
+  // Strip translations from SAVED_ARTICLES
+  const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
+  if (Array.isArray(savedArticles)) {
+    savedArticles.forEach(a => { a.translations = {}; });
+    await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: savedArticles });
+  }
+  showStatus(browser.i18n.getMessage('translationsClearedStatus') || 'Translation cache cleared.', 'success');
+});
+
 document.getElementById('toggle-visibility').addEventListener('click', () => {
   const input = document.getElementById('api-key');
   input.type = input.type === 'password' ? 'text' : 'password';
@@ -135,3 +155,138 @@ browser.storage.onChanged.addListener((changes) => {
 });
 
 (window.i18nReady || Promise.resolve()).then(() => loadSettings().catch(console.error));
+
+// --- Tab switching ---
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'library') libraryRefresh();
+  });
+});
+
+// --- Library tab ---
+
+async function libraryRefresh() {
+  const listEl  = document.getElementById('lib-list');
+  const countEl = document.getElementById('lib-count');
+
+  const [{ savedArticles }, syncList] = await Promise.all([
+    browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES),
+    getSyncBookmarks(),
+  ]);
+
+  const locals       = Array.isArray(savedArticles) ? savedArticles : [];
+  const localUrls    = new Set(locals.map(a => a.url));
+  const syncedUrls   = new Set(syncList.map(b => b.url));
+  const syncOnlyList = syncList.filter(b => !localUrls.has(b.url)).map(b => ({ ...b, _syncOnly: true }));
+  const articles     = [...locals, ...syncOnlyList].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+
+  const total = articles.length;
+  countEl.textContent = total === 0 ? '' : total === 1
+    ? (browser.i18n.getMessage('libArticleCountOne') || '1 article')
+    : (browser.i18n.getMessage('libArticleCountMany', [String(total)]) || `${total} articles`);
+  document.getElementById('lib-clear-all').style.display = total === 0 ? 'none' : '';
+
+  listEl.replaceChildren();
+
+  if (total === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'lib-empty';
+    empty.textContent = browser.i18n.getMessage('savedArticlesEmpty') || 'No saved articles yet';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  articles.forEach(article => {
+    const isSyncOnly = !!article._syncOnly;
+    const isSynced   = !isSyncOnly && syncedUrls.has(article.url);
+
+    const card = document.createElement('div');
+    card.className = 'lib-card';
+
+    // Top row: title + delete button
+    const top = document.createElement('div');
+    top.className = 'lib-card-top';
+
+    const titleEl = document.createElement('a');
+    titleEl.className = 'lib-title';
+    titleEl.href = article.url;
+    titleEl.target = '_blank';
+    titleEl.rel = 'noopener noreferrer';
+    titleEl.textContent = article.title || article.url;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'lib-delete-btn';
+    deleteBtn.textContent = '×';
+    deleteBtn.title = browser.i18n.getMessage('removeDomain') || 'Remove';
+    deleteBtn.addEventListener('click', async () => {
+      if (!isSyncOnly) {
+        const { savedArticles: cur } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
+        const updated = (Array.isArray(cur) ? cur : [])
+          .filter(a => !(a.url === article.url && a.savedAt === article.savedAt));
+        await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: updated });
+      }
+      // Single atomic remove — safe even if both devices delete simultaneously.
+      await browser.storage.sync.remove(urlToSyncKey(article.url)).catch(() => {});
+      libraryRefresh();
+    });
+
+    top.append(titleEl, deleteBtn);
+    card.appendChild(top);
+
+    // Meta row: site · date · badge
+    const meta = document.createElement('div');
+    meta.className = 'lib-meta';
+
+    const metaParts = [article.siteName, article.savedAt ? new Date(article.savedAt).toLocaleDateString() : null].filter(Boolean);
+    if (metaParts.length) {
+      const metaText = document.createElement('span');
+      metaText.textContent = metaParts.join(' · ');
+      meta.appendChild(metaText);
+    }
+
+    if (isSyncOnly) {
+      const badge = document.createElement('span');
+      badge.className = 'lib-badge lib-badge--sync';
+      badge.textContent = browser.i18n.getMessage('libBadgeOtherDevice') || 'Other device';
+      meta.appendChild(badge);
+    } else if (isSynced) {
+      const badge = document.createElement('span');
+      badge.className = 'lib-badge lib-badge--synced';
+      badge.textContent = browser.i18n.getMessage('libBadgeSynced') || 'Synced';
+      meta.appendChild(badge);
+    }
+
+    card.appendChild(meta);
+    listEl.appendChild(card);
+  });
+}
+
+document.getElementById('lib-add-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const url   = document.getElementById('lib-add-url').value.trim();
+  const title = document.getElementById('lib-add-title').value.trim();
+  if (!url) return;
+  try { new URL(url); } catch (_) { return; }
+  const syncKey = urlToSyncKey(url);
+  const existing = await browser.storage.sync.get(syncKey).catch(() => ({}));
+  if (!existing[syncKey]) {
+    await browser.storage.sync.set({ [syncKey]: { url, title: title || url, byline: null, siteName: null, savedAt: Date.now() } }).catch(() => {});
+  }
+  document.getElementById('lib-add-url').value   = '';
+  document.getElementById('lib-add-title').value = '';
+  libraryRefresh();
+});
+
+document.getElementById('lib-clear-all').addEventListener('click', async () => {
+  if (!confirm(browser.i18n.getMessage('libClearAllConfirm') || 'Remove all saved articles? This cannot be undone.')) return;
+  await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: [] });
+  const allSync = await browser.storage.sync.get(null).catch(() => ({}));
+  const bmKeys = Object.keys(allSync).filter(k => k.startsWith(STORAGE_KEYS.BOOKMARK_KEY_PREFIX));
+  if (bmKeys.length) await browser.storage.sync.remove(bmKeys).catch(() => {});
+  libraryRefresh();
+});
+

@@ -65,6 +65,15 @@
   "settingsSubtitle": {
     "message": "Gérez votre clé API et vos préférences"
   },
+  "tabSettings": {
+    "message": "Paramètres"
+  },
+  "tabAbout": {
+    "message": "À propos"
+  },
+  "tabLibrary": {
+    "message": "Bibliothèque"
+  },
   "apiKeyLabel": {
     "message": "OpenAI API Key"
   },
@@ -246,6 +255,21 @@
   "removeDomain": {
     "message": "Supprimer"
   },
+  "clearTranslationsLabel": {
+    "message": "Cache des traductions"
+  },
+  "clearTranslationsInfo": {
+    "message": "Efface toutes les traductions mises en cache. Utile si les traductions apparaissent sur la mauvaise page ou semblent incorrectes. Vos articles sauvegardés et paramètres ne sont pas affectés."
+  },
+  "clearTranslationsBtn": {
+    "message": "Vider le cache des traductions"
+  },
+  "confirmClearTranslations": {
+    "message": "Effacer toutes les traductions en cache ? Vos articles sauvegardés et paramètres ne seront pas affectés."
+  },
+  "translationsClearedStatus": {
+    "message": "Cache des traductions vidé."
+  },
   "hideOnThisSite": {
     "message": "Masquer sur ce site"
   },
@@ -342,6 +366,9 @@
   "savedArticlesEmpty": {
     "message": "Aucun article enregistré"
   },
+  "syncedArticle": {
+    "message": "Mis en cache sur un autre appareil — rouvrez la page pour lire. Les traductions devront être refaites."
+  },
   "savedTab": {
     "message": "Enregistrés"
   },
@@ -356,5 +383,31 @@
   },
   "currentPageBadge": {
     "message": "Cette page"
+  },
+  "libAddTitlePlaceholder": {
+    "message": "Titre (optionnel)"
+  },
+  "libClearAll": {
+    "message": "Tout effacer"
+  },
+  "libArticleCountOne": {
+    "message": "1 article"
+  },
+  "libArticleCountMany": {
+    "message": "$count$ articles",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "libBadgeOtherDevice": {
+    "message": "Autre appareil"
+  },
+  "libBadgeSynced": {
+    "message": "Synchronisé"
+  },
+  "libClearAllConfirm": {
+    "message": "Supprimer tous les articles enregistrés ? Cette action est irréversible."
   }
 }
