@@ -317,5 +317,44 @@
   },
   "readerWidthWide": {
     "message": "Geniş"
+  },
+  "articleSaved": {
+    "message": "Makale kaydedildi"
+  },
+  "articleUnsaved": {
+    "message": "Kaydedilenlerden kaldırıldı"
+  },
+  "backToArticle": {
+    "message": "Makaleye geri dön"
+  },
+  "deleteSavedArticle": {
+    "message": "Sil"
+  },
+  "openSavedArticle": {
+    "message": "Aç"
+  },
+  "saveForLater": {
+    "message": "Makaleyi kaydet"
+  },
+  "savedArticleSource": {
+    "message": "Kaynak"
+  },
+  "savedArticlesEmpty": {
+    "message": "Kayıtlı makale yok"
+  },
+  "savedTab": {
+    "message": "Kaydedilenler"
+  },
+  "unsaveArticle": {
+    "message": "Kaydı kaldır"
+  },
+  "libraryFull": {
+    "message": "Kütüphane dolu — en eski makale kaldırıldı"
+  },
+  "closeLibrary": {
+    "message": "Kapat"
+  },
+  "currentPageBadge": {
+    "message": "Bu sayfa"
   }
 }

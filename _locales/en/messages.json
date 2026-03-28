@@ -347,5 +347,14 @@
   },
   "backToArticle": {
     "message": "Back to article"
+  },
+  "libraryFull": {
+    "message": "Library full — oldest article removed"
+  },
+  "closeLibrary": {
+    "message": "Close"
+  },
+  "currentPageBadge": {
+    "message": "This page"
   }
 }

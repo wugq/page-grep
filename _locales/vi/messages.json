@@ -317,5 +317,44 @@
   },
   "readerWidthWide": {
     "message": "Rộng"
+  },
+  "articleSaved": {
+    "message": "Đã lưu bài viết"
+  },
+  "articleUnsaved": {
+    "message": "Đã xóa khỏi mục đã lưu"
+  },
+  "backToArticle": {
+    "message": "Quay lại bài viết"
+  },
+  "deleteSavedArticle": {
+    "message": "Xóa"
+  },
+  "openSavedArticle": {
+    "message": "Mở"
+  },
+  "saveForLater": {
+    "message": "Lưu bài viết"
+  },
+  "savedArticleSource": {
+    "message": "Nguồn"
+  },
+  "savedArticlesEmpty": {
+    "message": "Chưa có bài viết đã lưu"
+  },
+  "savedTab": {
+    "message": "Đã lưu"
+  },
+  "unsaveArticle": {
+    "message": "Bỏ lưu bài viết"
+  },
+  "libraryFull": {
+    "message": "Thư viện đầy — đã xóa bài viết cũ nhất"
+  },
+  "closeLibrary": {
+    "message": "Đóng"
+  },
+  "currentPageBadge": {
+    "message": "Trang này"
   }
 }

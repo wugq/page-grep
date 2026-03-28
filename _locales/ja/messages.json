@@ -317,5 +317,44 @@
   },
   "readerWidthWide": {
     "message": "広い"
+  },
+  "articleSaved": {
+    "message": "記事を保存しました"
+  },
+  "articleUnsaved": {
+    "message": "保存から削除しました"
+  },
+  "backToArticle": {
+    "message": "記事に戻る"
+  },
+  "deleteSavedArticle": {
+    "message": "削除"
+  },
+  "openSavedArticle": {
+    "message": "開く"
+  },
+  "saveForLater": {
+    "message": "記事を保存"
+  },
+  "savedArticleSource": {
+    "message": "出典"
+  },
+  "savedArticlesEmpty": {
+    "message": "保存した記事はありません"
+  },
+  "savedTab": {
+    "message": "保存済み"
+  },
+  "unsaveArticle": {
+    "message": "保存解除"
+  },
+  "libraryFull": {
+    "message": "ライブラリが満杯 — 最も古い記事を削除しました"
+  },
+  "closeLibrary": {
+    "message": "閉じる"
+  },
+  "currentPageBadge": {
+    "message": "このページ"
   }
 }

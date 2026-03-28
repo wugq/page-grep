@@ -317,5 +317,44 @@
   },
   "readerWidthWide": {
     "message": "Широкий"
+  },
+  "articleSaved": {
+    "message": "Статья сохранена"
+  },
+  "articleUnsaved": {
+    "message": "Удалено из сохранённых"
+  },
+  "backToArticle": {
+    "message": "Вернуться к статье"
+  },
+  "deleteSavedArticle": {
+    "message": "Удалить"
+  },
+  "openSavedArticle": {
+    "message": "Открыть"
+  },
+  "saveForLater": {
+    "message": "Сохранить статью"
+  },
+  "savedArticleSource": {
+    "message": "Источник"
+  },
+  "savedArticlesEmpty": {
+    "message": "Нет сохранённых статей"
+  },
+  "savedTab": {
+    "message": "Сохранённые"
+  },
+  "unsaveArticle": {
+    "message": "Убрать из сохранённых"
+  },
+  "libraryFull": {
+    "message": "Библиотека полна — самая старая статья удалена"
+  },
+  "closeLibrary": {
+    "message": "Закрыть"
+  },
+  "currentPageBadge": {
+    "message": "Эта страница"
   }
 }

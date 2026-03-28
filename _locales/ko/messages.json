@@ -317,5 +317,44 @@
   },
   "readerWidthWide": {
     "message": "넓게"
+  },
+  "articleSaved": {
+    "message": "기사가 저장되었습니다"
+  },
+  "articleUnsaved": {
+    "message": "저장에서 제거되었습니다"
+  },
+  "backToArticle": {
+    "message": "기사로 돌아가기"
+  },
+  "deleteSavedArticle": {
+    "message": "삭제"
+  },
+  "openSavedArticle": {
+    "message": "열기"
+  },
+  "saveForLater": {
+    "message": "기사 저장"
+  },
+  "savedArticleSource": {
+    "message": "출처"
+  },
+  "savedArticlesEmpty": {
+    "message": "저장된 기사가 없습니다"
+  },
+  "savedTab": {
+    "message": "저장됨"
+  },
+  "unsaveArticle": {
+    "message": "저장 취소"
+  },
+  "libraryFull": {
+    "message": "라이브러리 가득 참 — 가장 오래된 기사 제거됨"
+  },
+  "closeLibrary": {
+    "message": "닫기"
+  },
+  "currentPageBadge": {
+    "message": "현재 페이지"
   }
 }

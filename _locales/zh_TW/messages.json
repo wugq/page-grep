@@ -317,5 +317,44 @@
   },
   "readerWidthWide": {
     "message": "寬"
+  },
+  "articleSaved": {
+    "message": "文章已儲存"
+  },
+  "articleUnsaved": {
+    "message": "已從收藏中移除"
+  },
+  "backToArticle": {
+    "message": "返回文章"
+  },
+  "deleteSavedArticle": {
+    "message": "刪除"
+  },
+  "openSavedArticle": {
+    "message": "開啟"
+  },
+  "saveForLater": {
+    "message": "收藏文章"
+  },
+  "savedArticleSource": {
+    "message": "來源"
+  },
+  "savedArticlesEmpty": {
+    "message": "尚無收藏文章"
+  },
+  "savedTab": {
+    "message": "收藏"
+  },
+  "unsaveArticle": {
+    "message": "取消收藏"
+  },
+  "libraryFull": {
+    "message": "收藏已滿 — 已移除最早文章"
+  },
+  "closeLibrary": {
+    "message": "關閉"
+  },
+  "currentPageBadge": {
+    "message": "本頁"
   }
 }

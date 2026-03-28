@@ -317,5 +317,44 @@
   },
   "readerWidthWide": {
     "message": "Largo"
+  },
+  "articleSaved": {
+    "message": "Artigo salvo"
+  },
+  "articleUnsaved": {
+    "message": "Removido dos salvos"
+  },
+  "backToArticle": {
+    "message": "Voltar ao artigo"
+  },
+  "deleteSavedArticle": {
+    "message": "Excluir"
+  },
+  "openSavedArticle": {
+    "message": "Abrir"
+  },
+  "saveForLater": {
+    "message": "Salvar artigo"
+  },
+  "savedArticleSource": {
+    "message": "Fonte"
+  },
+  "savedArticlesEmpty": {
+    "message": "Nenhum artigo salvo"
+  },
+  "savedTab": {
+    "message": "Salvos"
+  },
+  "unsaveArticle": {
+    "message": "Remover dos salvos"
+  },
+  "libraryFull": {
+    "message": "Biblioteca cheia — artigo mais antigo removido"
+  },
+  "closeLibrary": {
+    "message": "Fechar"
+  },
+  "currentPageBadge": {
+    "message": "Esta página"
   }
 }
