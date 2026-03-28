@@ -96,15 +96,18 @@ async function runSummaryFromPage() {
   try {
     const response = await browser.runtime.sendMessage({
       action: 'summarize',
+      requestId: crypto.randomUUID(),
       elements: elements.map(e => e.text),
       pageLanguage,
     });
 
+    if (response?.code === 'CANCELLED') return;
     if (!response.success) throwFromResponse(response);
     log(`[PageGrep] summary: received ${response.points.length} points`, response.points);
     updateSummarySidebar(response.points, elements);
     cacheSummary(response.points, elements, !!readerBody);
   } catch (err) {
+    if (err?.code === 'CANCELLED') return;
     error('[PageGrep] summary: failed:', err.message);
     browser.runtime.sendMessage({ action: 'summaryError', error: err.message, code: err.code });
   }
@@ -314,10 +317,12 @@ async function runInterestingFromPage() {
   try {
     const response = await browser.runtime.sendMessage({
       action: 'findInteresting',
+      requestId: crypto.randomUUID(),
       interests: userInterests,
       elements: elements.map(e => e.text),
     });
 
+    if (response?.code === 'CANCELLED') return;
     if (!response.success) throwFromResponse(response);
     log(`[PageGrep] ★: matched items:`, response.items);
 
@@ -335,6 +340,7 @@ async function runInterestingFromPage() {
     browser.runtime.sendMessage({ action: 'highlightDone', items });
     log(`[PageGrep] ★: found ${items.length} interesting elements`);
   } catch (err) {
+    if (err?.code === 'CANCELLED') return;
     error('[PageGrep] ★: highlight failed:', err.message);
     browser.runtime.sendMessage({ action: 'highlightError', error: err.message, code: err.code });
   }

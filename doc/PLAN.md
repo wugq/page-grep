@@ -16,25 +16,13 @@ Last audited against code: 2026-03-29.
 
 ---
 
-## 1. XSS — stored article HTML injected without sanitisation
+## 1. XSS — stored article HTML injected without sanitisation — RESOLVED
 
-**Files:** `content/content-reader.js`
-
-Translation results from the API are already safe — `appendSavedTranslationContent()`
-builds DOM nodes manually without touching `innerHTML`.
-
-The real vector is stored article HTML restored from `browser.storage`. Three
-call sites parse it with `DOMParser` and insert nodes via `replaceChildren`:
-
-- `content-reader.js:1021–1023` — live article on reader open
-- `content-reader.js:694–696` — saved library article loaded into reader
-- `content-reader.js:748–750` — live article restored after browsing library
-
-Each site strips `<script>` and `<style>`, but event handler attributes
-(`onclick`, `onerror`, etc.) and `javascript:` hrefs survive.
-
-**Fix:** Run the `DOMParser` output through DOMPurify (or a strict allowlist
-sanitiser) before `replaceChildren` at the three sites above.
+**Audit (2026-03-29):** Added `sanitiseArticleDoc(doc)` helper in
+`content-reader.js` (near top). It removes `script`/`style` elements, strips
+all `on*` event-handler attributes, and removes `javascript:`/`data:`/`vbscript:`
+URLs from `href`, `src`, `action`, and `formaction`. All three `replaceChildren`
+call sites now call this helper instead of the old inline `script, style` removal.
 
 ---
 
@@ -46,20 +34,16 @@ elements are GC'd when the overlay is removed. No action needed.
 
 ---
 
-## 3. No message-passing cancellation
+## 3. No message-passing cancellation — RESOLVED
 
-**Files:** `background/background.js`, `sidebar/sidebar.js`,
-`content/content-collectors.js`
-
-AI requests have no request IDs and no abort mechanism. Rapid clicks fire
-duplicate API calls; closing the sidebar leaves orphaned 30 s fetches running.
-
-**Fix:**
-1. Generate a `requestId` (`crypto.randomUUID()`) per request, include it in
-   the message.
-2. Store `requestId → AbortController` in background; abort previous on new
-   request for the same action.
-3. Discard responses whose `requestId` no longer matches the latest issued ID.
+**Audit (2026-03-29):** Added `_pendingRequests` map in `background.js`.
+`summarize` and `findInteresting` handlers abort the previous in-flight fetch
+when a new request arrives for the same action, track `requestId`, and return
+`{ code: 'CANCELLED' }` for superseded requests. `callAI` accepts an optional
+`externalSignal` and distinguishes cancellation from timeout in the AbortError
+catch. Both content flow functions (`runSummaryFromPage`,
+`runInterestingFromPage`) send a `requestId` via `crypto.randomUUID()` and
+silently return on `code: 'CANCELLED'`.
 
 ---
 

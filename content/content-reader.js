@@ -39,6 +39,33 @@ function getReaderUrl() {
   return location.origin + location.pathname;
 }
 
+// Strips event-handler attributes and javascript:/data: URLs from a parsed document
+// in place. Addresses stored article HTML restored from browser.storage — script/style
+// tags are removed by callers; this covers the remaining XSS vectors.
+function sanitiseArticleDoc(doc) {
+  doc.querySelectorAll('script, style').forEach(el => el.remove());
+  doc.querySelectorAll('*').forEach(el => {
+    for (const attr of Array.from(el.attributes)) {
+      if (attr.name.startsWith('on')) {
+        el.removeAttribute(attr.name);
+      }
+    }
+    for (const attr of ['href', 'src', 'action', 'formaction']) {
+      const val = el.getAttribute(attr);
+      if (val && /^\s*(javascript|vbscript)\s*:/i.test(val)) {
+        el.removeAttribute(attr);
+      }
+    }
+    // data: hrefs and form actions have no legitimate use in article HTML.
+    for (const attr of ['href', 'action', 'formaction']) {
+      const val = el.getAttribute(attr);
+      if (val && /^\s*data\s*:/i.test(val)) {
+        el.removeAttribute(attr);
+      }
+    }
+  });
+}
+
 // Apply updater(urlEntry) to the given URL's state entry and persist.
 // Pass targetUrl explicitly when updating a library article's state.
 function saveReaderState(updater, targetUrl) {
@@ -692,7 +719,7 @@ function loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn) {
   const body = readerGetById('ai-reader-body');
   if (body) {
     const articleDoc = _htmlParser.parseFromString(article.html || '', 'text/html');
-    articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
+    sanitiseArticleDoc(articleDoc);
     body.replaceChildren(...Array.from(articleDoc.body.childNodes));
     _readerBody = body;
 
@@ -746,7 +773,7 @@ function restoreLiveArticle(overlay, saveBtn, backBtn) {
   const body = readerGetById('ai-reader-body');
   if (body && snap.html) {
     const articleDoc = _htmlParser.parseFromString(snap.html, 'text/html');
-    articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
+    sanitiseArticleDoc(articleDoc);
     body.replaceChildren(...Array.from(articleDoc.body.childNodes));
     _readerBody = body;
 
@@ -1019,7 +1046,7 @@ async function openReaderMode(triggerBtn) {
   const body = document.createElement('div');
   body.id = 'ai-reader-body';
   const articleDoc = _htmlParser.parseFromString(article.content, 'text/html');
-  articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
+  sanitiseArticleDoc(articleDoc);
   body.replaceChildren(...Array.from(articleDoc.body.childNodes));
   _readerBody = body;
   const summaryElements = collectArticleElements(body);

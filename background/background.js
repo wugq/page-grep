@@ -30,7 +30,11 @@ browser.browserAction.onClicked.addListener(() => {
 const API_TIMEOUT_MS      = 30000;
 const MAX_TRANSLATE_CHARS = 8000;  // ~2k tokens; a normal paragraph is well under this
 
-async function callAI(systemPrompt, userContent, apiKey, model, jsonMode = false, temperature = 0) {
+// Tracks the latest in-flight summarize/findInteresting request per action.
+// A new request for the same action aborts the previous one.
+const _pendingRequests = {};
+
+async function callAI(systemPrompt, userContent, apiKey, model, jsonMode = false, temperature = 0, externalSignal = null) {
   const body = {
     model,
     messages: [
@@ -44,6 +48,8 @@ async function callAI(systemPrompt, userContent, apiKey, model, jsonMode = false
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  const onExternalAbort = () => controller.abort();
+  externalSignal?.addEventListener('abort', onExternalAbort);
 
   let response;
   try {
@@ -57,10 +63,14 @@ async function callAI(systemPrompt, userContent, apiKey, model, jsonMode = false
       signal: controller.signal
     });
   } catch (err) {
-    if (err.name === 'AbortError') throw new Error(browser.i18n.getMessage('requestTimeout') || 'Request timed out');
+    if (err.name === 'AbortError') {
+      if (externalSignal?.aborted) throw Object.assign(new Error('cancelled'), { code: 'CANCELLED' });
+      throw new Error(browser.i18n.getMessage('requestTimeout') || 'Request timed out');
+    }
     throw err;
   } finally {
     clearTimeout(timeoutId);
+    externalSignal?.removeEventListener('abort', onExternalAbort);
   }
 
   if (!response.ok) {
@@ -135,6 +145,10 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return;
     }
     (async () => {
+      const { requestId } = message;
+      _pendingRequests.summarize?.controller.abort();
+      const controller = new AbortController();
+      _pendingRequests.summarize = { requestId, controller };
       try {
         const { apiKey, model } = await getApiSettings();
         const elementList = message.elements.map((t, i) => `${i}: ${t}`).join('\n');
@@ -144,13 +158,21 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           `Page elements:\n${elementList}`,
           apiKey,
           model,
-          true
+          true,
+          0,
+          controller.signal
         );
+        if (_pendingRequests.summarize?.requestId !== requestId) {
+          sendResponse({ success: false, code: 'CANCELLED' });
+          return;
+        }
+        delete _pendingRequests.summarize;
         let data;
         try { data = JSON.parse(result); } catch (_) { data = {}; }
         const points = Array.isArray(data.sections) ? data.sections : [];
         sendResponse({ success: true, points });
       } catch (err) {
+        if (_pendingRequests.summarize?.requestId === requestId) delete _pendingRequests.summarize;
         sendResponse({ success: false, error: err.message, code: err.code });
       }
     })();
@@ -167,6 +189,10 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return;
     }
     (async () => {
+      const { requestId } = message;
+      _pendingRequests.findInteresting?.controller.abort();
+      const controller = new AbortController();
+      _pendingRequests.findInteresting = { requestId, controller };
       try {
         const { apiKey, model } = await getApiSettings();
         const interests = message.interests.split(',').map(s => s.trim()).filter(Boolean);
@@ -179,13 +205,21 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
               `Interest: ${interest}\n\nPage elements:\n${elementList}`,
               apiKey,
               model,
-              true
+              true,
+              0,
+              controller.signal
             );
             return JSON.parse(result).matches || [];
-          } catch (_) {
+          } catch (err) {
+            if (err.code === 'CANCELLED') throw err;
             return [];
           }
         }));
+        if (_pendingRequests.findInteresting?.requestId !== requestId) {
+          sendResponse({ success: false, code: 'CANCELLED' });
+          return;
+        }
+        delete _pendingRequests.findInteresting;
         const seen = new Set();
         const items = [];
         for (const matches of resultsPerInterest) {
@@ -198,6 +232,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         sendResponse({ success: true, items });
       } catch (err) {
+        if (_pendingRequests.findInteresting?.requestId === requestId) delete _pendingRequests.findInteresting;
         sendResponse({ success: false, error: err.message, code: err.code });
       }
     })();
