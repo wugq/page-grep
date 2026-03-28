@@ -120,6 +120,364 @@ const SAVED_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height
 const LIBRARY_ICON  = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
 const BACK_ICON     = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><polyline points="15 18 9 12 15 6"/></svg>`;
 
+// CSS injected into the reader shadow root. Provides complete isolation from page styles.
+// Mirrors content.css reader section but uses :host selectors and drops !important guards.
+const READER_SHADOW_CSS = `
+.ai-para-wrap { position: relative; }
+.ai-para-original { display: block; }
+.ai-para-translated { display: none; color: inherit; }
+.ai-para-wrap.show-translation .ai-para-original { display: none; }
+.ai-para-wrap.show-translation .ai-para-translated { display: block; }
+.ai-toggle-btn {
+  position: absolute; top: 2px; right: 2px;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  color: white; border: none; border-radius: 50%;
+  cursor: pointer; font-size: 11px; font-weight: bold;
+  opacity: 0; transition: opacity 0.15s, transform 0.15s;
+  z-index: 9999; padding: 0;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+  pointer-events: none;
+}
+.ai-para-wrap:hover .ai-toggle-btn { opacity: 0.85; pointer-events: auto; }
+.ai-toggle-btn:hover  { opacity: 1; transform: scale(1.1); }
+.ai-toggle-btn:active { transform: scale(0.9); }
+.ai-loading-btn { background: #94a3b8; cursor: wait; animation: ai-pulse 1.2s ease-in-out infinite; }
+.ai-error-btn { background: #ef4444; opacity: 1; }
+@keyframes ai-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+:host([data-reader-theme="light"]) {
+  --rd-bg: #f9f7f4; --rd-text: #1a1a1a; --rd-muted: #888;
+  --rd-border: rgba(0,0,0,0.08); --rd-meta-border: rgba(0,0,0,0.1);
+  --rd-link: #6366f1; --rd-quote: #666; --rd-ctrl-bg: rgba(255,255,255,0.85);
+  --rd-ctrl-color: #222; --rd-ctrl-border: rgba(0,0,0,0.14);
+  --rd-ctrl-active-bg: rgba(0,0,0,0.08);
+  --rd-settings-bg: rgba(0,0,0,0.025); --rd-accent: #6366f1;
+}
+:host([data-reader-theme="sepia"]) {
+  --rd-bg: #f4ecd8; --rd-text: #5b4636; --rd-muted: #9c7c5e;
+  --rd-border: rgba(91,70,54,0.12); --rd-meta-border: rgba(91,70,54,0.15);
+  --rd-link: #8b5e3c; --rd-quote: #8b7355; --rd-ctrl-bg: rgba(255,248,235,0.88);
+  --rd-ctrl-color: #4a3728; --rd-ctrl-border: rgba(91,70,54,0.22);
+  --rd-ctrl-active-bg: rgba(91,70,54,0.12);
+  --rd-settings-bg: rgba(91,70,54,0.04); --rd-accent: #8b5e3c;
+}
+:host([data-reader-theme="dark"]) {
+  --rd-bg: #1c1c1e; --rd-text: #d0d0d0; --rd-muted: #888;
+  --rd-border: rgba(255,255,255,0.08); --rd-meta-border: rgba(255,255,255,0.1);
+  --rd-link: #818cf8; --rd-quote: #aaa; --rd-ctrl-bg: rgba(50,50,55,0.92);
+  --rd-ctrl-color: #e8e8e8; --rd-ctrl-border: rgba(255,255,255,0.14);
+  --rd-ctrl-active-bg: rgba(255,255,255,0.12);
+  --rd-settings-bg: rgba(255,255,255,0.03); --rd-accent: #818cf8;
+}
+
+/* Shadow host: full-screen fixed container */
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483640;
+  overflow: hidden;
+  padding: 0; margin: 0; border: none;
+  box-sizing: border-box;
+  animation: ai-reader-fade-in 0.18s ease forwards;
+  --reader-settings-max-h: 280px;
+}
+:host(.ai-closing) {
+  animation: ai-reader-fade-out 0.15s ease forwards;
+  pointer-events: none;
+}
+@keyframes ai-reader-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ai-reader-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* Inner overlay container */
+.rd-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--rd-bg);
+  color: var(--rd-text);
+  font-family: Georgia, "Times New Roman", serif;
+  outline: none;
+}
+
+#ai-reader-scroll {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+#ai-reader-close-btn,
+#ai-reader-save-btn,
+#ai-reader-back-btn,
+#ai-reader-library-btn {
+  position: absolute;
+  top: 16px;
+  z-index: 10;
+  pointer-events: auto;
+  width: 32px; height: 32px;
+  min-width: 32px; min-height: 32px;
+  max-width: 32px; max-height: 32px;
+  padding: 0;
+  box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--rd-ctrl-bg);
+  color: var(--rd-ctrl-color);
+  border: 1px solid var(--rd-ctrl-border, rgba(0,0,0,0.12));
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  transition: transform 0.15s, box-shadow 0.15s, color 0.15s;
+  flex-shrink: 0;
+  touch-action: manipulation;
+}
+#ai-reader-close-btn:hover,
+#ai-reader-save-btn:hover,
+#ai-reader-back-btn:hover,
+#ai-reader-library-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+#ai-reader-close-btn:active,
+#ai-reader-save-btn:active,
+#ai-reader-back-btn:active,
+#ai-reader-library-btn:active { transform: scale(0.92); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+#ai-reader-close-btn   { right: 24px; }
+#ai-reader-save-btn    { right: 64px; }
+#ai-reader-back-btn    { right: 104px; }
+#ai-reader-library-btn { left: 24px; }
+
+#ai-reader-close-btn:focus   { outline: none; }
+#ai-reader-close-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; }
+#ai-reader-save-btn.saved { color: var(--rd-accent); }
+#ai-reader-save-btn:focus   { outline: none; }
+#ai-reader-save-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; }
+#ai-reader-back-btn:focus   { outline: none; }
+#ai-reader-back-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; }
+#ai-reader-library-btn.active { color: var(--rd-accent); }
+#ai-reader-library-btn:focus   { outline: none; }
+#ai-reader-library-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; opacity: 1; }
+
+#ai-reader-library-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.35);
+  cursor: default;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+#ai-reader-library-backdrop.visible { opacity: 1; }
+
+#ai-reader-library {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 300px;
+  z-index: 20;
+  background: var(--rd-bg);
+  border-right: 1px solid var(--rd-border);
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+}
+#ai-reader-library.open { transform: translateX(0); }
+
+.ai-lib-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--rd-border);
+  font-size: 13px; font-weight: 700; color: var(--rd-text);
+  position: sticky; top: 0; background: var(--rd-bg); z-index: 1;
+}
+.ai-lib-close-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; line-height: 1; color: var(--rd-muted);
+  padding: 2px 6px; border-radius: 4px;
+}
+.ai-lib-close-btn:hover { color: var(--rd-text); }
+.ai-lib-list { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.ai-lib-loading {
+  padding: 32px 16px; text-align: center; color: var(--rd-muted); font-size: 13px;
+}
+.ai-lib-loading::after {
+  content: '';
+  display: inline-block; width: 18px; height: 18px;
+  border: 2px solid var(--rd-border); border-top-color: var(--rd-accent);
+  border-radius: 50%;
+  animation: ai-lib-spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes ai-lib-spin { to { transform: rotate(360deg); } }
+.ai-lib-error { padding: 24px 16px; text-align: center; color: #ef4444; font-size: 13px; }
+.ai-lib-empty { padding: 32px 16px; text-align: center; color: var(--rd-muted); font-size: 13px; font-style: italic; }
+.ai-lib-item {
+  padding: 10px 12px; border: 1px solid var(--rd-border); border-radius: 8px;
+  cursor: pointer; transition: background 0.15s, border-color 0.15s;
+  position: relative;
+}
+.ai-lib-item:hover { background: var(--rd-ctrl-bg); }
+.ai-lib-item:active { opacity: 0.8; }
+/* Current page: accent border to make it easy to spot */
+.ai-lib-item--current { border-color: var(--rd-accent); }
+/* Currently displayed in reader: accent border + subtle background */
+.ai-lib-item--reading { border-color: var(--rd-accent); background: var(--rd-ctrl-bg); }
+.ai-lib-item-top { display: flex; align-items: flex-start; gap: 6px; }
+.ai-lib-title {
+  flex: 1; font-size: 13px; font-weight: 600; color: var(--rd-text);
+  line-height: 1.4; margin-bottom: 3px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ai-lib-meta { font-size: 11px; color: var(--rd-muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ai-lib-badge {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.03em;
+  background: var(--rd-accent); color: #fff;
+  border-radius: 4px; padding: 1px 5px;
+  white-space: nowrap; flex-shrink: 0;
+}
+/* Delete button: × icon, hidden until hover */
+.ai-lib-delete-btn {
+  flex-shrink: 0; width: 20px; height: 20px;
+  background: none; border: none; padding: 0;
+  color: var(--rd-muted); cursor: pointer;
+  font-size: 15px; line-height: 1;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.15s, color 0.15s, background 0.15s;
+  touch-action: manipulation; margin-top: 1px;
+}
+.ai-lib-item:hover .ai-lib-delete-btn { opacity: 1; }
+.ai-lib-delete-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+.ai-lib-delete-btn:active { transform: scale(0.9); }
+
+.ai-reader-source { font-size: 12px; color: var(--rd-muted, #888); margin-top: 6px; word-break: break-all; }
+.ai-reader-source a { color: var(--rd-link); }
+
+#ai-reader-settings {
+  position: absolute;
+  z-index: 20;
+  width: 220px;
+  max-height: var(--reader-settings-max-h);
+  overflow-x: hidden; overflow-y: auto;
+  background: var(--rd-bg);
+  border: 1px solid var(--rd-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.96);
+  transform-origin: top right;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+#ai-reader-settings:not(.open) * { pointer-events: none; }
+#ai-reader-settings.open { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+
+.ai-rs-row {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 14px; border-bottom: 1px solid var(--rd-border);
+}
+.ai-rs-row:last-child { border-bottom: none; }
+.ai-rs-theme-btn {
+  flex: 1; height: 32px; padding: 0; margin: 0; box-sizing: border-box;
+  border-radius: 8px; border: 2px solid transparent; cursor: pointer;
+  font-family: Georgia, serif; font-size: 14px; font-weight: 600;
+  transition: border-color 0.15s, transform 0.15s;
+  white-space: nowrap; min-width: 0;
+  -webkit-appearance: none; appearance: none;
+}
+.ai-rs-theme-btn[data-theme="auto"] {
+  background: var(--rd-ctrl-bg); color: var(--rd-text);
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif; font-size: 11px;
+}
+.ai-rs-theme-btn[data-theme="light"] { background: #f9f7f4; color: #1a1a1a; }
+.ai-rs-theme-btn[data-theme="sepia"] { background: #f4ecd8; color: #5b4636; }
+.ai-rs-theme-btn[data-theme="dark"]  { background: #1c1c1e; color: #d0d0d0; }
+.ai-rs-section-label {
+  width: 100%; padding: 10px 14px 0;
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--rd-muted);
+}
+.ai-rs-theme-btn:hover  { transform: scale(1.05); }
+.ai-rs-theme-btn:active { transform: scale(0.96); }
+.ai-rs-theme-btn.active { border-color: var(--rd-accent); }
+
+.ai-rs-stepper-label { flex: 1; font-family: "Plus Jakarta Sans", -apple-system, sans-serif; font-size: 12px; color: var(--rd-muted); }
+.ai-rs-stepper-val { min-width: 38px; text-align: center; font-family: "Plus Jakarta Sans", -apple-system, sans-serif; font-size: 12px; font-weight: 600; color: var(--rd-text); }
+.ai-rs-step-btn {
+  width: 28px; height: 28px; padding: 0; margin: 0; box-sizing: border-box;
+  border: 1px solid var(--rd-border); border-radius: 50%;
+  background: var(--rd-ctrl-bg); color: var(--rd-text);
+  font-size: 16px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s, transform 0.12s; flex-shrink: 0;
+  -webkit-appearance: none; appearance: none;
+}
+.ai-rs-step-btn:hover    { background: var(--rd-ctrl-active-bg); transform: scale(1.1); }
+.ai-rs-step-btn:active   { transform: scale(0.92); }
+.ai-rs-step-btn:disabled { opacity: 0.3; cursor: default; transform: none; }
+
+.ai-rs-width-btn {
+  flex: 1; height: 30px; padding: 0; margin: 0; box-sizing: border-box;
+  border: 1px solid var(--rd-border); border-radius: 6px;
+  background: transparent; color: var(--rd-muted);
+  cursor: pointer; font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+  font-size: 12px; font-weight: 500;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  max-width: 90px; -webkit-appearance: none; appearance: none;
+}
+.ai-rs-width-btn:hover  { color: var(--rd-text); }
+.ai-rs-width-btn:active { opacity: 0.75; }
+.ai-rs-width-btn.active { background: var(--rd-accent); color: white; border-color: var(--rd-accent); font-weight: 600; }
+
+#ai-reader-content {
+  max-width: var(--reader-width, 680px);
+  margin: 0 auto; padding: 48px 24px 60px; box-sizing: border-box;
+  transition: max-width 0.2s ease;
+}
+#ai-reader-meta { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--rd-meta-border); }
+#ai-reader-title {
+  font-size: 28px; font-weight: 700; line-height: 1.3; margin: 0 0 10px;
+  font-family: Georgia, "Times New Roman", serif; color: var(--rd-text);
+}
+#ai-reader-byline { font-family: "Plus Jakarta Sans", -apple-system, sans-serif; font-size: 13px; color: var(--rd-muted); line-height: 1.5; }
+
+#ai-reader-body { font-size: var(--reader-font-size, 18px); line-height: var(--reader-line-height, 1.8); transition: font-size 0.15s, line-height 0.15s; }
+#ai-reader-body p  { margin: 0 0 1.2em; line-height: var(--reader-line-height, 1.8); }
+#ai-reader-body h1 { font-size: calc(var(--reader-font-size, 18px) * 1.35); font-weight: 700; line-height: 1.3; margin: 1.6em 0 0.6em; }
+#ai-reader-body h2 { font-size: calc(var(--reader-font-size, 18px) * 1.2);  font-weight: 700; line-height: 1.3; margin: 1.6em 0 0.5em; }
+#ai-reader-body h3,
+#ai-reader-body h4,
+#ai-reader-body h5,
+#ai-reader-body h6 { font-size: var(--reader-font-size, 18px); font-weight: 700; line-height: 1.3; margin: 1.4em 0 0.4em; }
+#ai-reader-body blockquote {
+  border-left: 3px solid var(--rd-accent); margin: 1.2em 0; padding: 2px 20px;
+  color: var(--rd-quote); font-style: italic; line-height: var(--reader-line-height, 1.8);
+}
+#ai-reader-body a   { color: var(--rd-link); }
+#ai-reader-body img { max-width: 100%; border-radius: 8px; margin: 1em 0; display: block; }
+#ai-reader-body ul,
+#ai-reader-body ol  { padding-left: 24px; margin: 0 0 1.2em; }
+#ai-reader-body li  { margin: 0.3em 0; line-height: var(--reader-line-height, 1.8); }
+
+::selection { background: var(--rd-accent, #6366f1); color: #fff; }
+
+@media (max-width: 480px) {
+  #ai-reader-library { width: min(300px, calc(100vw - 40px)); }
+}
+`;
+
+// Queries an element by ID within the reader's shadow root.
+// Needed because document.getElementById() cannot pierce shadow DOM.
+function readerGetById(id) {
+  const root = _readerBody?.getRootNode();
+  return (root instanceof ShadowRoot ? root : document).getElementById(id);
+}
+
 const FONT_SIZES    = [14, 15, 16, 17, 18, 20, 22, 24, 28]; // index 0–8, default 4 (18px)
 const LINE_SPACINGS = [1.4, 1.6, 1.8, 2.0, 2.2];           // index 0–4, default 2 (1.8)
 const WIDTHS = [
@@ -382,6 +740,8 @@ function holdRepeat(btn, action) {
 
 // --- Save-for-later helpers ---
 
+let _savingInProgress = false;
+
 function updateSaveBtn(btn, saved) {
   btn.replaceChildren(_svgParser.parseFromString(saved ? SAVED_ICON : SAVE_ICON, 'image/svg+xml').documentElement);
   const label = browser.i18n.getMessage(saved ? 'unsaveArticle' : 'saveForLater') || (saved ? 'Unsave article' : 'Save article');
@@ -391,10 +751,13 @@ function updateSaveBtn(btn, saved) {
 }
 
 async function onSaveBtnClick(btn) {
+  if (_savingInProgress) return;
+  _savingInProgress = true;
   try {
     const { savedArticles } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
     const articles = Array.isArray(savedArticles) ? savedArticles : [];
-    const url = getReaderUrl();
+    // When a library article is loaded use its URL, otherwise use the live page URL.
+    const url = _libraryArticleUrl || getReaderUrl();
     const existingIdx = articles.findIndex(a => a.url === url);
 
     if (existingIdx >= 0) {
@@ -416,20 +779,26 @@ async function onSaveBtnClick(btn) {
         translations,
       };
       articles.unshift(newArticle);
-      if (articles.length > 20) articles.length = 20;
+      if (articles.length > 20) {
+        articles.length = 20;
+        showToast(browser.i18n.getMessage('libraryFull') || 'Library full — oldest article removed');
+      } else {
+        showToast(browser.i18n.getMessage('articleSaved') || 'Article saved');
+      }
       await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: articles });
       updateSaveBtn(btn, true);
-      showToast(browser.i18n.getMessage('articleSaved') || 'Article saved');
     }
   } catch (err) {
     error('[PageGrep] onSaveBtnClick failed:', err.message);
     showToast(browser.i18n.getMessage('operationFailed') || 'Operation failed');
+  } finally {
+    _savingInProgress = false;
   }
 }
 
 // Build the slide-in library panel. onOpen(article) is called when the user
 // picks an article; the panel closes itself beforehand.
-function buildLibraryPanel(onOpen, onClose) {
+function buildLibraryPanel(onOpen, onClose, onDelete) {
   const panel = document.createElement('div');
   panel.id = 'ai-reader-library';
 
@@ -440,6 +809,7 @@ function buildLibraryPanel(onOpen, onClose) {
   const closeBtn = document.createElement('button');
   closeBtn.className = 'ai-lib-close-btn';
   closeBtn.textContent = '×';
+  closeBtn.setAttribute('aria-label', browser.i18n.getMessage('closeLibrary') || 'Close');
   closeBtn.addEventListener('click', () => { if (onClose) onClose(); else panel.classList.remove('open'); });
   header.append(headerTitle, closeBtn);
   panel.appendChild(header);
@@ -477,47 +847,62 @@ function buildLibraryPanel(onOpen, onClose) {
       return;
     }
 
+    const currentPageUrl = getReaderUrl();
+
     articles.forEach((article) => {
+      const isCurrentPage = article.url === currentPageUrl;
+      const isReading     = article.url === _libraryArticleUrl;
+
       const item = document.createElement('div');
       item.className = 'ai-lib-item';
+      if (isCurrentPage) item.classList.add('ai-lib-item--current');
+      if (isReading)     item.classList.add('ai-lib-item--reading');
+
+      // Clicking anywhere on the item opens it (except the delete button)
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.ai-lib-delete-btn')) return;
+        onOpen(article);
+      });
+
+      const itemTop = document.createElement('div');
+      itemTop.className = 'ai-lib-item-top';
 
       const titleEl = document.createElement('div');
       titleEl.className = 'ai-lib-title';
       titleEl.textContent = article.title || article.url;
-      item.appendChild(titleEl);
-
-      const metaParts = [article.siteName, article.savedAt ? new Date(article.savedAt).toLocaleDateString() : null].filter(Boolean);
-      if (metaParts.length) {
-        const metaEl = document.createElement('div');
-        metaEl.className = 'ai-lib-meta';
-        metaEl.textContent = metaParts.join(' · ');
-        item.appendChild(metaEl);
-      }
-
-      const actions = document.createElement('div');
-      actions.className = 'ai-lib-actions';
-
-      const openBtn = document.createElement('button');
-      openBtn.className = 'ai-lib-open-btn';
-      openBtn.textContent = browser.i18n.getMessage('openSavedArticle') || 'Open';
-      openBtn.addEventListener('click', () => {
-        panel.classList.remove('open');
-        onOpen(article);
-      });
 
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'ai-lib-delete-btn';
-      deleteBtn.textContent = browser.i18n.getMessage('deleteSavedArticle') || 'Delete';
-      deleteBtn.addEventListener('click', async () => {
+      deleteBtn.textContent = '×';
+      deleteBtn.setAttribute('aria-label', browser.i18n.getMessage('deleteSavedArticle') || 'Remove article');
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
         const { savedArticles: current } = await browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES);
         const updated = (Array.isArray(current) ? current : [])
           .filter(a => !(a.url === article.url && a.savedAt === article.savedAt));
         await browser.storage.local.set({ [STORAGE_KEYS.SAVED_ARTICLES]: updated });
+        if (onDelete) onDelete(article);
         refresh();
       });
 
-      actions.append(openBtn, deleteBtn);
-      item.appendChild(actions);
+      itemTop.append(titleEl, deleteBtn);
+      item.appendChild(itemTop);
+
+      // Meta line: site · date · badges
+      const metaEl = document.createElement('div');
+      metaEl.className = 'ai-lib-meta';
+      const metaText = [article.siteName, article.savedAt ? new Date(article.savedAt).toLocaleDateString() : null].filter(Boolean).join(' · ');
+      if (metaText) {
+        metaEl.appendChild(document.createTextNode(metaText));
+      }
+      if (isCurrentPage) {
+        const badge = document.createElement('span');
+        badge.className = 'ai-lib-badge';
+        badge.textContent = browser.i18n.getMessage('currentPageBadge') || 'This page';
+        metaEl.appendChild(badge);
+      }
+      if (metaEl.childNodes.length) item.appendChild(metaEl);
+
       listEl.appendChild(item);
     });
   }
@@ -532,8 +917,8 @@ function loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn) {
   // Skip when the library article is the same page — no navigation needed.
   if (!_libraryArticleLoaded && article.url !== getReaderUrl()) {
     _liveArticleSnapshot = {
-      title: document.getElementById('ai-reader-title')?.textContent || '',
-      bylineText: document.getElementById('ai-reader-byline')?.textContent || '',
+      title: readerGetById('ai-reader-title')?.textContent || '',
+      bylineText: readerGetById('ai-reader-byline')?.textContent || '',
       html: _articleHtml,
       url: getReaderUrl(),
       summaryPoints: Array.isArray(SUMMARY_STATE.points) ? SUMMARY_STATE.points.slice() : [],
@@ -544,11 +929,11 @@ function loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn) {
   _libraryArticleUrl = article.url;
 
   // Meta
-  const titleEl = document.getElementById('ai-reader-title');
+  const titleEl = readerGetById('ai-reader-title');
   if (titleEl) titleEl.textContent = article.title || '';
 
-  const meta = document.getElementById('ai-reader-meta');
-  let bylineEl = document.getElementById('ai-reader-byline');
+  const meta = readerGetById('ai-reader-meta');
+  let bylineEl = readerGetById('ai-reader-byline');
   const bylineParts = [article.byline, article.siteName, article.publishedTime].filter(Boolean);
   if (bylineParts.length) {
     if (!bylineEl) {
@@ -581,7 +966,7 @@ function loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn) {
   }
 
   // Body
-  const body = document.getElementById('ai-reader-body');
+  const body = readerGetById('ai-reader-body');
   if (body) {
     const articleDoc = new DOMParser().parseFromString(article.html || '', 'text/html');
     articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
@@ -614,7 +999,8 @@ function loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn) {
   // If it's the same URL there's nowhere to "go back" to.
   const isSamePage = article.url === getReaderUrl();
   if (backBtn) backBtn.style.display = isSamePage ? 'none' : '';
-  if (saveBtn) saveBtn.style.display = 'none';
+  // Library articles are always saved — show save button in saved state so user can unsave.
+  if (saveBtn) { updateSaveBtn(saveBtn, true); saveBtn.style.display = ''; }
 }
 
 // Restore the live article that was being read before a library article was opened.
@@ -625,16 +1011,16 @@ function restoreLiveArticle(overlay, saveBtn, backBtn) {
   _libraryArticleLoaded = false;
   _libraryArticleUrl = null;
 
-  const titleEl = document.getElementById('ai-reader-title');
+  const titleEl = readerGetById('ai-reader-title');
   if (titleEl) titleEl.textContent = snap.title;
 
-  const bylineEl = document.getElementById('ai-reader-byline');
+  const bylineEl = readerGetById('ai-reader-byline');
   if (bylineEl) bylineEl.textContent = snap.bylineText;
 
   // Remove the source-URL line that was added for the library article.
-  document.getElementById('ai-reader-meta')?.querySelector('.ai-reader-source')?.remove();
+  readerGetById('ai-reader-meta')?.querySelector('.ai-reader-source')?.remove();
 
-  const body = document.getElementById('ai-reader-body');
+  const body = readerGetById('ai-reader-body');
   if (body && snap.html) {
     const articleDoc = new DOMParser().parseFromString(snap.html, 'text/html');
     articleDoc.querySelectorAll('script, style').forEach(el => el.remove());
@@ -670,7 +1056,14 @@ function restoreLiveArticle(overlay, saveBtn, backBtn) {
   scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
 
   if (backBtn) backBtn.style.display = 'none';
-  if (saveBtn) saveBtn.style.display = '';
+  if (saveBtn) {
+    saveBtn.style.display = '';
+    // Re-check saved state — user may have unsaved the live article while browsing library.
+    browser.storage.local.get(STORAGE_KEYS.SAVED_ARTICLES).then(({ savedArticles }) => {
+      const stillSaved = Array.isArray(savedArticles) && savedArticles.some(a => a.url === snap.url);
+      updateSaveBtn(saveBtn, stillSaved);
+    });
+  }
 }
 
 function toggleReaderMode(triggerBtn) {
@@ -745,10 +1138,20 @@ async function openReaderMode(triggerBtn) {
     publishedTime: article.publishedTime || null,
   };
 
+  // Shadow host lives in the page DOM (carries the ID + CSS vars for shadow inheritance).
+  const shadowHost = document.createElement('div');
+  shadowHost.id = READER_OVERLAY_ID;
+  const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
+  const shadowStyle = document.createElement('style');
+  shadowStyle.textContent = READER_SHADOW_CSS;
+  shadowRoot.appendChild(shadowStyle);
+
+  // Inner overlay container inside the shadow root — isolated from page CSS.
   const overlay = document.createElement('div');
-  overlay.id = READER_OVERLAY_ID;
-  overlay.tabIndex = -1; // focusable but not in tab order; allows Space/PageDown to scroll
-  applyPrefs(overlay, prefs);
+  overlay.className = 'rd-overlay';
+  overlay.tabIndex = -1;
+  applyPrefs(shadowHost, prefs); // CSS vars + data-reader-theme propagate into shadow
+  shadowRoot.appendChild(overlay);
 
   const closeBtn = document.createElement('button');
   closeBtn.id = 'ai-reader-close-btn';
@@ -760,7 +1163,11 @@ async function openReaderMode(triggerBtn) {
   const saveBtn = document.createElement('button');
   saveBtn.id = 'ai-reader-save-btn';
   updateSaveBtn(saveBtn, isSaved);
-  saveBtn.addEventListener('click', () => onSaveBtnClick(saveBtn));
+  saveBtn.addEventListener('click', async () => {
+    await onSaveBtnClick(saveBtn);
+    // Keep library list in sync when user unsaves while viewing a library article.
+    if (_libraryArticleLoaded && libraryPanel.classList.contains('open')) libraryPanel._refresh();
+  });
 
   const libraryBtn = document.createElement('button');
   libraryBtn.id = 'ai-reader-library-btn';
@@ -777,6 +1184,7 @@ async function openReaderMode(triggerBtn) {
 
   function openLibrary() {
     libraryPanel.before(libraryBackdrop); // insert into DOM just before the panel
+    requestAnimationFrame(() => libraryBackdrop.classList.add('visible')); // fade in
     libraryPanel.classList.add('open');
     libraryBtn.classList.add('active');
     _focusableCache = null;
@@ -786,8 +1194,17 @@ async function openReaderMode(triggerBtn) {
   function closeLibrary() {
     libraryPanel.classList.remove('open');
     libraryBtn.classList.remove('active');
-    libraryBackdrop.remove(); // remove from DOM entirely — no residual event interception
     _focusableCache = null;
+    if (libraryBackdrop.isConnected) {
+      if (libraryBackdrop.classList.contains('visible')) {
+        // Fully faded in — animate out then remove.
+        libraryBackdrop.classList.remove('visible');
+        libraryBackdrop.addEventListener('transitionend', () => libraryBackdrop.remove(), { once: true });
+      } else {
+        // Closed before fade-in completed (rapid tap) — remove immediately.
+        libraryBackdrop.remove();
+      }
+    }
   }
 
   const backBtn = document.createElement('button');
@@ -798,14 +1215,19 @@ async function openReaderMode(triggerBtn) {
   backBtn.setAttribute('aria-label', backLabel);
   backBtn.style.display = 'none';
 
-  const libraryPanel = buildLibraryPanel((article) => {
-    loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn);
-    closeLibrary();
-  }, closeLibrary);
+  const libraryPanel = buildLibraryPanel(
+    (article) => { loadSavedArticleIntoReader(article, shadowHost, saveBtn, backBtn); closeLibrary(); },
+    closeLibrary,
+    (deletedArticle) => {
+      // If the deleted article is currently displayed in the reader, mark it unsaved.
+      const activeUrl = _libraryArticleUrl || getReaderUrl();
+      if (deletedArticle.url === activeUrl) updateSaveBtn(saveBtn, false);
+    }
+  );
 
   libraryBackdrop.addEventListener('click', closeLibrary);
 
-  backBtn.addEventListener('click', () => restoreLiveArticle(overlay, saveBtn, backBtn));
+  backBtn.addEventListener('click', () => restoreLiveArticle(shadowHost, saveBtn, backBtn));
 
   libraryBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -861,7 +1283,7 @@ async function openReaderMode(triggerBtn) {
   content.append(meta, body);
 
   // --- Settings panel (receives content so width clicks can trigger its CSS transition) ---
-  const settingsPanel = buildSettingsPanel(overlay, prefs, content);
+  const settingsPanel = buildSettingsPanel(shadowHost, prefs, content);
 
   // Wrap the article content in a dedicated scroll container so the overlay itself
   // can be overflow:hidden — this keeps buttons/panels truly above the scroll area
@@ -874,11 +1296,11 @@ async function openReaderMode(triggerBtn) {
   overlay.append(closeBtn, saveBtn, backBtn, libraryBtn, libraryPanel, settingsPanel, scrollEl);
 
   // Store the scroll element for use in loadSavedArticleIntoReader / restoreLiveArticle.
-  overlay._scrollEl = scrollEl;
+  shadowHost._scrollEl = scrollEl;
 
   // Save scroll position before locking the page so we can restore it on close.
   const savedScrollY = window.scrollY;
-  document.body.appendChild(overlay);
+  document.body.appendChild(shadowHost);
   // Use setProperty with 'important' so the lock overrides site CSS that may
   // declare overflow with !important (e.g. `html, body { overflow: auto !important }`).
   const _savedHtmlOverflow = [
@@ -891,8 +1313,8 @@ async function openReaderMode(triggerBtn) {
   ];
   document.documentElement.style.setProperty('overflow', 'hidden', 'important');
   document.body.style.setProperty('overflow', 'hidden', 'important');
-  overlay._savedHtmlOverflow = _savedHtmlOverflow;
-  overlay._savedBodyOverflow = _savedBodyOverflow;
+  shadowHost._savedHtmlOverflow = _savedHtmlOverflow;
+  shadowHost._savedBodyOverflow = _savedBodyOverflow;
 
   // Swap to reader-mode summary instance before notifying the sidebar.
   _pageSummaryBackup = {
@@ -955,6 +1377,11 @@ async function openReaderMode(triggerBtn) {
     if (open) positionSettingsPopup(settingsPanel, panelReaderBtn);
     settingsPanel.classList.toggle('open', open);
     panelReaderBtn?.classList.toggle('active', open);
+    if (open) {
+      // Move focus inside the panel so keyboard/screen-reader users land in the right place.
+      const firstFocusable = settingsPanel.querySelector('button:not([disabled])');
+      firstFocusable?.focus();
+    }
   }
 
   // Repurpose the floating panel reader button as the settings trigger.
@@ -1024,9 +1451,10 @@ async function openReaderMode(triggerBtn) {
       if (all.length < 2) return;
       const first = all[0];
       const last  = all[all.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
+      const activeEl = shadowRoot.activeElement || document.activeElement;
+      if (e.shiftKey && activeEl === first) {
         e.preventDefault(); last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
+      } else if (!e.shiftKey && activeEl === last) {
         e.preventDefault(); first.focus();
       }
     }
@@ -1042,8 +1470,8 @@ async function openReaderMode(triggerBtn) {
   window.addEventListener('resize', onResize);
   cleanupFns.push(() => window.removeEventListener('resize', onResize));
 
-  overlay._cleanupFns   = cleanupFns;
-  overlay._savedScrollY = savedScrollY;
+  shadowHost._cleanupFns   = cleanupFns;
+  shadowHost._savedScrollY = savedScrollY;
 
   closeBtn.addEventListener('click', closeReaderMode);
 }

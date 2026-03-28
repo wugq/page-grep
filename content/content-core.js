@@ -136,6 +136,9 @@ function showToast(msg) {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'ai-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.setAttribute('aria-atomic', 'true');
     document.body.appendChild(toast);
   }
   toast.textContent = msg;
