@@ -96,11 +96,6 @@ browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOM
   }
 });
 
-// Handle system theme changes if no explicit preference is set
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async () => {
-  const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
-  if (!theme) applyThemeToPanel();
-});
 
 browser.storage.onChanged.addListener((changes) => {
   if (STORAGE_KEYS.SHOW_FLOAT_BTN in changes) {

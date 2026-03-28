@@ -14,9 +14,4 @@
     }
   });
 
-  // Listen for system theme changes if no theme is set
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async () => {
-    const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
-    if (!theme) applyTheme();
-  });
 })();

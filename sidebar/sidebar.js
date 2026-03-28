@@ -50,11 +50,6 @@ async function init() {
     });
   }
 
-  // Handle system theme changes if no explicit preference is set
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async (e) => {
-    const { theme } = await browser.storage.local.get(STORAGE_KEYS.THEME);
-    if (!theme && themeToggle) themeToggle.checked = e.matches;
-  });
 
   const floatCheckbox = document.getElementById('show-float-btn');
   if (floatCheckbox) floatCheckbox.checked = showFloatBtn !== false;

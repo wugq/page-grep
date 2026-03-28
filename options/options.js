@@ -37,7 +37,7 @@ async function loadSettings() {
 
   if (s[STORAGE_KEYS.API_KEY]) document.getElementById('api-key').value = s[STORAGE_KEYS.API_KEY];
   if (s[STORAGE_KEYS.MODEL]) document.getElementById('model-select').value = s[STORAGE_KEYS.MODEL];
-  if (s[STORAGE_KEYS.THEME] !== undefined) document.getElementById('theme-select').value = s[STORAGE_KEYS.THEME] || '';
+  document.getElementById('theme-select').value = s[STORAGE_KEYS.THEME] || 'light';
   _loadedUiLang = s[STORAGE_KEYS.UI_LANG] || '';
   document.getElementById('language-select').value = _loadedUiLang;
   document.getElementById('translate-lang-select').value = s[STORAGE_KEYS.TRANSLATE_LANG] || 'zh-CN';
@@ -81,7 +81,7 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
     await browser.storage.local.set({
       [STORAGE_KEYS.API_KEY]: apiKey,
       [STORAGE_KEYS.MODEL]: model,
-      [STORAGE_KEYS.THEME]: theme || null,
+      [STORAGE_KEYS.THEME]: theme || 'light',
       [STORAGE_KEYS.SHOW_FLOAT_BTN]: showFloatBtn,
       [STORAGE_KEYS.UI_LANG]: uiLang || null,
       [STORAGE_KEYS.TRANSLATE_LANG]: translateLang || null,
@@ -107,7 +107,7 @@ document.getElementById('clear-btn').addEventListener('click', async () => {
   ]);
   document.getElementById('api-key').value = '';
   document.getElementById('model-select').value = 'gpt-4o-mini';
-  document.getElementById('theme-select').value = '';
+  document.getElementById('theme-select').value = 'light';
   document.getElementById('language-select').value = '';
   document.getElementById('translate-lang-select').value = 'zh-CN';
   document.getElementById('show-float-btn').checked = true;
@@ -122,7 +122,7 @@ document.getElementById('toggle-visibility').addEventListener('click', () => {
 
 browser.storage.onChanged.addListener((changes) => {
   if (STORAGE_KEYS.THEME in changes) {
-    document.getElementById('theme-select').value = changes[STORAGE_KEYS.THEME].newValue || '';
+    document.getElementById('theme-select').value = changes[STORAGE_KEYS.THEME].newValue || 'light';
   }
   if (STORAGE_KEYS.SHOW_FLOAT_BTN in changes) {
     document.getElementById('show-float-btn').checked = changes[STORAGE_KEYS.SHOW_FLOAT_BTN].newValue !== false;
