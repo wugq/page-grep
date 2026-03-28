@@ -74,6 +74,15 @@ Content scripts share a global scope — load order in `manifest.json` is the de
 
 ---
 
+## Conventions
+
+- **Clean Code** — names and structure should be self-explanatory. Do not write
+  *what* comments (they restate the code). Only write *why* comments when the
+  reason behind a decision is not obvious from the code itself — e.g. a
+  constraint, a tradeoff, or a gotcha that would surprise a future reader.
+
+---
+
 ## Key invariants
 
 - **Shadow DOM isolation** — panel and reader overlay use `attachShadow`. CSS is injected as `<style>` text (fetched at script load); `<link>` does not work in content-script shadow roots.
