@@ -3,9 +3,9 @@
 //             content-reader.js (getActiveReaderBody, collectReaderElements),
 //             content-translation.js (runTranslateElements)
 
-function createFloatButton() {
+async function createFloatButton() {
   if (panelGetById(FLOAT_BTN_ID)) return;
-  const panel = getOrCreatePanel();
+  const panel = await getOrCreatePanel();
   const shadowRoot = panel.shadowRoot;
 
   const btn = document.createElement('button');

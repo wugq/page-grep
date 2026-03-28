@@ -40,6 +40,10 @@
     "page": "options/options.html",
     "open_in_tab": true
   },
+  "web_accessible_resources": [
+    "content/reader-shadow.css",
+    "content/panel-shadow.css"
+  ],
   "browser_specific_settings": {
     "gecko": {
       "id": "ai-reader-helper@local",
