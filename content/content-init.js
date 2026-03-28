@@ -146,4 +146,7 @@ browser.storage.onChanged.addListener((changes) => {
   if (STORAGE_KEYS.UI_LANG in changes) {
     applyI18nOverride();
   }
+  if (STORAGE_KEYS.READER_STATES in changes) {
+    syncReaderStatesFromStorage(changes[STORAGE_KEYS.READER_STATES].newValue);
+  }
 });

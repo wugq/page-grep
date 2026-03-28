@@ -66,6 +66,12 @@ function sanitiseArticleDoc(doc) {
   });
 }
 
+// Called from content-init.js storage.onChanged to keep the mirror current.
+// Ignored when reader mode is closed (_readerStates is null).
+function syncReaderStatesFromStorage(newValue) {
+  if (_readerStates !== null) _readerStates = newValue || {};
+}
+
 // Apply updater(urlEntry) to the given URL's state entry and persist.
 // Pass targetUrl explicitly when updating a library article's state.
 function saveReaderState(updater, targetUrl) {

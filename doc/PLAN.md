@@ -47,18 +47,17 @@ silently return on `code: 'CANCELLED'`.
 
 ---
 
-## 4. Fragmented state management
+## 4. Fragmented state management — RESOLVED
 
-**Files:** `content/content-reader.js`, `content/content-init.js`,
-`shared/storage-keys.js`
+**Audit (2026-03-29):** The only real staleness bug was `_readerStates` —
+loaded once at reader open and never re-synced. `pageStates` and `savedArticles`
+always do a read-modify-write directly from storage so they were never stale.
 
-State spans four storage keys with separate serialisation logic. `_readerStates`
-is loaded once at reader open and never re-synced — writes from another tab
-drift silently.
-
-**Fix:** Introduce a `StorageService` module with typed helpers per key, a
-schema version field, and a single `storage.onChanged` listener to keep the
-in-memory mirror in sync.
+Added `syncReaderStatesFromStorage(newValue)` in `content-reader.js` (no-op
+when reader mode is closed). Wired it into the existing `storage.onChanged`
+listener in `content-init.js` for `STORAGE_KEYS.READER_STATES`. Now any write
+from another tab propagates into the in-memory mirror before the next
+`saveReaderState()` call.
 
 ---
 
