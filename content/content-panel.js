@@ -4,14 +4,16 @@
 //             content-translation.js (runTranslateElements)
 
 function createFloatButton() {
-  if (document.getElementById(FLOAT_BTN_ID)) return;
+  if (panelGetById(FLOAT_BTN_ID)) return;
   const panel = getOrCreatePanel();
+  const shadowRoot = panel.shadowRoot;
+
   const btn = document.createElement('button');
   btn.id = FLOAT_BTN_ID;
   btn.className = 'ai-panel-btn';
   setTranslateIcon(btn);
   btn.title = browser.i18n.getMessage('translateScreenContent');
-  panel.appendChild(btn);
+  shadowRoot.appendChild(btn);
   btn.addEventListener('click', () => {
     const readerBody = getActiveReaderBody();
     const elements = readerBody ? collectReaderElements(readerBody) : findVisibleParagraphs();
@@ -28,7 +30,7 @@ function createFloatButton() {
   readerSvg.setAttribute('height', '18');
   readerBtn.appendChild(readerSvg);
   readerBtn.title = browser.i18n.getMessage('readerMode') || 'Reader view';
-  panel.appendChild(readerBtn);
+  shadowRoot.appendChild(readerBtn);
   // In reader mode this button is repurposed as the settings trigger by content-reader.js.
   // The data-reader-active flag prevents the open/close logic from double-firing.
   readerBtn.addEventListener('click', () => {
@@ -44,7 +46,7 @@ function createFloatButton() {
   noteSvg.setAttribute('height', '16');
   saveBtn.appendChild(noteSvg);
   saveBtn.title = browser.i18n.getMessage('saveArticle') || 'Copy article to clipboard';
-  panel.appendChild(saveBtn);
+  shadowRoot.appendChild(saveBtn);
   saveBtn.addEventListener('click', () => saveArticleToClipboard(saveBtn));
 
   panel.addEventListener('contextmenu', (e) => {

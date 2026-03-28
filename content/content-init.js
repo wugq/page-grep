@@ -113,9 +113,9 @@ browser.storage.onChanged.addListener((changes) => {
         }
       });
     } else if (!getActiveReaderBody()) {
-      document.getElementById(FLOAT_BTN_ID)?.remove();
-      document.getElementById(READER_MODE_BTN_ID)?.remove();
-      document.getElementById(SCRATCHPAD_BTN_ID)?.remove();
+      panelGetById(FLOAT_BTN_ID)?.remove();
+      panelGetById(READER_MODE_BTN_ID)?.remove();
+      panelGetById(SCRATCHPAD_BTN_ID)?.remove();
       clearAllHighlights();
       removePanelIfEmpty();
     }
@@ -129,9 +129,9 @@ browser.storage.onChanged.addListener((changes) => {
       // button is the settings trigger and removing it leaves reader mode
       // uncontrollable. closeReaderMode() will clean up on exit.
       if (!getActiveReaderBody()) {
-        document.getElementById(FLOAT_BTN_ID)?.remove();
-        document.getElementById(READER_MODE_BTN_ID)?.remove();
-        document.getElementById(SCRATCHPAD_BTN_ID)?.remove();
+        panelGetById(FLOAT_BTN_ID)?.remove();
+        panelGetById(READER_MODE_BTN_ID)?.remove();
+        panelGetById(SCRATCHPAD_BTN_ID)?.remove();
         clearAllHighlights();
         removePanelIfEmpty();
       }

@@ -1516,9 +1516,9 @@ function closeReaderMode() {
   browser.storage.local.get([STORAGE_KEYS.SHOW_FLOAT_BTN, STORAGE_KEYS.BLOCKED_DOMAINS]).then(({ showFloatBtn, blockedDomains }) => {
     const siteBlocked = Array.isArray(blockedDomains) && blockedDomains.includes(location.hostname);
     if (showFloatBtn === false || siteBlocked) {
-      document.getElementById(FLOAT_BTN_ID)?.remove();
-      document.getElementById(READER_MODE_BTN_ID)?.remove();
-      document.getElementById(SCRATCHPAD_BTN_ID)?.remove();
+      panelGetById(FLOAT_BTN_ID)?.remove();
+      panelGetById(READER_MODE_BTN_ID)?.remove();
+      panelGetById(SCRATCHPAD_BTN_ID)?.remove();
       removePanelIfEmpty();
     }
   });

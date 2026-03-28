@@ -30,6 +30,79 @@ const READER_ICON    = `<svg xmlns="http://www.w3.org/2000/svg" width="18" heigh
 const TOGGLE_TRANSLATE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`;
 const TOGGLE_ORIGINAL_ICON  = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>`;
 
+// --- Floating panel shadow DOM CSS ---
+// Styles scoped to the panel shadow root; page CSS cannot override these.
+const PANEL_SHADOW_CSS = `
+:host {
+  position: fixed !important;
+  bottom: 24px;
+  right: 20px;
+  top: auto;
+  left: auto;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  z-index: 2147483647 !important;
+  width: 46px !important;
+  padding: 8px 0 !important;
+  margin: 0 !important;
+  user-select: none;
+  background: rgba(248, 250, 252, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 28px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  resize: none !important;
+  box-sizing: content-box !important;
+}
+:host(.dark) {
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+.ai-panel-btn {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  max-width: 34px;
+  max-height: 34px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s, opacity 0.18s;
+}
+.ai-panel-btn:hover { transform: scale(1.12); box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16); }
+.ai-panel-btn:active { transform: scale(0.92); }
+.ai-panel-btn:disabled { opacity: 0.45; cursor: wait; }
+#ai-translate-btn { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); box-shadow: 0 2px 10px rgba(99, 102, 241, 0.45); }
+#ai-scratchpad-btn { background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); box-shadow: 0 2px 10px rgba(14, 165, 233, 0.4); }
+#ai-translate-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16), 0 4px 16px rgba(99,102,241,0.55); }
+#ai-scratchpad-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16), 0 4px 16px rgba(14,165,233,0.5); }
+#ai-reader-mode-btn { background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%); box-shadow: 0 2px 10px rgba(139, 92, 246, 0.4); }
+#ai-reader-mode-btn:hover { box-shadow: inset 0 0 0 100px rgba(255,255,255,0.16), 0 4px 16px rgba(139, 92, 246, 0.5); }
+#ai-reader-mode-btn.active { box-shadow: inset 0 0 0 100px rgba(0,0,0,0.15), 0 2px 10px rgba(139, 92, 246, 0.4); }
+.ai-loading-btn { background: #94a3b8 !important; cursor: wait; animation: ai-pulse 1.2s ease-in-out infinite; }
+@keyframes ai-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+`;
+
 const _svgParser = new DOMParser();
 function setTranslateIcon(el) {
   const doc = _svgParser.parseFromString(TRANSLATE_ICON, 'image/svg+xml');
@@ -81,20 +154,29 @@ async function blockCurrentDomain() {
   }
 }
 
+// Looks up a button by id inside the panel's shadow root.
+function panelGetById(id) {
+  return document.getElementById(PANEL_ID)?.shadowRoot?.getElementById(id) ?? null;
+}
+
 function getOrCreatePanel() {
   let panel = document.getElementById(PANEL_ID);
   if (!panel) {
     panel = document.createElement('div');
     panel.id = PANEL_ID;
-    applyThemeToPanel();
+    const shadowRoot = panel.attachShadow({ mode: 'open' });
+    const style = document.createElement('style');
+    style.textContent = PANEL_SHADOW_CSS;
+    shadowRoot.appendChild(style);
     document.body.appendChild(panel);
+    applyThemeToPanel();
   }
   return panel;
 }
 
 function removePanelIfEmpty() {
   const panel = document.getElementById(PANEL_ID);
-  if (panel && panel.children.length === 0) panel.remove();
+  if (panel && !panel.shadowRoot?.querySelector('button')) panel.remove();
 }
 
 function isApiKeyError(msg, code) {
