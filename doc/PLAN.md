@@ -61,10 +61,21 @@ from another tab propagates into the in-memory mirror before the next
 
 ---
 
-## 5. Monolithic modules
+## 5. Monolithic modules — IN PROGRESS
 
-**Files:** `content/content-reader.js` (1290 lines),
-`sidebar/sidebar.js` (419 lines)
+**Files:** `content/content-reader.js` (was 1290 lines),
+`sidebar/sidebar.js` (419 lines — acceptable, no action planned)
 
-**Fix:** Split each file by concern (see original breakdown in git history).
-Do one split per commit for easy bisect.
+**Fix:** Split each file by concern. Do one split per commit for easy bisect.
+
+**Done:**
+- Extracted `content/content-reader-settings.js` (281 lines): icons, shadow DOM
+  helper (`readerGetById`), reader prefs constants and helpers, `collectReaderElements`,
+  settings panel UI (`buildSettingsPanel`, `positionSettingsPopup`, `makeRow`,
+  `makeStepper`, `holdRepeat`). `content-reader.js` reduced to 1045 lines.
+
+**Remaining:**
+- Extract save/library section (~lines 149–545 of current reader.js) into
+  `content-reader-library.js`: bookmark sync helpers, `updateSaveBtn`,
+  `onSaveBtnClick`, `buildLibraryPanel`, `loadSavedArticleIntoReader`,
+  `restoreLiveArticle`.
