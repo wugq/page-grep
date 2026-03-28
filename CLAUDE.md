@@ -76,10 +76,20 @@ Content scripts share a global scope — load order in `manifest.json` is the de
 
 ## Conventions
 
-- **Clean Code** — names and structure should be self-explanatory. Do not write
+- **Comments** — names and structure should be self-explanatory. Do not write
   *what* comments (they restate the code). Only write *why* comments when the
   reason behind a decision is not obvious from the code itself — e.g. a
   constraint, a tradeoff, or a gotcha that would surprise a future reader.
+- **Small units** — functions do one thing; files have one concern. If a
+  function needs a comment to explain what it does, it should be split or
+  renamed. Long files are a sign of mixed concerns, not maturity.
+- **No speculative abstractions** — do not create helpers, wrappers, or
+  utilities for one-time use. Do not design for hypothetical future
+  requirements. Add abstraction when the duplication actually exists.
+- **Validate at boundaries only** — do not add null checks, try/catch, or
+  fallbacks for internal code paths that cannot fail. Trust function
+  contracts and framework guarantees. Validate at real boundaries: user
+  input, API responses, and storage reads.
 
 ---
 
