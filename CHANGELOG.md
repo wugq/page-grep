@@ -2,8 +2,30 @@
 
 ## [1.7] - 2026-03-29
 
+### Added
+- **Save-for-later reading list** — save articles from any page and read them later from a library panel inside the reader overlay
+- **Back-to-article button** — when reading a saved article from the library, a back button returns you to the original page article without closing the reader
+
+### Changed
+- Reader overlay and floating panel now use Shadow DOM for full CSS isolation
+- Reader and floating panel CSS extracted from inline JS template literals into dedicated stylesheet files
+- Theme selector simplified to light/dark only; auto/system mode removed
+- Reader settings UI extracted into a dedicated module (`content-reader-settings.js`)
+- Library panel UI extracted into a dedicated module (`content-reader-library.js`)
+
 ### Fixed
 - Reader-mode summary now saves under the library article's URL instead of the current page URL, so summaries are no longer misattributed when switching articles in the library
+- XSS vulnerability: `on*` event handlers and `javascript:`/`vbscript:` URLs are now stripped from saved article HTML before rendering
+- Repeated AI requests (summarize, find interesting) now cancel the previous in-flight request instead of racing
+- `_readerStates` in-memory mirror now stays in sync with storage changes from other tabs
+- Async state races, stale element references, and missed cleanup on reader close
+- Accumulating `mouseleave` listeners on summary and highlight list items
+- Reader images no longer stretch — `height: auto` restored correct aspect ratio
+- Translation restore now correctly reapplies stored translations when reopening an article
+- Missing i18n translations for save/library UI across all supported locales
+- Content script `matches` restricted to `http`/`https` only (was `<all_urls>`)
+- Background script no longer crashes on empty `choices` array from the API
+- i18n placeholder RegExp no longer vulnerable to metacharacter injection
 
 ## [1.6] - 2026-03-27
 
