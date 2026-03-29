@@ -612,11 +612,20 @@ function closeReaderMode() {
   _libraryArticleLoaded = false;
   _libraryArticleUrl = null;
   _liveArticleSnapshot = null;
+  // Cancel any in-flight sync-bookmark promotion. The IIFE in openReaderMode
+  // checks this flag after its storage await; without this, it would proceed and
+  // crash accessing _articleMeta.title (null) — silently caught, but wrong.
+  _promoteSuppressed = true;
 
   // Restore page-mode summary before notifying the sidebar.
   SUMMARY_STATE.points = _pageSummaryBackup?.points || [];
   SUMMARY_STATE.elements = _pageSummaryBackup?.elements || [];
   _pageSummaryBackup = null;
+  // Clear highlight state — any highlight run inside reader mode holds refs to
+  // now-detached reader DOM nodes. Page-mode highlights are also invalid since
+  // they were computed before reader mode replaced the visible content.
+  HIGHLIGHT_STATE.elements = null;
+  HIGHLIGHT_STATE.items = null;
 
   // Restore html/body overflow to whatever it was before reader mode.
   // removeProperty + conditional re-set handles both !important and normal values.

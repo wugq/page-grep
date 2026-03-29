@@ -80,6 +80,7 @@ function updateSummarySidebar(points, elements) {
 
 async function runSummaryFromPage() {
   log('[PageGrep] runSummary triggered');
+  // Capture reader mode state before any await so we can detect transitions.
   const readerBody = getActiveReaderBody();
   const elements = readerBody ? collectArticleElements(readerBody) : collectPageElements();
   // In reader mode the content may be translated, so detect language from the
@@ -103,6 +104,10 @@ async function runSummaryFromPage() {
 
     if (response?.code === 'CANCELLED') return;
     if (!response.success) throwFromResponse(response);
+    // Reader mode opened or closed while the request was in-flight — the result
+    // belongs to a different context. Discard it to avoid overwriting the wrong
+    // SUMMARY_STATE instance.
+    if (getActiveReaderBody() !== readerBody) return;
     log(`[PageGrep] summary: received ${response.points.length} points`, response.points);
     updateSummarySidebar(response.points, elements);
     cacheSummary(response.points, elements, !!readerBody);
@@ -298,6 +303,8 @@ function inferHackerNewsTags(title, site) {
 
 async function runInterestingFromPage() {
   log('[PageGrep] ★ (highlight) clicked');
+  // Capture reader mode state before any await so we can detect transitions.
+  const readerBody = getActiveReaderBody();
   const { userInterests } = await browser.storage.local.get([STORAGE_KEYS.USER_INTERESTS]);
   if (!userInterests) {
     warn('[PageGrep] ★: no user interests set');
@@ -305,7 +312,6 @@ async function runInterestingFromPage() {
     return;
   }
 
-  const readerBody = getActiveReaderBody();
   const elements = readerBody ? collectArticleElements(readerBody) : collectPageElements();
   HIGHLIGHT_STATE.elements = elements;
   log(`[PageGrep] ★: collected ${elements.length} elements, interests: "${userInterests}"`);
@@ -324,6 +330,12 @@ async function runInterestingFromPage() {
 
     if (response?.code === 'CANCELLED') return;
     if (!response.success) throwFromResponse(response);
+    // Reader mode opened or closed while the request was in-flight — discard
+    // the stale result and clear the element refs we wrote synchronously above.
+    if (getActiveReaderBody() !== readerBody) {
+      HIGHLIGHT_STATE.elements = null;
+      return;
+    }
     log(`[PageGrep] ★: matched items:`, response.items);
 
     const textSeen = new Set();

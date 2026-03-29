@@ -77,6 +77,9 @@ log('[PageGrep] content script loaded', location.href);
 // Pre-populate page-mode summary from cache so the sidebar can show it
 // immediately without requiring the user to re-run.
 browser.storage.local.get(STORAGE_KEYS.PAGE_STATES).then(({ pageStates }) => {
+  // Reader mode may have opened before the storage read resolved. Writing to
+  // SUMMARY_STATE now would overwrite the reader-mode instance.
+  if (getActiveReaderBody()) return;
   const cached = (pageStates || {})[location.origin + location.pathname]?.summary;
   if (cached?.points?.length) {
     SUMMARY_STATE.points = cached.points;

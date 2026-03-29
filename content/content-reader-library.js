@@ -319,7 +319,7 @@ function loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn) {
     }
 
     SUMMARY_STATE.points = [];
-    SUMMARY_STATE.elements = restoreSummaryElements(null, collectArticleElements(body));
+    SUMMARY_STATE.elements = [];
   }
 
   (overlay._scrollEl || overlay).scrollTo({ top: 0, behavior: 'smooth' });

@@ -142,10 +142,10 @@ function showApiKeyToast() {
   link.style.cssText = 'color:#818cf8;text-decoration:underline;cursor:pointer;';
   link.textContent = browser.i18n.getMessage('settingsLinkLabel') || 'Settings';
   link.addEventListener('click', (e) => { e.preventDefault(); browser.runtime.sendMessage({ action: 'openOptionsPage' }); });
+  clearTimeout(toast._hideTimer);
   toast.appendChild(msgNode);
   toast.appendChild(link);
   toast.style.pointerEvents = 'auto';
-  clearTimeout(toast._hideTimer);
   toast.classList.add('ai-toast-show');
   toast._hideTimer = setTimeout(() => { toast.classList.remove('ai-toast-show'); toast.style.pointerEvents = ''; }, 4000);
 }
