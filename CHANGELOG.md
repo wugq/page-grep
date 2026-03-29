@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7] - 2026-03-29
+
+### Fixed
+- Reader-mode summary now saves under the library article's URL instead of the current page URL, so summaries are no longer misattributed when switching articles in the library
+
 ## [1.6] - 2026-03-27
 
 ### Added
