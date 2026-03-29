@@ -146,6 +146,11 @@ async function init() {
     }
   });
 
+  document.getElementById('summary-list').addEventListener('mouseleave',
+    () => sendToActiveTab({ action: 'summaryUnhover' }));
+  document.getElementById('highlight-list').addEventListener('mouseleave',
+    () => sendToActiveTab({ action: 'highlightUnhover' }));
+
   loadFromActiveTab();
   updateHideOnSiteToggle();
 }
@@ -285,8 +290,6 @@ function renderSummary(points) {
 
   // Clear all highlights when the mouse leaves the list entirely — catches cases
   // where an individual item's mouseleave fails to reach the content script.
-  listEl.addEventListener('mouseleave', () => sendToActiveTab({ action: 'summaryUnhover' }), { once: true });
-
   points.forEach(point => {
     const item = document.createElement('div');
     item.className = 'summary-item';
@@ -324,8 +327,6 @@ function renderHighlights(items) {
     return;
   }
   emptyEl.classList.add('hidden');
-
-  listEl.addEventListener('mouseleave', () => sendToActiveTab({ action: 'highlightUnhover' }), { once: true });
 
   items.forEach(item => {
     const row = document.createElement('div');
