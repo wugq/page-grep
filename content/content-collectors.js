@@ -56,7 +56,7 @@ function cacheSummary(points, elements, isReaderMode) {
     targets: elements.map(item => item.text)
   };
   if (isReaderMode) {
-    saveReaderState(state => { state.summary = summary; });
+    saveReaderState(state => { state.summary = summary; }, _libraryArticleUrl || undefined);
     return;
   }
   const url = location.origin + location.pathname;
