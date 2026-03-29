@@ -337,7 +337,7 @@
   color: var(--rd-quote); font-style: italic; line-height: var(--reader-line-height, 1.8);
 }
 #ai-reader-body a   { color: var(--rd-link); }
-#ai-reader-body img { max-width: 100%; border-radius: 8px; margin: 1em 0; display: block; }
+#ai-reader-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 1em 0; display: block; }
 #ai-reader-body ul,
 #ai-reader-body ol  { padding-left: 24px; margin: 0 0 1.2em; }
 #ai-reader-body li  { margin: 0.3em 0; line-height: var(--reader-line-height, 1.8); }
