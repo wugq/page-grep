@@ -24,7 +24,8 @@ Content scripts share a global scope — load order in `manifest.json` is the de
 | `content/content-translation.js` | In-place translation, wrap/restore helpers |
 | `content/content-collectors.js` | Element collection, summary and highlight AI flows, hover/flash |
 | `content/content-reader-settings.js` | Reader prefs constants/helpers, `readerGetById`, settings panel UI |
-| `content/content-reader.js` | Reader overlay (Shadow DOM), library panel, article save/restore, open/close lifecycle |
+| `content/content-reader.js` | Reader overlay open/close lifecycle, scroll tracking, translation persistence |
+| `content/content-reader-library.js` | Article save/unsave, bookmark sync, library panel UI |
 | `content/content-panel.js` | Floating panel, drag-and-drop, context menu, article-to-clipboard |
 | `content/content-selection.js` | Text-selection popup toolbar |
 | `content/content-init.js` | Bootstrap: storage init, message listener, storage-change listener |

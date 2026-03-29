@@ -67,6 +67,7 @@
         "content/content-collectors.js",
         "content/content-reader-settings.js",
         "content/content-reader.js",
+        "content/content-reader-library.js",
         "content/content-panel.js",
         "content/content-selection.js",
         "content/content-init.js"
