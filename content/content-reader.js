@@ -622,14 +622,14 @@ async function openReaderMode(triggerBtn) {
       a.href = img.src;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
+      a.dataset.printWrap = '';
       img.replaceWith(a);
       a.appendChild(img);
     });
   }
   function onAfterPrint() {
-    _readerBody?.querySelectorAll('a > img').forEach(img => {
-      const a = img.parentElement;
-      if (a.tagName === 'A' && a.childElementCount === 1) a.replaceWith(img);
+    _readerBody?.querySelectorAll('a[data-print-wrap] > img').forEach(img => {
+      img.parentElement.replaceWith(img);
     });
   }
   window.addEventListener('beforeprint', onBeforePrint);
