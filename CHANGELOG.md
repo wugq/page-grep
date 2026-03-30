@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.8] - 2026-03-30
+
+### Added
+- **Print reader article** — a print button (printer icon, left toolbar beside the library button) sends the cleaned article to the browser print dialog or print-to-PDF. Typography is normalized for paper: 12pt body, 1.5 line height, full page width, light theme forced regardless of reader setting. The source URL is shown below the article byline (print only) and stays correct when switching between live and saved library articles. Images become clickable links in the exported PDF so the user can open them in a new tab to download. The floating panel is hidden during print.
+
 ## [1.7] - 2026-03-29
 
 ### Added

@@ -7,7 +7,7 @@ A Firefox extension that helps you read and discover content on web pages using 
 ## Features
 
 - **In-place translation** — translates visible paragraphs on screen without leaving the page. Each paragraph gets a hover-revealed toggle button to switch between original and translated text.
-- **Reader mode** — opens a distraction-free reading overlay with saved theme, width, font size, and spacing controls.
+- **Reader mode** — opens a distraction-free reading overlay with saved theme, width, font size, and spacing controls. Includes a print button that normalizes typography for paper and embeds the source URL; images in the printed PDF are clickable links for easy download.
 - **Reader state restore** — remembers reader-mode translations, summary targets, and reading position for each page.
 - **Smart selection toolbar** — select any text on a translated paragraph to get "↩ Original" (revert that paragraph) and "Copy + Original" (copy source + translation together). On untranslated text, get "Translate" and "Copy" instead.
 - **Copy article to clipboard** — the clipboard button in the floating panel extracts the page article as clean Markdown and copies it instantly.
@@ -70,6 +70,13 @@ A compact panel appears in the bottom-right corner of every page (when enabled).
 | Translate icon | Translate all visible paragraphs on screen in-place |
 | Reader icon | Open reader mode; while reader mode is active, this becomes the reading settings button |
 | Clipboard icon | Extract the page article as Markdown and copy it to the clipboard |
+
+While in reader mode, additional buttons appear in the reader toolbar:
+
+| Button | Action |
+|--------|--------|
+| Library icon | Open the saved articles library panel |
+| Print icon | Print the article (or export to PDF); typography normalized for paper, source URL shown, images clickable in PDF |
 
 The panel is draggable — click and drag to reposition it. Drag it toward the bottom of the screen to reveal a trash zone; release there to hide the panel on the current site. Position is remembered across page loads.
 
