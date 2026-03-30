@@ -391,13 +391,6 @@
     margin-top: 5pt;
     word-break: break-all;
   }
-  /* Show full URLs after links so printed copy is usable offline */
-  #ai-reader-body a[href]::after {
-    content: " (" attr(href) ")";
-    font-size: 0.8em;
-    color: #555;
-    word-break: break-all;
-  }
   /* Hide all UI chrome */
   .ai-toggle-btn,
   #ai-reader-close-btn,
