@@ -294,6 +294,9 @@ function loadSavedArticleIntoReader(article, overlay, saveBtn, backBtn) {
     sourceEl.append(label, link);
   }
 
+  const printSourceEl = readerGetById('ai-reader-print-source');
+  if (printSourceEl) printSourceEl.textContent = article.url;
+
   // Body
   const body = readerGetById('ai-reader-body');
   if (body) {
@@ -348,6 +351,9 @@ function restoreLiveArticle(overlay, saveBtn, backBtn) {
 
   // Remove the source-URL line that was added for the library article.
   readerGetById('ai-reader-meta')?.querySelector('.ai-reader-source')?.remove();
+
+  const printSourceEl = readerGetById('ai-reader-print-source');
+  if (printSourceEl) printSourceEl.textContent = location.href;
 
   const body = readerGetById('ai-reader-body');
   if (body && snap.html) {

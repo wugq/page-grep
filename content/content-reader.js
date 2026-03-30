@@ -379,6 +379,11 @@ async function openReaderMode(triggerBtn) {
     meta.appendChild(bylineEl);
   }
 
+  const printSourceEl = document.createElement('div');
+  printSourceEl.id = 'ai-reader-print-source';
+  printSourceEl.textContent = location.href;
+  meta.appendChild(printSourceEl);
+
   const body = document.createElement('div');
   body.id = 'ai-reader-body';
   const articleDoc = _htmlParser.parseFromString(article.content, 'text/html');
@@ -477,7 +482,8 @@ async function openReaderMode(triggerBtn) {
   // and all other page content is hidden. Removed on reader close.
   const printStyle = document.createElement('style');
   printStyle.id = 'ai-reader-print-style';
-  printStyle.textContent = `@media print {
+  printStyle.textContent = `@page { margin: 1.5cm 2cm; }
+@media print {
   html, body { overflow: visible !important; }
   body > *:not(#${READER_OVERLAY_ID}) { display: none !important; }
   #${PANEL_ID} { display: none !important; }
