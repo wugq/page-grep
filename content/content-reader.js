@@ -613,6 +613,32 @@ async function openReaderMode(triggerBtn) {
   window.addEventListener('resize', onResize);
   cleanupFns.push(() => window.removeEventListener('resize', onResize));
 
+  // Before printing, wrap each image in a link so PDFs have a clickable URL
+  // the user can open in a new tab to download the image. Unwrap after print.
+  function onBeforePrint() {
+    _readerBody?.querySelectorAll('img[src]').forEach(img => {
+      if (img.parentElement?.tagName === 'A') return;
+      const a = document.createElement('a');
+      a.href = img.src;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      img.replaceWith(a);
+      a.appendChild(img);
+    });
+  }
+  function onAfterPrint() {
+    _readerBody?.querySelectorAll('a > img').forEach(img => {
+      const a = img.parentElement;
+      if (a.tagName === 'A' && a.childElementCount === 1) a.replaceWith(img);
+    });
+  }
+  window.addEventListener('beforeprint', onBeforePrint);
+  window.addEventListener('afterprint', onAfterPrint);
+  cleanupFns.push(() => {
+    window.removeEventListener('beforeprint', onBeforePrint);
+    window.removeEventListener('afterprint', onAfterPrint);
+  });
+
   shadowHost._cleanupFns   = cleanupFns;
   shadowHost._savedScrollY = savedScrollY;
 
