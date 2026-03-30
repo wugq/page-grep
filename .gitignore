@@ -1,3 +1,4 @@
 dist/
 .amo-upload-uuid
 .web-extension-id
+.DS_Store
