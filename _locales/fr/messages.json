@@ -409,5 +409,8 @@
   },
   "libClearAllConfirm": {
     "message": "Supprimer tous les articles enregistrés ? Cette action est irréversible."
+  },
+  "printArticle": {
+    "message": "Imprimer"
   }
 }

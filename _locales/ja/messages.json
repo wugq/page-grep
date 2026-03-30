@@ -409,5 +409,8 @@
   },
   "libClearAllConfirm": {
     "message": "保存したすべての記事を削除しますか？この操作は元に戻せません。"
+  },
+  "printArticle": {
+    "message": "印刷"
   }
 }

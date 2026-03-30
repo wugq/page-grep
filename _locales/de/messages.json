@@ -389,5 +389,8 @@
   },
   "libClearAllConfirm": {
     "message": "Alle gespeicherten Artikel löschen? Dies kann nicht rückgängig gemacht werden."
+  },
+  "printArticle": {
+    "message": "Drucken"
   }
 }

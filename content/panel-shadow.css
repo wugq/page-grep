@@ -66,3 +66,7 @@
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
 }
+
+@media print {
+  :host { display: none !important; }
+}

@@ -389,5 +389,8 @@
   },
   "libClearAllConfirm": {
     "message": "删除所有保存的文章？此操作无法撤消。"
+  },
+  "printArticle": {
+    "message": "打印"
   }
 }

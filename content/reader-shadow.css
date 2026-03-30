@@ -88,7 +88,8 @@
 #ai-reader-close-btn,
 #ai-reader-save-btn,
 #ai-reader-back-btn,
-#ai-reader-library-btn {
+#ai-reader-library-btn,
+#ai-reader-print-btn {
   position: absolute;
   top: 16px;
   z-index: 10;
@@ -112,19 +113,22 @@
 #ai-reader-close-btn:hover,
 #ai-reader-save-btn:hover,
 #ai-reader-back-btn:hover,
-#ai-reader-library-btn:hover {
+#ai-reader-library-btn:hover,
+#ai-reader-print-btn:hover {
   transform: scale(1.1);
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 #ai-reader-close-btn:active,
 #ai-reader-save-btn:active,
 #ai-reader-back-btn:active,
-#ai-reader-library-btn:active { transform: scale(0.92); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+#ai-reader-library-btn:active,
+#ai-reader-print-btn:active { transform: scale(0.92); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
 #ai-reader-close-btn   { right: 24px; }
 #ai-reader-save-btn    { right: 64px; }
 #ai-reader-back-btn    { right: 104px; }
 #ai-reader-library-btn { left: 24px; }
+#ai-reader-print-btn   { left: 64px; }
 
 #ai-reader-close-btn:focus   { outline: none; }
 #ai-reader-close-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; }
@@ -136,6 +140,8 @@
 #ai-reader-library-btn.active { color: var(--rd-accent); }
 #ai-reader-library-btn:focus   { outline: none; }
 #ai-reader-library-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; opacity: 1; }
+#ai-reader-print-btn:focus   { outline: none; }
+#ai-reader-print-btn:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; }
 
 #ai-reader-library-backdrop {
   position: absolute;
@@ -346,4 +352,29 @@
 
 @media (max-width: 480px) {
   #ai-reader-library { width: min(300px, calc(100vw - 40px)); }
+}
+
+@media print {
+  :host {
+    position: static !important;
+    overflow: visible !important;
+    animation: none !important;
+    z-index: auto !important;
+  }
+  .rd-overlay {
+    position: static !important;
+    overflow: visible !important;
+  }
+  #ai-reader-scroll {
+    position: static !important;
+    overflow: visible !important;
+  }
+  #ai-reader-close-btn,
+  #ai-reader-save-btn,
+  #ai-reader-back-btn,
+  #ai-reader-library-btn,
+  #ai-reader-print-btn,
+  #ai-reader-settings,
+  #ai-reader-library,
+  #ai-reader-library-backdrop { display: none !important; }
 }

@@ -409,5 +409,8 @@
   },
   "libClearAllConfirm": {
     "message": "¿Eliminar todos los artículos guardados? Esta acción no se puede deshacer."
+  },
+  "printArticle": {
+    "message": "Imprimir"
   }
 }

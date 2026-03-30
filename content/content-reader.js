@@ -346,6 +346,14 @@ async function openReaderMode(triggerBtn) {
 
   backBtn.addEventListener('click', () => restoreLiveArticle(shadowHost, saveBtn, backBtn));
 
+  const printBtn = document.createElement('button');
+  printBtn.id = 'ai-reader-print-btn';
+  printBtn.replaceChildren(_svgParser.parseFromString(PRINT_ICON, 'image/svg+xml').documentElement);
+  const printLabel = browser.i18n.getMessage('printArticle') || 'Print';
+  printBtn.title = printLabel;
+  printBtn.setAttribute('aria-label', printLabel);
+  printBtn.addEventListener('click', () => window.print());
+
   libraryBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (libraryPanel.classList.contains('open')) { closeLibrary(); } else { openLibrary(); }
@@ -410,7 +418,7 @@ async function openReaderMode(triggerBtn) {
   scrollEl.tabIndex = -1; // allow Space/PageDown to scroll when focused
   scrollEl.appendChild(content);
 
-  overlay.append(closeBtn, saveBtn, backBtn, libraryBtn, libraryPanel, settingsPanel, scrollEl);
+  overlay.append(closeBtn, saveBtn, backBtn, libraryBtn, printBtn, libraryPanel, settingsPanel, scrollEl);
 
   // Store the scroll element for use in loadSavedArticleIntoReader / restoreLiveArticle.
   shadowHost._scrollEl = scrollEl;
@@ -464,6 +472,18 @@ async function openReaderMode(triggerBtn) {
 
   // Collect teardown callbacks — flushed immediately on close, before the fade-out.
   const cleanupFns = [];
+
+  // Inject a document-level print stylesheet so the reader content fills the page
+  // and all other page content is hidden. Removed on reader close.
+  const printStyle = document.createElement('style');
+  printStyle.id = 'ai-reader-print-style';
+  printStyle.textContent = `@media print {
+  html, body { overflow: visible !important; }
+  body > *:not(#${READER_OVERLAY_ID}) { display: none !important; }
+  #${PANEL_ID} { display: none !important; }
+}`;
+  document.head.appendChild(printStyle);
+  cleanupFns.push(() => printStyle.remove());
 
   // Prevent wheel events from bubbling to the page's scroll container.
   // Sites that declare `html { overflow: auto !important }` can otherwise

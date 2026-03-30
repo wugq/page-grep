@@ -409,5 +409,8 @@
   },
   "libClearAllConfirm": {
     "message": "刪除所有已儲存的文章？此操作無法復原。"
+  },
+  "printArticle": {
+    "message": "列印"
   }
 }

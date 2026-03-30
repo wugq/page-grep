@@ -409,5 +409,8 @@
   },
   "libClearAllConfirm": {
     "message": "Kaydedilen tüm makaleler kaldırılsın mı? Bu işlem geri alınamaz."
+  },
+  "printArticle": {
+    "message": "Yazdır"
   }
 }

@@ -409,5 +409,8 @@
   },
   "libClearAllConfirm": {
     "message": "Xóa tất cả bài viết đã lưu? Thao tác này không thể hoàn tác."
+  },
+  "printArticle": {
+    "message": "In"
   }
 }

@@ -405,5 +405,8 @@
   },
   "libClearAllConfirm": {
     "message": "Remove all saved articles? This cannot be undone."
+  },
+  "printArticle": {
+    "message": "Print"
   }
 }

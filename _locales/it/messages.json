@@ -409,5 +409,8 @@
   },
   "libClearAllConfirm": {
     "message": "Rimuovere tutti gli articoli salvati? Questa azione non può essere annullata."
+  },
+  "printArticle": {
+    "message": "Stampa"
   }
 }

@@ -409,5 +409,8 @@
   },
   "libClearAllConfirm": {
     "message": "Remover todos os artigos salvos? Esta ação não pode ser desfeita."
+  },
+  "printArticle": {
+    "message": "Imprimir"
   }
 }
